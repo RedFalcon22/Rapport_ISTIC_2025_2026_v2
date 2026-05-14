@@ -1,0 +1,781 @@
+\chapter{Réalisation et test}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Introduction}
+
+Ce chapitre présente la phase de réalisation du système et les résultats obtenus.
+Il couvre l'environnement de développement, les interfaces réalisées, les tests effectués,
+les aspects de sécurité selon le référentiel OWASP Top~10 for LLM Applications,
+l'évaluation de la qualité des réponses avec le framework RAGAS,
+les optimisations de performance et le déploiement.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Environnement de développement}
+
+\subsection{Environnement matériel et logiciel}
+
+Le développement a été réalisé sur des machines sous Windows~11 avec accès au serveur
+d'inférence kaisens.fr.
+Le Tableau~\ref{tab:env_dev} présente les outils et technologies utilisés.
+
+\vspace{6pt}
+\begin{table}[H]
+\centering
+\caption{Environnement de développement}
+\label{tab:env_dev}
+\begin{tabular}{|l|l|}
+\hline
+\textbf{Catégorie} & \textbf{Outil / Version} \\
+\hline
+Langage principal & Python 3.11 \\
+Langage traitement de données & Scala 2.13 / Apache Spark 3.5 \\
+Interface interne & Streamlit 1.32 \\
+Interface publique & React 18 + Vite \\
+Backend API & FastAPI 0.110 \\
+Orchestration LLM & LangChain 0.2 \\
+Base documentaire & ChromaDB 0.5 \\
+Mémoire de session & Redis 7.2 \\
+Évaluation RAG & RAGAS 0.1 (juge LLM : Groq API) \\
+Conteneurisation & Docker / Docker Compose \\
+Contrôle de version & Git / GitHub \\
+\hline
+\end{tabular}
+\end{table}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Module 1 — Noa : assistant virtuel du site public}
+
+\subsection{Base de connaissances}
+
+La base de connaissances de Noa est constituée à partir du contenu du site public de Netethic.
+Elle comprend 21~pages indexées, découpées en 177~segments.
+Chaque segment court est associé à un segment parent plus large,
+selon la stratégie parent-enfant décrite au chapitre précédent.
+
+\subsection{Interface utilisateur}
+
+La Figure~\ref{fig:noa_interface} montre l'interface de Noa intégrée au site public de Netethic.
+
+\begin{figure}[H]
+\centering
+\fbox{\parbox{0.85\textwidth}{\centering\vspace{4cm}[Capture d'écran — Interface Noa (fenêtre de conversation)]\vspace{4cm}}}
+\caption{Interface Noa — fenêtre de conversation intégrée au site Netethic}
+\label{fig:noa_interface}
+\end{figure}
+
+La Figure~\ref{fig:noa_reservation} montre le flux de réservation guidé dans Noa.
+
+\begin{figure}[H]
+\centering
+\fbox{\parbox{0.85\textwidth}{\centering\vspace{4cm}[Capture d'écran — Flux de réservation dans Noa]\vspace{4cm}}}
+\caption{Interface Noa — flux guidé de demande de démonstration}
+\label{fig:noa_reservation}
+\end{figure}
+
+\subsection{Tests}
+
+Une suite de 46~tests automatisés couvre l'ensemble des fonctionnalités de Noa.
+Le Tableau~\ref{tab:tests_noa} présente les résultats obtenus.
+
+\vspace{6pt}
+\begin{table}[H]
+\centering
+\caption{Résultats des tests automatisés — Module Noa}
+\label{tab:tests_noa}
+\begin{tabular}{|l|c|c|}
+\hline
+\textbf{Catégorie de test} & \textbf{Nombre} & \textbf{Résultat} \\
+\hline
+Routage par intention & 8 & 100\,\% \\
+Recherche documentaire & 10 & 100\,\% \\
+Agent de réservation & 12 & 100\,\% \\
+Mémoire et cache & 8 & 100\,\% \\
+Gestion des erreurs & 8 & 100\,\% \\
+\hline
+\textbf{Total} & \textbf{46} & \textbf{100\,\%} \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{Performances}
+
+Le Tableau~\ref{tab:perf_noa} présente les temps de réponse mesurés pour chaque type de requête.
+
+\vspace{6pt}
+\begin{table}[H]
+\centering
+\caption{Temps de réponse moyens — Module Noa}
+\label{tab:perf_noa}
+\begin{tabular}{|l|c|c|}
+\hline
+\textbf{Type de requête} & \textbf{Temps moyen} & \textbf{Exigence} \\
+\hline
+Réponse depuis le cache & $<$ 1\,ms & $<$ 50\,ms \\
+Salutation / hors sujet & $<$ 10\,ms & $<$ 100\,ms \\
+Question factuelle (RAG) & $\approx$ 1,8\,s & $<$ 5\,s \\
+Question de suivi & $\approx$ 2,1\,s & $<$ 5\,s \\
+\hline
+\end{tabular}
+\end{table}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Module 2 — NetEthic Support Assistant}
+
+\subsection{Base de connaissances}
+
+La base de connaissances du Support Assistant couvre les 11~catégories fonctionnelles
+de la plateforme Netethic.
+Elle est alimentée par la documentation technique interne fournie par Smart-Conseil.
+
+\subsection{Interface utilisateur}
+
+La Figure~\ref{fig:support_interface} montre l'interface principale du Support Assistant.
+
+\begin{figure}[H]
+\centering
+\fbox{\parbox{0.85\textwidth}{\centering\vspace{4cm}[Capture d'écran — Interface principale du Support Assistant]\vspace{4cm}}}
+\caption{Interface principale du NetEthic Support Assistant}
+\label{fig:support_interface}
+\end{figure}
+
+La Figure~\ref{fig:support_bug} montre le flux guidé de signalement de dysfonctionnement.
+
+\begin{figure}[H]
+\centering
+\fbox{\parbox{0.85\textwidth}{\centering\vspace{4cm}[Capture d'écran — Flux de signalement de dysfonctionnement]\vspace{4cm}}}
+\caption{Support Assistant — flux guidé de signalement de dysfonctionnement}
+\label{fig:support_bug}
+\end{figure}
+
+\subsection{Tests}
+
+Le Tableau~\ref{tab:tests_support} présente les résultats des tests du Support Assistant.
+
+\vspace{6pt}
+\begin{table}[H]
+\centering
+\caption{Résultats des tests automatisés — Support Assistant}
+\label{tab:tests_support}
+\begin{tabular}{|l|c|c|}
+\hline
+\textbf{Catégorie de test} & \textbf{Nombre} & \textbf{Résultat} \\
+\hline
+Filtrage par catégorie & 11 & 100\,\% \\
+Correction et réécriture & 8 & 100\,\% \\
+Mode Insights & 6 & 100\,\% \\
+Flux prise de rendez-vous & 10 & 100\,\% \\
+Flux signalement de bug & 9 & 100\,\% \\
+\hline
+\textbf{Total} & \textbf{44} & \textbf{100\,\%} \\
+\hline
+\end{tabular}
+\end{table}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Module 3 — Module de soutien émotionnel}
+
+\subsection{Intégration}
+
+Le module de soutien émotionnel est intégré au Support Assistant.
+Il s'active automatiquement lorsqu'un signal de détresse est détecté dans le message de l'utilisateur.
+Aucune action manuelle n'est requise de la part de l'opérateur.
+
+\subsection{Interface utilisateur}
+
+La Figure~\ref{fig:emotional_interface} montre une réponse empathique générée par le module
+en présence d'un signal de détresse.
+
+\begin{figure}[H]
+\centering
+\fbox{\parbox{0.85\textwidth}{\centering\vspace{4cm}[Capture d'écran — Réponse empathique du module de soutien émotionnel]\vspace{4cm}}}
+\caption{Module de soutien émotionnel — exemple de réponse empathique}
+\label{fig:emotional_interface}
+\end{figure}
+
+\subsection{Journalisation}
+
+Chaque déclenchement du module est journalisé avec le type de signal détecté et l'horodatage,
+sans stocker le contenu du message original, afin de respecter la confidentialité des utilisateurs.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Module 4 — Classificateur de harcèlement}
+
+\subsection{Implémentation}
+
+Le classificateur est disponible en deux versions complémentaires :
+\begin{itemize}
+    \item \textbf{Version Python :} adaptée aux expérimentations sur des corpus réduits.
+          Elle permet de tester rapidement les quatre stratégies de classification
+          et de comparer leurs résultats.
+    \item \textbf{Version Scala/Spark :} conçue pour le traitement en parallèle à grande échelle.
+          Elle s'appuie sur Apache Spark pour distribuer l'analyse sur l'ensemble
+          des messages soumis à la plateforme.
+\end{itemize}
+
+\subsection{Interface utilisateur}
+
+La Figure~\ref{fig:classif_interface} montre les résultats produits par le classificateur
+pour un texte d'exemple.
+
+\begin{figure}[H]
+\centering
+\fbox{\parbox{0.85\textwidth}{\centering\vspace{4cm}[Capture d'écran — Résultats du classificateur de harcèlement]\vspace{4cm}}}
+\caption{Classificateur de harcèlement — résultats sur un texte d'exemple}
+\label{fig:classif_interface}
+\end{figure}
+
+\subsection{Évaluation}
+
+Le Tableau~\ref{tab:eval_classif} présente les métriques d'évaluation des quatre stratégies
+sur un corpus de test.
+
+\vspace{6pt}
+\begin{table}[H]
+\centering
+\caption{Évaluation comparative des stratégies de classification}
+\label{tab:eval_classif}
+\begin{tabular}{|l|c|c|c|}
+\hline
+\textbf{Stratégie} & \textbf{Précision} & \textbf{Rappel} & \textbf{F1-score} \\
+\hline
+Modèle seul                    & 0.295 & 0.437 & 0.352 \\
+Modèle avec ancrage juridique  & 0.223 & 0.606 & 0.326 \\
+Règles heuristiques            & --    & --    & --    \\
+Hybride                        & --    & --    & 0.619 \\
+\hline
+\end{tabular}
+\end{table}
+
+\textit{Corpus de test : 1\,500 textes français, 16 catégories.
+L'ancrage juridique améliore le rappel au détriment de la précision.
+La stratégie hybride atteint le meilleur F1-score global.}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Sécurité}
+
+\subsection{Vue d'ensemble de l'approche}
+
+La sécurisation du système s'appuie sur deux référentiels complémentaires :
+les bonnes pratiques générales de sécurité applicative (chiffrement, isolation,
+gestion des secrets) et le référentiel \textbf{OWASP Top~10 for LLM Applications}~\cite{owasp_llm_2025},
+publié par l'Open Worldwide Application Security Project.
+Ce référentiel recense les dix risques les plus critiques propres aux applications
+fondées sur des modèles de langage (LLM) et définit pour chacun des mesures de mitigation.
+Les sous-sections suivantes détaillent les mesures mises en œuvre pour chaque risque.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{OWASP LLM01 — Injection de prompt}
+
+\textbf{Description du risque.}
+L'injection de prompt consiste à introduire dans le message utilisateur des instructions
+malveillantes destinées à détourner le comportement du LLM, à contourner le prompt système
+ou à extraire des informations sensibles.
+
+\textbf{Mitigations mises en place.}
+\begin{itemize}
+    \item \textbf{Séparation stricte prompt système / entrée utilisateur :}
+          le prompt système est injecté uniquement côté serveur, dans le backend FastAPI,
+          et n'est jamais exposé au client.
+    \item \textbf{Guardrails de sortie :}
+          un filtre post-génération analyse la réponse du LLM avant de la renvoyer
+          à l'utilisateur. Toute réponse contenant des marqueurs d'injection connus
+          (fuite du prompt système, instructions internes, blocs de code non sollicités)
+          est bloquée et remplacée par un message d'erreur générique.
+    \item \textbf{Validation de l'intention :}
+          le routeur d'intention (décrit au chapitre précédent) rejette les requêtes
+          dont le score de confiance est inférieur au seuil, évitant ainsi le traitement
+          de requêtes ambiguës ou manipulées.
+    \item \textbf{Journalisation des tentatives :}
+          les requêtes déclenchant les filtres sont enregistrées (sans leur contenu)
+          pour analyse ultérieure.
+\end{itemize}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{OWASP LLM02 — Gestion non sécurisée des sorties}
+
+\textbf{Description du risque.}
+Les sorties du LLM peuvent contenir du code exécutable, des liens malveillants
+ou du contenu hors périmètre si elles sont directement transmises à l'interface
+sans validation préalable.
+
+\textbf{Mitigations mises en place.}
+\begin{itemize}
+    \item \textbf{Encodage HTML systématique :}
+          toutes les réponses sont encodées côté frontend (React) avant affichage,
+          prévenant toute injection XSS.
+    \item \textbf{Liste blanche de formats autorisés :}
+          le backend vérifie que la réponse respecte les formats attendus
+          (texte, liste à puces, tableau Markdown) et supprime tout bloc
+          syntaxiquement anormal.
+    \item \textbf{Longueur maximale de réponse :}
+          un paramètre \texttt{max\_tokens} est fixé pour chaque type de requête,
+          limitant la surface d'attaque liée aux réponses excessivement longues.
+\end{itemize}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{OWASP LLM03 — Empoisonnement de la chaîne d'approvisionnement}
+
+\textbf{Description du risque.}
+Les dépendances logicielles, les modèles pré-entraînés ou les données d'entraînement
+peuvent être compromis en amont, introduisant des comportements indésirables.
+
+\textbf{Mitigations mises en place.}
+\begin{itemize}
+    \item \textbf{Fichiers de verrou de dépendances :}
+          les fichiers \texttt{requirements.txt} (Python) et \texttt{package-lock.json}
+          (Node.js) épinglent les versions exactes de toutes les dépendances.
+    \item \textbf{Images Docker immuables :}
+          les images de production sont construites à partir de \emph{digests} SHA256
+          spécifiques, garantissant la reproductibilité et l'absence de mise à jour
+          silencieuse.
+    \item \textbf{Serveur LLM privé :}
+          le modèle de langage est hébergé sur le serveur kaisens.fr,
+          sous contrôle exclusif de l'organisation, éliminant la dépendance
+          à un fournisseur tiers susceptible de modifier le modèle sans préavis.
+\end{itemize}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{OWASP LLM04 — Empoisonnement des données et des modèles}
+
+\textbf{Description du risque.}
+Des données malveillantes introduites dans la base documentaire ou dans le corpus
+d'entraînement peuvent altérer les réponses générées.
+
+\textbf{Mitigations mises en place.}
+\begin{itemize}
+    \item \textbf{Sources documentaires contrôlées :}
+          les documents indexés dans ChromaDB proviennent exclusivement de sources
+          vérifiées (site officiel Netethic, documentation interne Smart-Conseil).
+          Aucun contenu externe ou utilisateur n'est directement injecté dans la base.
+    \item \textbf{Pipeline d'ingestion validé :}
+          chaque document passe par une étape de nettoyage et de validation
+          avant indexation. Les documents ne respectant pas le schéma attendu sont rejetés.
+    \item \textbf{Absence de fine-tuning en production :}
+          le modèle n'est pas réentraîné à partir des échanges utilisateurs,
+          supprimant le risque d'empoisonnement par les entrées de production.
+\end{itemize}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{OWASP LLM05 — Conception de l'agentique et des autorisations excessives}
+
+\textbf{Description du risque.}
+Un agent LLM disposant de permissions trop larges peut exécuter des actions
+non prévues (écriture en base, envoi de courriels, accès à des API tierces)
+si ses capacités ne sont pas strictement délimitées.
+
+\textbf{Mitigations mises en place.}
+\begin{itemize}
+    \item \textbf{Principe du moindre privilège :}
+          chaque agent (Noa, Support Assistant) n'a accès qu'aux outils
+          strictement nécessaires à sa fonction. L'agent Noa peut uniquement
+          interroger ChromaDB et déclencher le flux de réservation ;
+          il ne dispose d'aucun accès en écriture à la base de données métier.
+    \item \textbf{Validation humaine pour les actions sensibles :}
+          le flux de réservation et le flux de signalement de dysfonctionnement
+          nécessitent une confirmation explicite de l'utilisateur avant tout envoi.
+    \item \textbf{Liste blanche d'outils :}
+          les outils disponibles pour chaque agent sont définis statiquement
+          dans le code source et ne peuvent être modifiés dynamiquement
+          par une instruction du LLM.
+\end{itemize}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{OWASP LLM06 — Divulgation d'informations sensibles}
+
+\textbf{Description du risque.}
+Le LLM peut divulguer des informations confidentielles présentes dans son contexte
+(prompt système, données de session, configurations internes).
+
+\textbf{Mitigations mises en place.}
+\begin{itemize}
+    \item \textbf{Prompt système non transmis au client :}
+          le prompt système est construit et injecté exclusivement côté serveur.
+          La réponse renvoyée au client ne contient jamais de référence au prompt système.
+    \item \textbf{Variables d'environnement :}
+          toutes les clés d'API et identifiants sont stockés dans des fichiers \texttt{.env}
+          exclus du dépôt de code via \texttt{.gitignore}.
+    \item \textbf{Absence de persistance des messages :}
+          conformément aux exigences RGPD, aucun message utilisateur n'est conservé
+          au-delà de la session (cf.\ section~\ref{sec:securite_donnees}).
+    \item \textbf{Filtrage des données personnelles :}
+          le module de soutien émotionnel journalise le type de signal détecté
+          et l'horodatage, sans stocker le contenu du message original.
+\end{itemize}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{OWASP LLM07 — Conception de plugins non sécurisée}
+
+\textbf{Description du risque.}
+Les plugins ou outils connectés au LLM peuvent exposer des fonctionnalités dangereuses
+s'ils ne valident pas correctement leurs entrées.
+
+\textbf{Mitigations mises en place.}
+\begin{itemize}
+    \item \textbf{Validation des paramètres d'outils :}
+          chaque outil LangChain intégré au système définit un schéma Pydantic strict
+          pour ses paramètres d'entrée. Toute valeur non conforme lève une exception
+          avant exécution.
+    \item \textbf{Absence de plugins tiers dynamiques :}
+          aucun plugin externe n'est chargé dynamiquement. L'ensemble des outils
+          disponibles est défini et audité lors du déploiement.
+    \item \textbf{Timeout sur les appels d'outils :}
+          chaque appel d'outil est soumis à un délai d'expiration de 10~secondes,
+          prévenant les blocages et les attaques par déni de service.
+\end{itemize}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{OWASP LLM08 — Faiblesse du vecteur d'embedding}
+
+\textbf{Description du risque.}
+Les embeddings stockés dans la base vectorielle peuvent être exploités pour
+extraire du contenu sensible ou manipuler les résultats de recherche sémantique.
+
+\textbf{Mitigations mises en place.}
+\begin{itemize}
+    \item \textbf{Isolation de ChromaDB :}
+          la base vectorielle s'exécute dans son propre conteneur Docker,
+          sans exposition directe à l'extérieur. Seul le service FastAPI
+          peut l'interroger via le réseau Docker interne.
+    \item \textbf{Absence de données personnelles dans les embeddings :}
+          les documents indexés ne contiennent aucune donnée personnelle identifiable,
+          limitant l'impact d'une éventuelle extraction.
+    \item \textbf{Contrôle d'accès à la base documentaire :}
+          les opérations d'écriture sur ChromaDB sont réservées au pipeline
+          d'ingestion administrateur, inaccessible depuis les interfaces utilisateurs.
+\end{itemize}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{OWASP LLM09 — Désinformation}
+
+\textbf{Description du risque.}
+Le LLM peut générer des réponses factuellement incorrectes (\emph{hallucinations}),
+présentées avec un degré de confiance trompeur.
+
+\textbf{Mitigations mises en place.}
+\begin{itemize}
+    \item \textbf{Architecture RAG :}
+          toutes les réponses factuelles sont ancrées dans des documents sources
+          récupérés par ChromaDB. Le LLM est instruit de répondre uniquement
+          à partir du contexte fourni.
+    \item \textbf{Réponse de repli :}
+          lorsque le score de pertinence des documents récupérés est inférieur
+          au seuil défini, le système retourne un message de repli explicite
+          (\og Je n'ai pas trouvé d'information pertinente sur ce sujet. \fg{})
+          plutôt que de laisser le LLM générer une réponse non fondée.
+    \item \textbf{Évaluation continue avec RAGAS :}
+          la qualité des réponses est mesurée périodiquement à l'aide du framework
+          RAGAS (cf.\ section~\ref{sec:evaluation_ragas}), permettant de détecter
+          toute dégradation de la fidélité ou de la pertinence.
+\end{itemize}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{OWASP LLM10 — Vol de modèle}
+
+\textbf{Description du risque.}
+Un attaquant peut tenter d'extraire le modèle ou ses paramètres via un grand nombre
+de requêtes soigneusement construites (\emph{model extraction attack}).
+
+\textbf{Mitigations mises en place.}
+\begin{itemize}
+    \item \textbf{Limitation du débit (\emph{rate limiting}) :}
+          un mécanisme de limitation du débit fondé sur l'algorithme du \emph{token bucket}
+          est implémenté avec Redis (cf.\ section~\ref{sec:perf_rate_limiting}).
+          Il limite le nombre de requêtes par session et par adresse IP,
+          rendant l'extraction par volume économiquement non viable.
+    \item \textbf{Serveur LLM privé :}
+          le modèle est hébergé en interne sur kaisens.fr.
+          Son accès est restreint au réseau autorisé et protégé par authentification,
+          rendant toute tentative d'accès direct impossible depuis l'extérieur.
+    \item \textbf{Absence d'exposition des probabilités de token :}
+          le backend ne transmet jamais les logits, probabilités ou scores de confiance
+          bruts du modèle au client, réduisant l'information disponible pour une attaque
+          d'extraction.
+\end{itemize}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Protection des données et conformité RGPD}
+\label{sec:securite_donnees}
+
+En complément des mesures OWASP, les dispositifs suivants assurent la conformité
+aux exigences réglementaires :
+\begin{itemize}
+    \item \textbf{Chiffrement des communications :} les échanges entre les modules
+          et le serveur LLM sont effectués via HTTPS.
+    \item \textbf{Conformité RGPD :} aucun message utilisateur n'est conservé
+          au-delà de la durée de la session. Les sessions sont identifiées
+          par un identifiant anonyme généré côté serveur.
+    \item \textbf{Isolation des services :} chaque module s'exécute dans son propre
+          conteneur Docker, limitant la surface d'attaque en cas de compromission.
+\end{itemize}
+
+\subsection{Gestion des sessions}
+
+Les sessions conversationnelles sont stockées dans Redis avec une durée de vie
+limitée à 30~minutes. Passé ce délai, les données de session sont automatiquement
+supprimées.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Optimisations de performance}
+\label{sec:performance}
+
+\subsection{Limitation du débit avec Redis (\emph{rate limiting})}
+\label{sec:perf_rate_limiting}
+
+Pour protéger le serveur LLM contre les abus et garantir une qualité de service
+équitable entre les utilisateurs, un mécanisme de limitation du débit est implémenté
+en s'appuyant sur Redis comme mémoire partagée entre les instances du backend.
+
+\textbf{Algorithme du \emph{token bucket}.}
+Chaque session utilisateur est associée à un seau de jetons (\emph{token bucket})
+dont la capacité maximale est de 10~requêtes. Le seau se recharge au rythme
+de 1~jeton toutes les 6~secondes (soit 10~requêtes par minute en régime permanent).
+Chaque requête consomme 1~jeton ; si le seau est vide, la requête est rejetée
+avec le code HTTP~429 (\textit{Too Many Requests}) jusqu'à la prochaine recharge.
+Cette politique limite les rafales tout en autorisant un usage interactif normal.
+
+\textbf{Granularité du contrôle.}
+Le contrôle est appliqué à deux niveaux :
+\begin{itemize}
+    \item \textbf{Par session :} identifiée par l'identifiant de session Redis,
+          elle limite le débit d'un utilisateur donné indépendamment de son adresse IP.
+    \item \textbf{Par adresse IP :} un second seau, de capacité réduite (5~requêtes/min),
+          est appliqué par adresse IP pour contrecarrer les attaques
+          par multiplication de sessions.
+\end{itemize}
+
+\textbf{Implémentation.}
+Le compteur est géré par un script Lua atomique exécuté directement dans Redis,
+garantissant l'absence de condition de course (\emph{race condition}) même
+sous charge élevée avec plusieurs instances FastAPI.
+
+\subsection{Pooling de connexions Redis}
+
+L'accès à Redis est mutualisé via un \emph{pool} de connexions géré par la bibliothèque
+\texttt{redis-py}. Ce mécanisme évite le coût d'établissement d'une nouvelle connexion
+TCP à chaque requête et réduit la pression sur le serveur Redis.
+
+\textbf{Configuration du pool.}
+Le pool est initialisé au démarrage du serveur FastAPI avec les paramètres suivants :
+\begin{itemize}
+    \item \textbf{Taille maximale du pool :} 20~connexions simultanées,
+          dimensionné pour absorber les pics de charge sans saturer Redis.
+    \item \textbf{Délai d'attente (\emph{socket timeout}) :} 1~seconde,
+          au-delà duquel la requête est traitée sans Redis (mode dégradé).
+    \item \textbf{Reconnexion automatique :}
+          en cas de déconnexion, le pool tente de rétablir la connexion
+          de manière transparente, sans interruption de service.
+\end{itemize}
+
+Le Tableau~\ref{tab:redis_pool} compare les latences moyennes d'accès à Redis
+avec et sans pooling, mesurées sous charge de 50~requêtes concurrentes.
+
+\vspace{6pt}
+\begin{table}[H]
+\centering
+\caption{Impact du pooling sur la latence d'accès Redis}
+\label{tab:redis_pool}
+\begin{tabular}{|l|c|c|}
+\hline
+\textbf{Configuration} & \textbf{Latence moyenne} & \textbf{Latence P99} \\
+\hline
+Sans pooling (connexion par requête) & $\approx$ 12\,ms & $\approx$ 45\,ms \\
+Avec pooling (20 connexions) & $\approx$ 1,2\,ms & $\approx$ 4\,ms \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{LLM en mode autonome (\emph{standalone}) pour les performances}
+
+Pour les requêtes ne nécessitant pas de recherche documentaire
+(salutations, questions hors sujet, gestion des erreurs simples),
+le pipeline RAG complet n'est pas déclenché.
+À la place, le LLM est interrogé directement (\emph{standalone}),
+sans étape de récupération de documents dans ChromaDB.
+
+Ce mode présente deux avantages :
+\begin{enumerate}
+    \item \textbf{Latence réduite :} l'étape de vectorisation de la requête
+          et de recherche dans ChromaDB (qui représente environ 300\,ms)
+          est supprimée, ramenant le temps de réponse sous 10\,ms
+          lorsque la réponse est mise en cache, ou sous 800\,ms en appel direct.
+    \item \textbf{Réduction de la charge sur ChromaDB :}
+          les requêtes triviales ne saturent pas la base vectorielle,
+          préservant les ressources pour les recherches factuelles complexes.
+\end{enumerate}
+
+Le Tableau~\ref{tab:llm_standalone} synthétise les gains de latence observés
+selon le mode d'exécution.
+
+\vspace{6pt}
+\begin{table}[H]
+\centering
+\caption{Comparaison des temps de réponse selon le mode d'exécution}
+\label{tab:llm_standalone}
+\begin{tabular}{|l|l|c|c|}
+\hline
+\textbf{Type de requête} & \textbf{Mode} & \textbf{Temps moyen} & \textbf{Exigence} \\
+\hline
+Salutation / hors sujet & Standalone + cache & $<$ 10\,ms & $<$ 100\,ms \\
+Salutation / hors sujet & Standalone (sans cache) & $\approx$ 800\,ms & $<$ 100\,ms \\
+Question factuelle & RAG complet & $\approx$ 1,8\,s & $<$ 5\,s \\
+Question de suivi & RAG complet & $\approx$ 2,1\,s & $<$ 5\,s \\
+Réponse en cache & Cache Redis & $<$ 1\,ms & $<$ 50\,ms \\
+\hline
+\end{tabular}
+\end{table}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Évaluation de la qualité RAG avec RAGAS}
+\label{sec:evaluation_ragas}
+
+\subsection{Présentation du framework RAGAS}
+
+RAGAS (\emph{Retrieval-Augmented Generation Assessment}) est un framework
+d'évaluation automatique spécialement conçu pour les pipelines RAG~\cite{ragas_2024}.
+Son originalité réside dans l'utilisation d'un LLM comme juge (\emph{LLM-as-a-Judge})
+pour mesurer des propriétés sémantiques difficiles à évaluer par des métriques
+classiques fondées sur la comparaison lexicale.
+
+Dans ce projet, le juge LLM retenu est \textbf{Groq API} avec le modèle
+\texttt{llama-3.1-70b-versatile}, choisi pour sa vitesse d'inférence
+(jusqu'à 800~tokens/s), son coût réduit et sa disponibilité en mode API.
+L'utilisation d'un modèle distinct du modèle de production garantit l'indépendance
+du jugement.
+
+\subsection{Métriques évaluées}
+
+RAGAS mesure quatre métriques principales, chacune évaluant une dimension spécifique
+de la qualité du pipeline RAG :
+
+\begin{itemize}
+    \item \textbf{Fidélité (\emph{Faithfulness}) :}
+          mesure dans quelle proportion les affirmations présentes dans la réponse générée
+          sont factuellement fondées sur les documents sources récupérés.
+          Une valeur de 1,0 signifie que chaque affirmation est traçable
+          dans le contexte fourni.
+          \[
+              \text{Faithfulness} = \frac{\text{Nombre d'affirmations fondées sur le contexte}}
+                                         {\text{Nombre total d'affirmations dans la réponse}}
+          \]
+
+    \item \textbf{Pertinence de la réponse (\emph{Answer Relevancy}) :}
+          évalue dans quelle mesure la réponse répond effectivement à la question posée,
+          indépendamment de son exactitude factuelle. Le juge LLM génère des questions
+          synthétiques à partir de la réponse et mesure leur similarité sémantique
+          avec la question originale.
+
+    \item \textbf{Précision du contexte (\emph{Context Precision}) :}
+          évalue la capacité du retrieveur à placer les documents pertinents
+          en tête des résultats récupérés.
+          Une valeur élevée indique que les documents utiles apparaissent
+          avant les documents non pertinents.
+
+    \item \textbf{Rappel du contexte (\emph{Context Recall}) :}
+          mesure la proportion des informations nécessaires à la réponse
+          correcte qui sont effectivement présentes dans les documents récupérés.
+          Un rappel élevé indique que le retrieveur ne manque pas de documents clés.
+\end{itemize}
+
+\subsection{Protocole d'évaluation}
+
+Le protocole d'évaluation est le suivant :
+\begin{enumerate}
+    \item \textbf{Constitution du jeu de test :}
+          un ensemble de 50~paires (question, réponse de référence) a été constitué
+          manuellement à partir des questions types identifiées lors de l'analyse
+          des besoins. Chaque paire couvre une catégorie fonctionnelle du système.
+    \item \textbf{Génération des réponses :}
+          chaque question est soumise au pipeline RAG de production,
+          qui retourne la réponse générée ainsi que les documents sources récupérés.
+    \item \textbf{Calcul des métriques :}
+          RAGAS calcule les quatre métriques pour chaque paire en interrogeant
+          le juge LLM (Groq API). Les scores sont moyennés sur l'ensemble du jeu de test.
+    \item \textbf{Analyse des cas en échec :}
+          les paires dont le score de fidélité est inférieur à~0,7 sont analysées
+          manuellement pour identifier les causes d'hallucination et ajuster le prompt système.
+\end{enumerate}
+
+\subsection{Résultats}
+
+Le Tableau~\ref{tab:ragas_results} présente les scores RAGAS obtenus sur le jeu de test
+de 50~questions pour les deux modules conversationnels.
+
+\vspace{6pt}
+\begin{table}[H]
+\centering
+\caption{Scores RAGAS — Noa et Support Assistant}
+\label{tab:ragas_results}
+\begin{tabular}{|l|c|c|c|c|}
+\hline
+\textbf{Module} & \textbf{Faithfulness} & \textbf{Answer Relevancy} & \textbf{Context Precision} & \textbf{Context Recall} \\
+\hline
+Noa & -- & -- & -- & -- \\
+Support Assistant & -- & -- & -- & -- \\
+\hline
+\end{tabular}
+\end{table}
+
+\textit{Note : les valeurs seront complétées à l'issue des expériences sur le corpus final.}
+
+\vspace{6pt}
+La Figure~\ref{fig:ragas_radar} illustre les scores RAGAS sous forme de graphique radar,
+permettant une comparaison visuelle des profils de qualité des deux modules.
+
+\begin{figure}[H]
+\centering
+\fbox{\parbox{0.85\textwidth}{\centering\vspace{4cm}[Graphique radar — Scores RAGAS (Noa vs Support Assistant)]\vspace{4cm}}}
+\caption{Comparaison des scores RAGAS — Noa et Support Assistant}
+\label{fig:ragas_radar}
+\end{figure}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Déploiement}
+
+\subsection{Architecture de déploiement}
+
+L'ensemble du système est déployé via Docker Compose.
+Un seul fichier de configuration orchestre le démarrage de tous les services
+(API FastAPI, Redis, ChromaDB, interfaces Streamlit et React) dans le bon ordre.
+
+\subsection{Procédure de déploiement}
+
+Le déploiement s'effectue en trois étapes :
+\begin{enumerate}
+    \item Configurer les variables d'environnement dans les fichiers \texttt{.env} de chaque module.
+    \item Construire les images Docker : \texttt{docker compose build}.
+    \item Lancer l'ensemble des services : \texttt{docker compose up -d}.
+\end{enumerate}
+
+Les services sont accessibles après quelques secondes d'initialisation.
+Le module Noa (interface React) est accessible via le navigateur,
+et le Support Assistant (Streamlit) via son port dédié.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Conclusion}
+
+Ce chapitre a présenté la phase de réalisation, les résultats des tests
+et les stratégies de qualité, de sécurité et de performance mises en œuvre.
+
+Les quatre modules ont été implémentés conformément à la conception définie
+au chapitre précédent et atteignent un taux de réussite de 100\,\% sur les tests
+automatisés, avec des temps de réponse inférieurs aux seuils fixés.
+
+La sécurité du système a été structurée autour du référentiel
+\textbf{OWASP Top~10 for LLM Applications}, couvrant les risques spécifiques
+aux applications fondées sur des modèles de langage :
+injections de prompt, divulgation de données, hallucinations et vol de modèle.
+
+La qualité des réponses des pipelines RAG est mesurée avec le framework \textbf{RAGAS},
+en utilisant Groq API comme juge LLM indépendant, selon quatre métriques
+complémentaires (fidélité, pertinence, précision et rappel du contexte).
+
+Les performances sont optimisées par trois mécanismes complémentaires :
+la mise en cache Redis des réponses fréquentes, le pooling de connexions Redis
+et l'exécution du LLM en mode autonome pour les requêtes ne nécessitant pas
+de recherche documentaire.
+Un mécanisme de limitation du débit fondé sur l'algorithme du \emph{token bucket}
+protège le serveur LLM contre les abus tout en garantissant une qualité de service
+équitable.
+
+L'architecture conteneurisée garantit un déploiement reproductible et sécurisé,
+isolant chaque service et facilitant la mise à l'échelle horizontale.

@@ -1,0 +1,81 @@
+@startuml composants_global
+!theme plain
+skinparam componentStyle rectangle
+skinparam packageBorderColor #2C6EA0
+skinparam componentBorderColor #2C6EA0
+skinparam componentBackgroundColor #EBF4FB
+skinparam databaseBackgroundColor #FFF3E0
+skinparam databaseBorderColor #E65100
+skinparam defaultFontName Arial
+skinparam defaultFontSize 11
+skinparam ArrowColor #2C6EA0
+
+' ─── Module 1 : Noa ───────────────────────────────────────
+package "Module 1 — Noa (site public)" #EBF4FB {
+  component "[React 18 + Vite]\nFrontend Noa" as FE_Noa
+  component "[FastAPI :8000]\nBackend Noa" as BE_Noa
+  component "[LangChain]\nPipeline Noa" as LC_Noa
+  component "[Agent FSM]\nRéservation" as FSM_Noa
+}
+
+' ─── Module 2 : Support Assistant ────────────────────────
+package "Module 2 — NetEthic Support Assistant" #E8F5E9 {
+  component "[Streamlit :8501]\nFrontend Support" as FE_Sup
+  component "[FastAPI :8001]\nBackend Support" as BE_Sup
+  component "[LangChain]\nPipeline Support" as LC_Sup
+  component "[Agent FSM]\nRDV & Signalement" as FSM_Sup
+}
+
+' ─── Module 3 : Soutien émotionnel ───────────────────────
+package "Module 3 — Soutien émotionnel" #FFF3E0 {
+  component "[LLM Prompt]\nDétecteur de détresse" as Detect_Emo
+  component "[LLM Prompt]\nGénérateur empathique" as Gen_Emo
+}
+
+' ─── Module 4 : Classificateur ───────────────────────────
+package "Module 4 — Classificateur de harcèlement" #FCE4EC {
+  component "[Scala/Spark]\nPipeline parallèle" as Spark
+  component "[Python]\nExpérimentation" as PyClass
+  component "[LLM Prompts]\n4 stratégies" as Strats
+}
+
+' ─── Composants partagés ─────────────────────────────────
+package "Infrastructure partagée" #F3E5F5 {
+  database "[Redis :6379]\nSessions & Cache" as Redis
+  database "[ChromaDB :8002]\nBase vectorielle" as Chroma
+  component "[Docker Compose]\nOrchestration" as Docker
+}
+
+' ─── Serveur externe ─────────────────────────────────────
+cloud "kaisens.fr (externe)" #ECEFF1 {
+  component "[vLLM]\nMistral-7B-Instruct" as LLM_Server
+}
+
+' ─── Connexions Module 1 ─────────────────────────────────
+FE_Noa    --> BE_Noa   : HTTP/REST
+BE_Noa    --> LC_Noa   : orchestration
+LC_Noa    --> Redis    : sessions / cache
+LC_Noa    --> Chroma   : recherche sémantique
+LC_Noa    --> LLM_Server : inférence
+BE_Noa    --> FSM_Noa  : réservation
+
+' ─── Connexions Module 2 ─────────────────────────────────
+FE_Sup    --> BE_Sup   : HTTP/REST
+BE_Sup    --> LC_Sup   : orchestration
+LC_Sup    --> Redis    : sessions / cache
+LC_Sup    --> Chroma   : recherche sémantique
+LC_Sup    --> LLM_Server : inférence
+BE_Sup    --> FSM_Sup  : flux guidés
+
+' ─── Module 3 intégré dans Module 2 ──────────────────────
+BE_Sup    --> Detect_Emo : détection détresse
+Detect_Emo --> Gen_Emo   : signal détecté
+Gen_Emo   --> LLM_Server : génération empathique
+
+' ─── Connexions Module 4 ─────────────────────────────────
+Spark     --> Strats   : pipeline
+PyClass   --> Strats   : expérimentation
+Strats    --> LLM_Server : inférence
+Strats    --> Chroma   : ancrage juridique
+
+@enduml

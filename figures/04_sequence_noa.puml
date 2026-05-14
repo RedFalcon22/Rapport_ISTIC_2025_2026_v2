@@ -1,0 +1,55 @@
+@startuml sequence_noa
+!theme plain
+skinparam sequenceArrowColor #2C6EA0
+skinparam sequenceLifeLineBorderColor #2C6EA0
+skinparam sequenceParticipantBorderColor #2C6EA0
+skinparam sequenceParticipantBackgroundColor #EBF4FB
+skinparam sequenceActorBorderColor #1A3550
+skinparam sequenceGroupBorderColor #888888
+skinparam defaultFontName Arial
+skinparam defaultFontSize 11
+
+title Diagramme de séquences — Module Noa (question factuelle)
+
+actor       "Visiteur"          as V
+participant "Frontend React"    as FE
+participant "FastAPI\n(Noa)"    as API
+participant "LangChain\nPipeline" as LC
+participant "Redis\n(cache)"    as Redis
+participant "ChromaDB"          as Chroma
+participant "Serveur LLM\n(kaisens.fr)" as LLM
+
+V  -> FE   : saisit une question
+FE -> API  : POST /chat\n{message, sessionId, lang}
+
+API -> LC  : classifyIntent(message)
+LC --> API : intent = "factual"
+
+API -> Redis : getFromCache(normalizedQuestion)
+Redis --> API : [cache miss]
+
+group Recherche documentaire (RAG)
+  API -> Chroma : searchSimilar(embedding, k=5,\ncollection="noa")
+  Chroma --> API : [DocumentChunk × 5]
+end
+
+group Génération de réponse
+  API -> LLM : POST /v1/chat/completions\n{question + context + historique}
+  LLM --> API : responseText
+end
+
+API -> Redis : cacheResponse(normalizedQuestion, responseText)
+API -> Redis : updateSession(sessionId, message, response)
+Redis --> API : OK
+
+API --> FE : {response, sessionId, lang}
+FE  --> V  : affiche la réponse
+
+note right of API
+  En cas de cache hit :
+  la réponse est retournée
+  directement en < 1 ms,
+  sans appel au LLM.
+end note
+
+@enduml

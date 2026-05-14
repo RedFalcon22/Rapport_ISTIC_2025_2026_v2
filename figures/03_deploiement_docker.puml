@@ -1,0 +1,65 @@
+@startuml deploiement_docker
+!theme plain
+skinparam nodeBorderColor #2C6EA0
+skinparam nodeBackgroundColor #EBF4FB
+skinparam artifactBorderColor #555555
+skinparam databaseBackgroundColor #FFF3E0
+skinparam databaseBorderColor #E65100
+skinparam defaultFontName Arial
+skinparam defaultFontSize 11
+skinparam ArrowColor #2C6EA0
+
+' ─── Machine hôte ────────────────────────────────────────
+node "Poste de développement\n(Windows 11 / Linux)" as Host {
+
+  node "Docker Engine (Docker Compose v2)" as DockerEngine {
+
+    ' ─── Réseau interne Docker ───────────────────────────
+    node "noa-frontend\n[React 18 + Vite]\n:3000" as C_FE_Noa
+    node "noa-backend\n[FastAPI + LangChain]\n:8000" as C_BE_Noa
+
+    node "support-frontend\n[Streamlit]\n:8501" as C_FE_Sup
+    node "support-backend\n[FastAPI + LangChain]\n:8001" as C_BE_Sup
+
+    node "classificateur\n[Python / Scala-Spark]\n:8003" as C_Classif
+
+    database "redis\n[Redis 5+]\n:6379" as C_Redis
+    database "chromadb\n[ChromaDB 0.5+]\n:8002" as C_Chroma
+
+  }
+
+  artifact "docker-compose.yml" as ComposeFile
+}
+
+' ─── Client navigateur ───────────────────────────────────
+actor "Visiteur / Navigateur" as Browser
+actor "Utilisateur interne" as UserBrowser
+actor "Administrateur" as AdminUser
+
+' ─── Serveur LLM externe ─────────────────────────────────
+cloud "kaisens.fr (externe)\n[vLLM — Mistral-7B-Instruct]" as LLM_External
+
+' ─── Relations clients → conteneurs ─────────────────────
+Browser     --> C_FE_Noa    : HTTPS :3000
+UserBrowser --> C_FE_Sup    : HTTPS :8501
+AdminUser   --> C_BE_Noa    : /admin (HTTPS :8000)
+
+' ─── Relations inter-conteneurs ─────────────────────────
+C_FE_Noa   --> C_BE_Noa  : REST /chat\n(réseau interne Docker)
+C_FE_Sup   --> C_BE_Sup  : REST /support\n(réseau interne Docker)
+
+C_BE_Noa   --> C_Redis   : sessions / cache
+C_BE_Noa   --> C_Chroma  : recherche vectorielle
+C_BE_Sup   --> C_Redis   : sessions / cache
+C_BE_Sup   --> C_Chroma  : recherche vectorielle
+C_Classif  --> C_Chroma  : ancrage juridique
+
+' ─── Relations vers LLM externe ─────────────────────────
+C_BE_Noa   --> LLM_External : HTTPS API OpenAI-compatible
+C_BE_Sup   --> LLM_External : HTTPS API OpenAI-compatible
+C_Classif  --> LLM_External : HTTPS API OpenAI-compatible
+
+' ─── Annotation compose ──────────────────────────────────
+ComposeFile .. DockerEngine
+
+@enduml

@@ -1,0 +1,65 @@
+@startuml sequence_support
+!theme plain
+skinparam sequenceArrowColor #2C6EA0
+skinparam sequenceLifeLineBorderColor #2C6EA0
+skinparam sequenceParticipantBorderColor #2C6EA0
+skinparam sequenceParticipantBackgroundColor #E8F5E9
+skinparam sequenceActorBorderColor #1A3550
+skinparam sequenceGroupBorderColor #888888
+skinparam defaultFontName Arial
+skinparam defaultFontSize 11
+
+title Diagramme de séquences — NetEthic Support Assistant
+
+actor       "Utilisateur interne" as U
+participant "Streamlit\nFrontend" as FE
+participant "FastAPI\n(Support)" as API
+participant "Garde-fou\n(Guardrail)" as Guard
+participant "Correcteur +\nRéécriture" as Rewrite
+participant "ChromaDB\n(catégorie)" as Chroma
+participant "Détecteur\némotionnel" as Emo
+participant "Serveur LLM\n(kaisens.fr)" as LLM
+participant "Redis\n(session/cache)" as Redis
+
+U  -> FE  : sélectionne catégorie\n+ saisit question
+FE -> API : POST /support/chat\n{message, sessionId, category}
+
+group Garde-fou
+  API -> Guard : check(message)
+  Guard --> API : safe = true
+end
+
+group Correction et réécriture
+  API -> Rewrite : correct(message)
+  Rewrite --> API : correctedMessage
+  API -> Rewrite : rewrite(correctedMessage, history)
+  Rewrite --> API : refinedQuery
+end
+
+group Recherche documentaire (RAG filtré par catégorie)
+  API -> Chroma : searchSimilar(refinedQuery, category, k=5)
+  Chroma --> API : [DocumentChunk × 5]
+end
+
+group Détection émotionnelle (Module 3)
+  API -> Emo : detect(message)
+  Emo  --> API : {signal: null, confidence: 0.08}
+end
+
+note over Emo : Si signal détecté,\nle flux émotionnel\nprend la main.
+
+group Génération de réponse
+  API -> Redis : getFromCache(refinedQuery, category)
+  Redis --> API : [cache miss]
+  API -> LLM  : POST /v1/chat/completions\n{refinedQuery + chunks + historique}
+  LLM --> API : responseText
+end
+
+API -> Redis : cacheResponse(refinedQuery, category, responseText)
+API -> Redis : updateSession(sessionId, ...)
+Redis --> API : OK
+
+API --> FE : {response, sessionId, suggestedQuestions}
+FE  --> U  : affiche la réponse + suggestions
+
+@enduml

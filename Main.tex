@@ -1,0 +1,62 @@
+\documentclass[12pt,a4paper]{report}
+\usepackage[top=2.5cm, bottom=2.5cm, left=2.5cm, right=2.5cm]{geometry}
+
+% - taille de la fonte    : 10pt, 11pt, 12pt
+% - recto ou recto-verso  : oneside, twoside
+% - stade de développement: draft, final
+
+\usepackage[french]{babel}
+\usepackage{textcomp}
+
+\usepackage[pdftex]{graphicx}
+\usepackage{setspace}
+\usepackage{hyperref}
+\usepackage{float}
+\usepackage[french]{varioref}
+\usepackage{fancyhdr}
+\usepackage{color}
+\usepackage{colortbl}
+\usepackage{amsmath}
+\usepackage{ifpdf}
+\usepackage{array}
+
+\IfFileExists{lmodern.sty}{\usepackage{lmodern}}{}
+
+\pagestyle{fancy}
+\fancyhead[L]{\nouppercase\leftmark}
+\fancyhead[C]{}
+\fancyhead[R]{\nouppercase\rightmark}
+
+\fancyfoot[L]{}
+\fancyfoot[C]{}
+\fancyfoot[R]{\textbf{\thepage}}
+
+\begin{document}
+%%%%%%%%%%%%% pages de garde en Français
+\include{garde_fin}
+\include{garde_sign_fin}
+
+\newpage
+\pagenumbering{roman}
+\include{Dedicaces}
+\include{Remerciements}
+\tableofcontents
+\listoffigures
+\listoftables
+\newpage
+\pagenumbering{arabic}
+\include{Introduction}
+\include{Chapitre1}
+\include{chapitre2}
+\include{Chapitre3}
+\include{Chapitre4}
+\include{Chapitre5}
+\include{Conclusion}
+
+\bibliographystyle{alpha}
+\bibliography{Biblio}
+\addcontentsline{toc}{chapter}{Bibliographie}
+\pagestyle{empty}
+\include{Annexe1}
+
+\end{document}
