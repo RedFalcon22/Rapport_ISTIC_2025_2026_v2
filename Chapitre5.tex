@@ -28,7 +28,7 @@ Le Tableau~\ref{tab:env_dev} présente les outils et technologies utilisés.
 \textbf{Catégorie} & \textbf{Outil / Version} \\
 \hline
 Langage principal & Python 3.11 \\
-Langage traitement de données & Scala 2.13 / Apache Spark 3.5 \\
+Langage traitement de données & Scala 2.12.18 / Apache Spark 3.5 \\
 Interface interne & Streamlit 1.32 \\
 Interface publique & React 18 + Vite \\
 Backend API & FastAPI 0.110 \\
@@ -37,7 +37,7 @@ Base documentaire & ChromaDB 0.5 \\
 Mémoire de session & Redis 7.2 \\
 Évaluation RAG & RAGAS 0.1 (juge LLM : Groq API) \\
 Conteneurisation & Docker / Docker Compose \\
-Contrôle de version & Git / GitHub \\
+Contrôle de version & Git / GitLab (\texttt{gitlab.dataforethic.fr}) \\
 \hline
 \end{tabular}
 \end{table}
@@ -211,6 +211,116 @@ Le classificateur est disponible en deux versions complémentaires :
           Elle s'appuie sur Apache Spark pour distribuer l'analyse sur l'ensemble
           des messages soumis à la plateforme.
 \end{itemize}
+
+\subsection{Préparation des données et labeling}
+
+\subsubsection{Constitution du corpus}
+
+Le corpus d'expérimentation est constitué de \textbf{977 textes multilingues} (français et anglais),
+issus d'une application mobile de modération de contenu.
+Tous les textes sont initialement étiquetés \textit{négatif} par l'application.
+Le Tableau~\ref{tab:corpus_classif} décrit la structure du jeu de données brut.
+
+\vspace{6pt}
+\begin{table}[H]
+\centering
+\caption{Structure du corpus brut}
+\label{tab:corpus_classif}
+\small
+\begin{tabular}{|l|l|}
+\hline
+\textbf{Caractéristique} & \textbf{Valeur} \\
+\hline
+Nombre de textes        & 977 \\
+\hline
+Langues                 & Français et anglais (mélangés) \\
+\hline
+Source                  & Application mobile de modération de contenu \\
+\hline
+Encodage                & Latin-1 (ISO-8859-1) \\
+\hline
+Étiquette initiale      & \textit{negative} (classification de l'application) \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsubsection{Pipeline de prétraitement}
+
+L'analyse du corpus a révélé cinq catégories de bruits textuels :
+entités HTML (8 occurrences), images Markdown (3), textes dépassant 128 caractères (152),
+mentions \texttt{@utilisateur} (14) et URLs (5).
+
+Un pipeline de prétraitement en cinq étapes a été développé pour normaliser les textes
+avant inférence. Le Tableau~\ref{tab:preprocessing_steps} décrit chaque étape.
+
+\vspace{6pt}
+\begin{table}[H]
+\centering
+\caption{Pipeline de prétraitement du corpus}
+\label{tab:preprocessing_steps}
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{|c|p{4cm}|p{8cm}|}
+\hline
+\textbf{Étape} & \textbf{Traitement} & \textbf{Description} \\
+\hline
+1 & Décodage HTML         & Conversion des entités HTML (\texttt{\&amp;}, \texttt{\&\#39;}, etc.) en caractères lisibles. \\
+\hline
+2 & Suppression des balises & Élimination des balises HTML résiduelles (\texttt{<br>}, \texttt{<a href=...>}, etc.). \\
+\hline
+3 & Normalisation mentions  & Remplacement de toutes les mentions \texttt{@xxx} par le jeton \texttt{@user}. \\
+\hline
+4 & Normalisation URLs      & Remplacement de toutes les URLs par le jeton \texttt{http}. \\
+\hline
+5 & Normalisation espaces   & Suppression des sauts de ligne multiples et collapsage des espaces superflus. \\
+\hline
+\end{tabular}
+\end{table}
+
+\textit{Résultat : 0 ligne vide après nettoyage — les 977 textes sont intégralement conservés.
+Le preprocessing ne modifie que 2 prédictions sur 977 (0,2\%), confirmant que les erreurs
+observées sont intrinsèques au modèle et non aux données brutes.}
+
+\subsubsection{Stratégie de labeling — LLM comme juge indépendant}
+
+Pour évaluer la qualité des étiquettes produites par le modèle de classification
+\texttt{cardiffnlp/twitter-xlm-roberta-base-sentiment-multilingual},
+une stratégie de \textit{LLM-as-a-Judge} a été adoptée :
+les 977 textes sont soumis à un modèle indépendant (\textbf{Groq API},
+modèle \texttt{llama-3.1-8b-instant}) pour obtenir une annotation de référence.
+
+Cette approche évite l'évaluation circulaire, dans laquelle un modèle validerait
+ses propres prédictions — biais qui rendrait les métriques sans valeur.
+
+Le Tableau~\ref{tab:labeling_results} présente les résultats obtenus.
+
+\vspace{6pt}
+\begin{table}[H]
+\centering
+\caption{Résultats du labeling indépendant (cardiffnlp vs Groq/Llama 3)}
+\label{tab:labeling_results}
+\small
+\begin{tabular}{|l|c|}
+\hline
+\textbf{Métrique} & \textbf{Valeur} \\
+\hline
+Vrais positifs (LLM confirme \textit{négatif})  & 647 / 977 \\
+\hline
+Faux positifs (LLM dit \textit{positif/neutre}) & 330 / 977 \\
+\hline
+Précision du modèle                             & 66,2\,\% \\
+\hline
+Accord cardiffnlp $\leftrightarrow$ LLM         & 63,4\,\% (619 / 977) \\
+\hline
+Impact du prétraitement sur les prédictions     & 0,2\,\% (2 / 977) \\
+\hline
+\end{tabular}
+\end{table}
+
+\textit{Analyse : les faux positifs (33,8\,\%) sont principalement dus à un écart de domaine.
+Le modèle cardiffnlp a été entraîné sur des tweets formels anglophones,
+alors que le corpus contient de l'argot jeune francophone
+(\og trop sous coter\fg{}, \og le meilleurrrrrr\fg{}) que le modèle interprète incorrectement.}
 
 \subsection{Interface utilisateur}
 
@@ -510,9 +620,10 @@ aux exigences réglementaires :
 
 \subsection{Gestion des sessions}
 
-Les sessions conversationnelles sont stockées dans Redis avec une durée de vie
-limitée à 30~minutes. Passé ce délai, les données de session sont automatiquement
-supprimées.
+Les sessions conversationnelles sont stockées dans Redis avec des durées de vie
+différentes selon le module : 30~minutes pour Noa (site public) et 24~heures
+pour le NetEthic Support Assistant (utilisateurs internes, conformément à BF-S04).
+Passé ce délai, les données de session sont automatiquement supprimées.
 
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Optimisations de performance}

@@ -5,12 +5,13 @@
 % - recto ou recto-verso  : oneside, twoside
 % - stade de développement: draft, final
 
+\usepackage[T1]{fontenc}
 \usepackage[french]{babel}
 \usepackage{textcomp}
 
 \usepackage[pdftex]{graphicx}
 \usepackage{setspace}
-\usepackage{hyperref}
+\usepackage[hypertexnames=false]{hyperref}
 \usepackage{float}
 \usepackage[french]{varioref}
 \usepackage{fancyhdr}
@@ -21,6 +22,8 @@
 \usepackage{array}
 
 \IfFileExists{lmodern.sty}{\usepackage{lmodern}}{}
+
+\setlength{\headheight}{14pt}
 
 \pagestyle{fancy}
 \fancyhead[L]{\nouppercase\leftmark}
