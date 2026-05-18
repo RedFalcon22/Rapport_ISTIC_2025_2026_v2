@@ -1,0 +1,70 @@
+@startuml sequence_classificateur
+!theme plain
+skinparam sequenceArrowColor #2C6EA0
+skinparam sequenceLifeLineBorderColor #2C6EA0
+skinparam sequenceParticipantBorderColor #2C6EA0
+skinparam sequenceParticipantBackgroundColor #FCE4EC
+skinparam sequenceActorBorderColor #1A3550
+skinparam sequenceGroupBorderColor #888888
+skinparam defaultFontName Arial
+skinparam defaultFontSize 11
+
+title Diagramme de séquences — Classificateur de harcèlement
+
+participant "Plateforme\nNetethic" as Plat
+participant "API\nClassificateur" as API
+participant "Préprocesseur" as Prep
+participant "Stratégie\nLLM seul" as SLLM
+participant "Stratégie\nLLM + Juridique" as SLegal
+participant "Stratégie\nHeuristique" as SHeur
+participant "Stratégie\nHybride" as SHybrid
+participant "ChromaDB\n(corpus légal)" as Chroma
+participant "Serveur LLM\n(kaisens.fr)" as LLM
+
+Plat -> API  : POST /classify\n{text, experimentId}
+
+group Prétraitement
+  API  -> Prep : preprocess(text)
+  note right of Prep : — Suppression des URLs\n— Normalisation des espaces\n— Mise en minuscules
+  Prep --> API  : cleanText
+end
+
+group Classification parallèle (4 stratégies)
+
+  API  -> SLLM    : classify(cleanText)
+  SLLM -> LLM     : inference(prompt_zero_shot + cleanText)
+  LLM --> SLLM    : rawLabels
+  SLLM --> API    : {labels, confidence, strategy="llm_only"}
+
+  API  -> SLegal  : classify(cleanText)
+  SLegal -> Chroma : searchLegal(cleanText, k=3)
+  Chroma --> SLegal : legalChunks
+  SLegal -> LLM    : inference(prompt + legalChunks + cleanText)
+  LLM --> SLegal   : rawLabels
+  SLegal --> API   : {labels, confidence, strategy="llm_legal"}
+
+  API  -> SHeur   : classify(cleanText)
+  note right of SHeur : Correspondance\npar mots-clés\n(pas de LLM)
+  SHeur --> API   : {labels, confidence, strategy="heuristics"}
+
+  API  -> SHybrid : classify(cleanText)
+  SHybrid -> LLM  : inference(prompt + cleanText)
+  alt LLM succès
+    LLM --> SHybrid  : rawLabels
+  else LLM échec
+    SHybrid -> SHeur : fallback heuristics
+    SHeur --> SHybrid : labels
+  end
+  SHybrid --> API : {labels, confidence, strategy="hybrid"}
+
+end
+
+group Sélection et journalisation
+  API -> API : evaluateBestStrategy(results)
+  API -> API : checkUrgencyFlag(labels)
+  API -> API : logClassification(textId, strategy, confidence,\nlatency, urgencyFlag, timestamp)
+end
+
+API --> Plat : {labels, confidence, strategy,\nurgencyFlag, latency, textId}
+
+@enduml

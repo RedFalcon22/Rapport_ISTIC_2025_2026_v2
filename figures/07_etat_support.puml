@@ -1,0 +1,70 @@
+@startuml etat_support
+!theme plain
+skinparam stateBorderColor #2C6EA0
+skinparam stateBackgroundColor #E8F5E9
+skinparam stateArrowColor #2C6EA0
+skinparam defaultFontName Arial
+skinparam defaultFontSize 11
+
+title Diagramme d'état-transition — NetEthic Support Assistant
+
+[*] --> Inactif : démarrage du service
+
+Inactif --> SelectionCategorie : interface ouverte
+
+SelectionCategorie --> AttenteQuestion : catégorie sélectionnée\n(1 parmi 11 thèmes)
+
+AttenteQuestion --> TraitementPipeline : question soumise
+AttenteQuestion --> FluxRendezVous     : demande RDV de support
+AttenteQuestion --> FluxSignalement    : signalement incident
+
+' ─── Pipeline principal ───────────────────────────────────
+state TraitementPipeline {
+  [*]                --> VerificationGardefou
+  VerificationGardefou --> RefusDemande       : requête interdite
+  RefusDemande        --> [*]
+  VerificationGardefou --> CorrectionOrthographe : requête valide
+  CorrectionOrthographe --> ReecritureRequete
+  ReecritureRequete   --> RechercheDocs
+  RechercheDocs       --> DetectionEmotionnelle
+  DetectionEmotionnelle --> FluxEmotionnel    : signal détresse détecté
+  DetectionEmotionnelle --> GenerationReponse : aucun signal
+  GenerationReponse   --> MiseAJourSession
+  MiseAJourSession    --> [*]
+}
+
+TraitementPipeline --> AttenteQuestion : réponse envoyée
+
+' ─── Flux de soutien émotionnel ───────────────────────────
+state FluxEmotionnel {
+  [*]              --> IdentificationSignal
+  IdentificationSignal --> AlerteUrgente    : idéation suicidaire
+  IdentificationSignal --> ReponseEmpathe   : autre signal
+  AlerteUrgente    --> OrientationAccompagnement
+  ReponseEmpathe   --> OrientationAccompagnement
+  OrientationAccompagnement --> [*]
+}
+
+FluxEmotionnel --> AttenteQuestion : traitement terminé
+
+' ─── Flux rendez-vous (FSM) ──────────────────────────────
+state FluxRendezVous {
+  [*]         --> CollecteEmail
+  CollecteEmail   --> CollecteTelephone : email valide
+  CollecteTelephone --> ConfirmationRDV : téléphone valide
+  ConfirmationRDV --> [*]
+}
+
+FluxRendezVous --> AttenteQuestion : RDV enregistré
+
+' ─── Flux signalement (FSM) ──────────────────────────────
+state FluxSignalement {
+  [*]              --> CollecteDescription
+  CollecteDescription --> CollecteCapture : description fournie
+  CollecteCapture     --> ConfirmationSignalement
+  ConfirmationSignalement --> [*]
+}
+
+FluxSignalement --> AttenteQuestion : signalement soumis
+
+@enduml

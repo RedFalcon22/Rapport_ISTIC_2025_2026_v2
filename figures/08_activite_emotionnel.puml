@@ -1,0 +1,44 @@
+@startuml activite_emotionnel
+!theme plain
+skinparam activityBorderColor #2C6EA0
+skinparam activityBackgroundColor #FFF3E0
+skinparam activityArrowColor #2C6EA0
+skinparam diamondBorderColor #E65100
+skinparam diamondBackgroundColor #FFF3E0
+skinparam defaultFontName Arial
+skinparam defaultFontSize 11
+
+title Diagramme d'activité — Module de soutien émotionnel
+
+start
+
+:Réception du message\n(depuis Support Assistant);
+
+:Analyse du message\npar le LLM\n(prompt de détection de détresse);
+
+if (Signal de détresse détecté ?) then (Oui)
+
+  :Identification du type de signal\n— Idéation dépressive\n— Idéation suicidaire\n— Solitude / Anxiété\n— Colère / Comportement addictif;
+
+  if (Idéation suicidaire ?) then (Oui)
+
+    #Pink:Déclenchement de l'alerte urgente;
+    :Génération immédiate d'une\nréponse de crise bienveillante;
+
+  else (Non)
+
+    :Génération d'une réponse empathique\nadaptée au type de signal détecté\n(appel au LLM);
+
+  endif
+
+  :Orientation de l'utilisateur\nvers le module Accompagnement\nde la plateforme Netethic;
+
+  :Journalisation de l'événement\n{type, niveau de confiance, horodatage}\n(sans conservation du contenu);
+
+else (Non)
+  :Aucun traitement émotionnel\n— retour au pipeline standard;
+endif
+
+stop
+
+@enduml

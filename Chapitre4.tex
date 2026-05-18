@@ -1,0 +1,313 @@
+\chapter{Conception}
+
+\section{Introduction}
+
+Ce chapitre présente la conception du système dans son ensemble.
+Il est structuré en deux parties.
+La première décrit l'architecture commune aux quatre modules.
+La seconde détaille la conception spécifique de chacun d'eux,
+illustrée par des diagrammes UML (Unified Modeling Language — langage de modélisation unifié).
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Architecture commune du système}
+
+\subsection{Vue d'ensemble}
+
+Les quatre modules du système partagent des composants technologiques communs.
+Cette conception modulaire facilite la maintenance et l'évolution du système.
+La Figure~\ref{fig:composants_global} illustre l'architecture globale.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{diagramme/02_composants_global.png}
+\caption{Diagramme de composants — Architecture globale du système}
+\label{fig:composants_global}
+\end{figure}
+
+\subsection{Composants partagés}
+
+Les composants suivants sont utilisés par plusieurs modules :
+
+\begin{itemize}
+    \item \textbf{Serveur LLM (kaisens.fr) :} point central de génération de réponses
+          en langage naturel, utilisé par les modules Noa, Support Assistant et le classificateur.
+    \item \textbf{Base documentaire vectorielle (ChromaDB) :} stocke les extraits de documents
+          indexés pour la recherche par similarité.
+          Chaque module possède sa propre collection de documents.
+    \item \textbf{Gestionnaire de mémoire (Redis) :} assure la persistance des sessions
+          conversationnelles et la mémorisation des réponses fréquentes \cite{redis}.
+    \item \textbf{Orchestrateur LangChain :} coordonne les étapes de traitement
+          (classification d'intention, recherche documentaire, appel au LLM,
+          gestion de session) \cite{langchain}.
+    \item \textbf{Conteneurisation Docker :} tous les services sont déployés
+          dans des conteneurs isolés, garantissant la reproductibilité
+          et la portabilité de l'environnement \cite{docker}.
+\end{itemize}
+
+\subsection{Architecture de déploiement}
+
+La Figure~\ref{fig:deploiement} montre l'architecture de déploiement du système global.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{diagramme/03_deploiement_docker.png}
+\caption{Diagramme de déploiement — Infrastructure Docker du système}
+\label{fig:deploiement}
+\end{figure}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Module 1 — Noa : assistant virtuel du site public}
+
+\subsection{Conception générale}
+
+Noa est l'assistant virtuel accessible sur le site public de Netethic.
+Son architecture repose sur un pipeline de traitement à cinq étapes :
+classification de l'intention, vérification de la mémoire cache,
+recherche dans la base documentaire, génération de la réponse
+et mise à jour de la mémoire.
+
+Les éléments spécifiques à ce module sont :
+\begin{itemize}
+    \item \textbf{Routage par intention :} chaque message est classifié avant tout traitement.
+          Les salutations et les demandes hors sujet reçoivent des réponses prédéfinies immédiates.
+    \item \textbf{Stratégie parent-enfant :} les documents sont indexés à deux niveaux.
+          Les segments courts servent à la recherche précise ;
+          les segments longs fournissent un contexte riche au modèle de génération.
+    \item \textbf{Normalisation des questions fréquentes :} deux questions au sens identique
+          partagent la même réponse mémorisée, grâce à une normalisation par synonymes.
+    \item \textbf{Agent de réservation :} un automate à états finis guide l'utilisateur
+          à travers la collecte de son adresse e-mail et de son numéro de téléphone.
+    \item \textbf{Interface React :} l'interface de Noa est développée en React
+          et intégrée au site Netethic sous forme de fenêtre de conversation flottante.
+\end{itemize}
+
+\subsection{Diagramme de séquences}
+
+La Figure~\ref{fig:seq_noa} illustre le déroulement d'une interaction typique avec Noa
+pour une question factuelle.
+
+\begin{figure}[H]
+\centering
+\fbox{\parbox{0.9\textwidth}{\centering\vspace{3.5cm}[Diagramme de séquences — Module Noa (question factuelle)]\vspace{3.5cm}}}
+\caption{Diagramme de séquences — Module Noa (question factuelle)}
+\label{fig:seq_noa}
+\end{figure}
+
+\subsection{Diagramme d'état-transition}
+
+La Figure~\ref{fig:etat_noa} représente les états possibles de l'assistant Noa
+au cours d'une session de conversation.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{diagramme/05_etat_noa.png}
+\caption{Diagramme d'état-transition — Module Noa}
+\label{fig:etat_noa}
+\end{figure}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Module 2 — NetEthic Support Assistant}
+
+\subsection{Conception générale}
+
+Le \textit{NetEthic Support Assistant} est l'assistant de support technique
+destiné aux utilisateurs internes de la plateforme.
+Son architecture inclut des fonctionnalités non présentes dans le module Noa :
+
+\begin{itemize}
+    \item \textbf{Filtrage par catégorie :} l'utilisateur sélectionne l'une des onze catégories
+          fonctionnelles avant de poser sa question.
+          La recherche documentaire est restreinte à cette catégorie,
+          améliorant la précision des résultats.
+    \item \textbf{Correction orthographique et réécriture :} la question est corrigée
+          et reformulée avant la recherche, ce qui améliore la pertinence des documents récupérés.
+    \item \textbf{Mode Insights (données en temps réel) :} l'assistant peut interroger
+          le tableau de bord de la plateforme et intégrer des métriques dynamiques
+          dans ses réponses.
+    \item \textbf{Flux guidés :} deux flux conversationnels à états finis gèrent
+          respectivement la prise de rendez-vous de support
+          et le signalement de dysfonctionnements.
+    \item \textbf{Interface Streamlit :} l'interface est développée avec Streamlit
+          pour un déploiement rapide côté interne.
+\end{itemize}
+
+\subsection{Diagramme de séquences}
+
+La Figure~\ref{fig:seq_support} illustre le traitement d'une question
+par le Support Assistant.
+
+\begin{figure}[H]
+\centering
+\fbox{\parbox{0.9\textwidth}{\centering\vspace{3.5cm}[Diagramme de séquences — NetEthic Support Assistant]\vspace{3.5cm}}}
+\caption{Diagramme de séquences — NetEthic Support Assistant}
+\label{fig:seq_support}
+\end{figure}
+
+\subsection{Diagramme d'état-transition}
+
+La Figure~\ref{fig:etat_support} représente les états du Support Assistant,
+incluant les états de traitement standard et les états des flux guidés.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{diagramme/07_etat_support.png}
+\caption{Diagramme d'état-transition — NetEthic Support Assistant}
+\label{fig:etat_support}
+\end{figure}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Module 3 — Module de soutien émotionnel}
+
+\subsection{Conception générale}
+
+Le module de soutien émotionnel est un sous-système intégré à l'assistant de support interne.
+Il est activé lorsque le texte d'un utilisateur contient des indicateurs de détresse psychologique.
+Son fonctionnement repose sur trois étapes :
+
+\begin{enumerate}
+    \item \textbf{Détection :} le message est analysé pour identifier l'un des six types
+          de signaux de détresse : idéation dépressive, idéation suicidaire,
+          solitude, anxiété, colère, comportement addictif.
+    \item \textbf{Génération de réponse :} une réponse empathique est générée par le LLM,
+          adaptée au type de signal détecté.
+          En cas d'idéation suicidaire, une réponse prioritaire est déclenchée immédiatement.
+    \item \textbf{Orientation :} l'utilisateur est dirigé vers le module
+          Accompagnement de la plateforme.
+\end{enumerate}
+
+\subsection{Diagramme d'activité}
+
+La Figure~\ref{fig:activite_emo} représente le flux de traitement
+du module de soutien émotionnel.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{diagramme/08_activite_emotionnel.png}
+\caption{Diagramme d'activité — Module de soutien émotionnel}
+\label{fig:activite_emo}
+\end{figure}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Module 4 — Classificateur de harcèlement}
+
+\subsection{Conception générale}
+
+Le classificateur de harcèlement est un système d'analyse automatique des textes
+soumis à la plateforme Netethic.
+Sa conception repose sur quatre stratégies de classification comparées en parallèle :
+
+\begin{enumerate}
+    \item \textbf{Modèle seul :} inférence directe du LLM sans contexte additionnel.
+          Rapide et généraliste.
+    \item \textbf{Modèle avec ancrage juridique :} les passages de loi les plus pertinents
+          sont récupérés et injectés dans la requête,
+          ancrant la décision dans le droit français.
+    \item \textbf{Règles heuristiques :} correspondance par mots-clés spécifiques au français.
+          Sert de méthode de repli rapide.
+    \item \textbf{Hybride :} appel au LLM avec repli automatique sur les heuristiques
+          en cas d'échec.
+\end{enumerate}
+
+\subsection{Taxonomie des catégories}
+
+Le système attribue plusieurs étiquettes simultanément selon une taxonomie à seize catégories.
+Le Tableau~\ref{tab:taxonomie} présente la répartition entre actes de harcèlement
+et signaux de détresse.
+
+\vspace{6pt}
+\begin{table}[H]
+\centering
+\caption{Taxonomie des catégories du classificateur}
+\label{tab:taxonomie}
+\begin{tabular}{|l|l|}
+\hline
+\textbf{Type} & \textbf{Catégories} \\
+\hline
+Actes de harcèlement (10) &
+Insultes, menaces, humiliation, exclusion, \\ &
+rumeurs, usurpation d'identité, chantage, \\ &
+harcèlement physique, cyberharcèlement, discrimination \\
+\hline
+Signaux de détresse (6) &
+Idéation dépressive, idéation suicidaire, \\ &
+solitude, anxiété, colère, comportement addictif \\
+\hline
+\end{tabular}
+\end{table}
+
+Le système est implémenté en deux versions :
+Scala/Spark pour le traitement en parallèle à grande échelle,
+et Python pour les expérimentations rapides sur des corpus réduits.
+
+\subsection{Diagramme de séquences}
+
+La Figure~\ref{fig:seq_classif} illustre le flux de classification d'un texte.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{diagramme/09_sequence_classificateur.png}
+\caption{Diagramme de séquences — Classificateur de harcèlement}
+\label{fig:seq_classif}
+\end{figure}
+
+\subsection{Diagramme d'activité}
+
+La Figure~\ref{fig:activite_classif} représente le flux de traitement complet,
+incluant les mécanismes de repli en cas d'échec.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{diagramme/10_activite_classificateur.png}
+\caption{Diagramme d'activité — Classificateur (chaîne de repli)}
+\label{fig:activite_classif}
+\end{figure}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Diagramme de classes (Application)}
+
+Le diagramme de classes de la Figure~\ref{fig:classes_app} représente la structure statique
+de l'application, c'est-à-dire les entités principales du système, leurs attributs et
+les relations qui les unissent.
+
+Les classes centrales sont les suivantes :
+
+\begin{itemize}
+    \item \textbf{ChatSession :} représente une session conversationnelle.
+          Attributs : \texttt{sessionId}, \texttt{userId}, \texttt{moduleType}, \texttt{createdAt}, \texttt{expiresAt}.
+          Une session agrège plusieurs instances de \texttt{Message}.
+    \item \textbf{Message :} représente un message échangé au cours d'une session.
+          Attributs : \texttt{messageId}, \texttt{content}, \texttt{role} (utilisateur/assistant), \texttt{timestamp}.
+          Chaque message est associé à une \texttt{IntentClassification} et peut référencer un \texttt{Response}.
+    \item \textbf{IntentClassification :} encapsule le résultat de la classification d'intention.
+          Attributs : \texttt{intent} (factual, chitchat, follow-up, forbidden), \texttt{confidence}.
+    \item \textbf{DocumentChunk :} représente un extrait de document indexé dans la base vectorielle.
+          Attributs : \texttt{chunkId}, \texttt{content}, \texttt{embedding}, \texttt{category}, \texttt{sourceDocument}.
+    \item \textbf{Response :} encapsule la réponse générée par le LLM.
+          Attributs : \texttt{responseId}, \texttt{content}, \texttt{sourceChunks}, \texttt{latency}, \texttt{cached}.
+    \item \textbf{ReservationRequest :} modélise une demande de réservation collectée par Noa ou le Support Assistant.
+          Attributs : \texttt{requestId}, \texttt{email}, \texttt{phone}, \texttt{requestedDate}, \texttt{channel}, \texttt{subject}.
+    \item \textbf{HarassmentClassification :} encapsule le résultat de l'analyse d'un texte par le classificateur.
+          Attributs : \texttt{textId}, \texttt{labels}, \texttt{strategy}, \texttt{confidence}, \texttt{urgencyFlag}, \texttt{timestamp}.
+    \item \textbf{EmotionalSignal :} représente un signal de détresse détecté dans un message.
+          Attributs : \texttt{signalType} (dépression, idéation suicidaire, solitude, anxiété, colère, addiction),
+          \texttt{severity}, \texttt{detectedAt}.
+\end{itemize}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{diagramme/11_classes_application.png}
+\caption{Diagramme de classes --- Architecture de l'application}
+\label{fig:classes_app}
+\end{figure}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Conclusion}
+
+Ce chapitre a présenté la conception du système à deux niveaux.
+L'architecture commune repose sur des composants partagés
+(serveur LLM, base documentaire, gestionnaire de mémoire, orchestrateur)
+qui garantissent la cohérence et la maintenabilité de l'ensemble du système.
+Chaque module présente ses spécificités de conception,
+illustrées par des diagrammes UML.
+
+Dans le chapitre suivant, nous présentons la phase de réalisation et les tests effectués.

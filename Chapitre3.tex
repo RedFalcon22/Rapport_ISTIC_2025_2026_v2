@@ -1,0 +1,352 @@
+\chapter{État de l'art et choix technologiques}
+
+\section{Introduction}
+
+Ce chapitre présente une étude des approches existantes dans les domaines couverts par le projet,
+et justifie les choix technologiques retenus pour chacun des quatre modules.
+Il est organisé en cinq axes : les assistants conversationnels,
+la recherche documentaire intelligente, les modèles de génération de langage,
+le soutien émotionnel par intelligence artificielle,
+et la détection automatique du harcèlement.
+Chaque axe se conclut par une justification du choix retenu.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Assistants conversationnels}
+
+\subsection{Évolution des approches}
+
+Un assistant conversationnel est un programme capable de tenir une conversation
+avec un utilisateur humain en langage naturel.
+Ces systèmes ont évolué en plusieurs générations successives.
+
+\textbf{Chatbots à règles.}
+Les premiers systèmes reposaient sur des règles explicites du type
+« si l'utilisateur dit X, répondre Y ».
+Le programme fondateur est \textit{ELIZA}, créé en 1966 \cite{eliza1966}.
+Ces systèmes sont rapides et prévisibles, mais incapables de traiter
+des formulations non anticipées.
+
+\textbf{Chatbots à intentions.}
+À partir des années 2010, des plateformes comme Dialogflow ont introduit
+la classification d'intention à partir d'exemples d'entraînement.
+Ces systèmes sont plus souples, mais restent limités aux catégories définies
+à l'avance et nécessitent un travail d'annotation important.
+
+\textbf{Chatbots à grand modèle de langage.}
+Un LLM (Large Language Model — grand modèle de langage) est un modèle
+entraîné sur des milliards de textes, capable de générer des réponses
+à presque n'importe quelle question sans entraînement spécifique.
+Ces modèles sont très expressifs mais peuvent produire des réponses incorrectes
+ou inventées, phénomène appelé \textit{hallucination}.
+
+\textbf{Génération ancrée dans la documentation (RAG).}
+L'architecture RAG (Retrieval-Augmented Generation — génération augmentée
+par récupération) combine un LLM et une base de connaissances \cite{lewis2020rag}.
+Le modèle répond uniquement à partir des documents fournis,
+ce qui réduit significativement les hallucinations
+et permet de contrôler le périmètre des réponses.
+
+\subsection{Tableau comparatif}
+
+Le Tableau~\ref{tab:comparatif_chatbots} compare les quatre approches
+selon les critères pertinents pour le projet.
+
+\vspace{6pt}
+\begin{table}[H]
+\centering
+\caption{Comparaison des approches pour les assistants conversationnels}
+\label{tab:comparatif_chatbots}
+\begin{tabular}{|l|c|c|c|c|}
+\hline
+\textbf{Critère} & \textbf{Règles} & \textbf{Intentions} & \textbf{LLM seul} & \textbf{RAG} \\
+\hline
+Flexibilité & Faible & Moyenne & Élevée & Élevée \\
+Fiabilité des réponses & Élevée & Moyenne & Faible & Élevée \\
+Contrôle du périmètre & Élevé & Élevé & Faible & Élevé \\
+Besoin de données & Aucun & Moyen & Aucun & Documents \\
+Mise à jour facile & Non & Non & Non & Oui \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{Choix retenu}
+
+L'architecture RAG a été retenue pour les modules Noa et Support Assistant.
+Elle combine la flexibilité d'un LLM avec la fiabilité d'une base documentaire maîtrisée,
+ce qui est indispensable dans un contexte où les réponses incorrectes
+peuvent avoir des conséquences sur des situations sensibles.
+Le module de soutien émotionnel, en revanche, ne dispose pas de base documentaire fixe :
+il repose sur un LLM en mode conversationnel pur, dont le comportement
+est adapté à chaque échange selon le profil et l'état émotionnel de l'utilisateur.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Recherche documentaire intelligente}
+
+\subsection{Approches existantes}
+
+La recherche documentaire consiste à retrouver, parmi un ensemble de documents,
+les passages les plus pertinents pour répondre à une question donnée.
+
+\textbf{Recherche par mots-clés (TF-IDF).}
+La méthode classique repose sur la fréquence des mots dans les documents.
+Elle est rapide mais insensible au sens : une question formulée différemment
+ne retrouvera pas les mêmes documents, même s'ils traitent du même sujet.
+
+\textbf{Recherche par similarité sémantique.}
+Les modèles d'encodage modernes transforment chaque texte
+en un vecteur numérique \cite{sbert}.
+Deux textes au sens similaire produisent des vecteurs proches,
+mesurés par la similarité cosinus.
+Cette approche est robuste aux reformulations et aux synonymes.
+
+\textbf{Bases de données vectorielles.}
+Les vecteurs générés sont indexés dans des bases spécialisées
+qui permettent une recherche efficace parmi des milliers de documents.
+Plusieurs solutions existent : Pinecone (hébergée dans le cloud),
+FAISS (bibliothèque locale non persistante),
+et ChromaDB (base locale persistante et légère).
+
+\subsection{Choix retenus}
+
+Le modèle d'encodage retenu est \texttt{paraphrase-multilingual-MiniLM-L12-v2} \cite{sbert},
+pour sa compatibilité française et anglaise et sa légèreté
+(fonctionne sans processeur graphique).
+La base vectorielle retenue est \textbf{ChromaDB} \cite{chromadb},
+pour sa persistance locale, sa légèreté et son intégration native avec LangChain.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Modèles de génération de langage}
+
+\subsection{Panorama des modèles disponibles}
+
+Plusieurs modèles de génération de langage sont disponibles pour des projets
+nécessitant une inférence locale ou une maîtrise des données.
+
+\textbf{GPT-4 (OpenAI).}
+Modèle très performant, accessible via API.
+Son utilisation implique que les données sont envoyées à des serveurs externes,
+ce qui pose des problèmes de confidentialité dans le contexte scolaire.
+
+\textbf{LLaMA (Meta).}
+Famille de modèles ouverts utilisables localement.
+Performants mais moins bien adaptés au français.
+
+\textbf{Mistral (Mistral AI).}
+Modèles développés par une entreprise française, disponibles en open source.
+Le modèle \textbf{Mistral-7B-Instruct} \cite{mistral2023} est optimisé
+pour suivre des instructions et offre un excellent rapport performance/ressources
+pour la langue française.
+
+\subsection{Tableau comparatif}
+
+Le Tableau~\ref{tab:comparatif_llm} compare les principaux modèles
+selon les critères du projet.
+
+\vspace{6pt}
+\begin{table}[H]
+\centering
+\caption{Comparaison des modèles de génération de langage}
+\label{tab:comparatif_llm}
+\begin{tabular}{|l|c|c|c|}
+\hline
+\textbf{Critère} & \textbf{GPT-4} & \textbf{LLaMA} & \textbf{Mistral-7B} \\
+\hline
+Hébergement local & Non & Oui & Oui \\
+Qualité en français & Élevée & Moyenne & Élevée \\
+Ressources requises & Cloud & Élevées & Modérées \\
+Licence ouverte & Non & Oui & Oui \\
+Confidentialité des données & Non & Oui & Oui \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{Choix retenu}
+
+Le modèle \textbf{Mistral-7B-Instruct} a été retenu pour sa qualité en français,
+son hébergement local (garantissant la confidentialité des données des élèves),
+et son accessibilité via le serveur LLM kaisens.fr.
+La version AWQ, une version compressée du modèle, est utilisée
+pour réduire les ressources mémoire sans perte significative de qualité.
+Le serveur d'inférence \textbf{vLLM} \cite{vllm2023} permet de traiter
+plusieurs requêtes simultanément.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Soutien émotionnel par intelligence artificielle}
+
+\subsection{Approches existantes}
+
+Le soutien émotionnel automatisé vise à détecter les signaux de détresse
+dans les messages d'un utilisateur et à générer des réponses empathiques adaptées.
+Plusieurs approches ont été explorées dans la littérature et les applications commerciales.
+
+\textbf{Scripts prédéfinis (chatbots guidés).}
+Des applications comme Woebot ou Wysa reposent sur des arbres de décision
+et des scripts thérapeutiques prédéfinis inspirés des techniques cognitivo-comportementales.
+Ces systèmes sont prévisibles et sûrs, mais rigides :
+ils ne peuvent pas s'adapter à une conversation libre
+et offrent une expérience répétitive à long terme.
+
+\textbf{Détection par mots-clés.}
+Une approche simple consiste à rechercher des mots ou expressions
+associés à une situation de crise (mal-être, idées suicidaires, violence).
+Elle est rapide mais produit de nombreuses fausses alertes
+et ne capture pas le contexte ni la nuance d'un message.
+
+\textbf{Classifieurs d'apprentissage automatique.}
+Des modèles supervisés entraînés sur des corpus annotés
+permettent une détection plus fine de la détresse émotionnelle.
+Ces modèles se concentrent sur la classification et ne génèrent pas de réponse empathique ;
+ils nécessitent par ailleurs un corpus étiqueté conséquent, difficile à constituer.
+
+\textbf{LLM conversationnel avec profil utilisateur.}
+Un grand modèle de langage utilisé en mode conversationnel peut à la fois
+détecter la détresse et générer une réponse empathique adaptée au contexte.
+L'ajout d'un profil utilisateur persistant, mis à jour au fil des sessions,
+permet au système de personnaliser les réponses en tenant compte
+de la situation propre à chaque élève.
+
+\subsection{Tableau comparatif}
+
+Le Tableau~\ref{tab:comparatif_emotionnel} compare ces approches
+selon les critères pertinents pour le module de soutien émotionnel.
+
+\vspace{6pt}
+\begin{table}[H]
+\centering
+\caption{Comparaison des approches pour le soutien émotionnel}
+\label{tab:comparatif_emotionnel}
+\begin{tabular}{|l|c|c|c|c|}
+\hline
+\textbf{Critère} & \textbf{Scripts} & \textbf{Mots-clés} & \textbf{ML supervisé} & \textbf{LLM conversationnel} \\
+\hline
+Flexibilité & Faible & Faible & Moyenne & Élevée \\
+Qualité empathique & Moyenne & Nulle & Nulle & Élevée \\
+Données d'entraînement & Aucune & Aucune & Élevées & Aucune \\
+Personnalisation & Non & Non & Non & Oui \\
+Détection de détresse & Manuelle & Partielle & Oui & Oui \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{Choix retenu}
+
+L'approche retenue est le \textbf{LLM conversationnel avec profil utilisateur persistant}.
+Contrairement aux modules Noa et Support Assistant,
+ce module n'a pas de base documentaire à consulter :
+les réponses doivent s'adapter à l'état émotionnel de l'utilisateur,
+pas à un corpus de documents.
+Un profil est extrait automatiquement de la conversation et enrichi à chaque session,
+permettant des réponses de plus en plus personnalisées.
+Des garde-fous basés sur la classification du contenu détectent
+les situations de crise et déclenchent une réponse adaptée
+avec les numéros d'urgence appropriés.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Détection automatique du harcèlement}
+
+\subsection{Approches existantes}
+
+La détection automatique du harcèlement dans les textes est un problème
+activement étudié en traitement automatique du langage naturel.
+
+\textbf{Listes de mots offensants.}
+L'approche la plus simple consiste à rechercher des mots ou expressions
+préalablement identifiés comme offensants.
+Elle est rapide mais incapable de saisir le contexte, l'ironie ou l'argot.
+
+\textbf{Modèles d'apprentissage automatique classiques.}
+Des modèles comme la régression logistique ou les SVM permettent
+une classification binaire à partir de caractéristiques textuelles.
+Ils nécessitent des données d'entraînement étiquetées et restent limités
+pour les taxonomies complexes à plusieurs catégories.
+
+\textbf{Modèles de type BERT.}
+Les modèles basés sur l'architecture Transformer (comme CamemBERT pour le français)
+offrent une meilleure compréhension du contexte.
+Ils nécessitent un corpus d'entraînement étiqueté conséquent,
+difficile à constituer dans le domaine du harcèlement scolaire en français.
+
+\textbf{Génération ancrée dans des textes juridiques.}
+Une approche originale consiste à guider le modèle de génération
+par les textes de loi pertinents \cite{sparkloi}.
+La décision est ainsi ancrée dans le droit français,
+ce qui renforce la légitimité des résultats dans un contexte légal encadré.
+
+\subsection{Tableau comparatif}
+
+Le Tableau~\ref{tab:comparatif_classif} compare ces approches selon les critères du projet.
+
+\vspace{6pt}
+\begin{table}[H]
+\centering
+\caption{Comparaison des approches de détection du harcèlement}
+\label{tab:comparatif_classif}
+\begin{tabular}{|l|c|c|c|c|}
+\hline
+\textbf{Critère} & \textbf{Mots-clés} & \textbf{ML classique} & \textbf{BERT} & \textbf{RAG juridique} \\
+\hline
+Données d'entraînement & Aucune & Élevées & Élevées & Aucune \\
+Compréhension du contexte & Faible & Moyenne & Élevée & Élevée \\
+Taxonomie complexe & Non & Non & Partielle & Oui \\
+Ancrage légal & Non & Non & Non & Oui \\
+Mise à jour facile & Oui & Non & Non & Oui \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{Choix retenu}
+
+L'approche retenue est la \textbf{génération ancrée dans des textes juridiques},
+combinée à un mécanisme de repli sur des règles heuristiques.
+Cette combinaison offre à la fois la richesse sémantique d'un LLM
+et la solidité d'un ancrage légal, sans nécessiter de corpus étiqueté.
+Elle est implémentée en quatre stratégies comparées en parallèle,
+détaillées dans le chapitre suivant.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Synthèse des choix technologiques}
+
+Le Tableau~\ref{tab:synthese_choix} récapitule l'ensemble des choix technologiques retenus
+et leur justification principale.
+
+\vspace{6pt}
+\begin{table}[H]
+\centering
+\caption{Synthèse des choix technologiques retenus}
+\label{tab:synthese_choix}
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{Brique} & \textbf{Solution retenue} & \textbf{Justification principale} \\
+\hline
+Architecture chatbot (Noa, Support) & RAG & Fiabilité, contrôle du périmètre \\
+Modèle d'encodage & MiniLM-L12-v2 & Bilingue, léger, sans GPU \\
+Base documentaire & ChromaDB & Légère, locale, persistante \\
+Modèle de génération & Mistral-7B-Instruct & Français, open source, local \\
+Serveur d'inférence & vLLM & Requêtes simultanées \\
+Orchestration & LangChain & Chaînes de traitement modulaires \\
+Mémoire de session & Redis & Rapide, persistant \\
+Soutien émotionnel & LLM conversationnel & Flexibilité, empathie, pas de corpus \\
+Profil utilisateur & Extraction LLM + Redis & Personnalisation multi-sessions \\
+Déploiement & Docker & Portabilité, isolation \\
+Classification texte & RAG juridique + repli & Ancrage légal, sans corpus étiqueté \\
+Traitement en volume & Apache Spark & Traitement distribué et parallèle \\
+\hline
+\end{tabular}
+\end{table}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Conclusion}
+
+Ce chapitre a établi, pour chaque domaine technique couvert par le projet,
+un panorama des approches existantes et une justification des choix retenus.
+Cinq axes ont été étudiés : les assistants conversationnels,
+la recherche documentaire intelligente, les modèles de génération de langage,
+le soutien émotionnel par intelligence artificielle,
+et la détection automatique du harcèlement.
+L'architecture RAG, le modèle Mistral-7B, ChromaDB, le LLM conversationnel
+avec profil utilisateur persistant, et l'ancrage juridique
+forment un ensemble cohérent, adapté aux contraintes du projet :
+confidentialité des données, qualité en français,
+absence de corpus étiqueté, et déploiement autonome.
+
+Le chapitre suivant présente la conception du système à partir de ces choix.

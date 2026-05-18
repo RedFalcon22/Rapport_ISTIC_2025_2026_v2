@@ -1,0 +1,83 @@
+@startuml use_case_global
+!theme plain
+skinparam actorStyle awesome
+skinparam usecaseBorderColor #2C6EA0
+skinparam usecaseBackgroundColor #EBF4FB
+skinparam actorBorderColor #1A3550
+skinparam packageBorderColor #888888
+skinparam arrowColor #2C6EA0
+skinparam defaultFontName Arial
+skinparam defaultFontSize 11
+
+left to right direction
+
+' ─── Acteurs humains (gauche) ─────────────────────────────
+actor "Visiteur\n(site public)" as Visiteur
+actor "Utilisateur interne\n(plateforme)" as UserInterne
+actor "Administrateur" as Admin
+actor "Système Netethic" as SysNet
+
+' ─── Acteurs IA (droite) ──────────────────────────────────
+actor "<<Actor>>\nNoa" as Noa
+actor "<<Actor>>\nNetEthic Support\nAssistant" as Support
+actor "<<Actor>>\nModule soutien\némotionnel" as Emo
+actor "<<Actor>>\nClassificateur\nharcèlement" as Classif
+actor "<<Actor>>\nServeur LLM\n(kaisens.fr)" as LLM
+
+' ─── Système global ───────────────────────────────────────
+rectangle "Système Netethic IA" {
+
+  ' Noa — Module 1
+  usecase "CU-01\nPoser une question\n(site public)" as CU01
+  usecase "CU-02\nRéserver une\ndémonstration" as CU02
+
+  ' Support Assistant — Module 2
+  usecase "CU-03\nPoser une question\n(support interne)" as CU03
+  usecase "CU-03b\nConsulter les suggestions\nde questions" as CU03b
+  usecase "CU-04\nPlanifier un rendez-vous\nde support" as CU04
+  usecase "CU-05\nSignaler un\ndysfonctionnement" as CU05
+  usecase "CU-05b\nAccéder au portail\nde support" as CU05b
+
+  ' Soutien émotionnel — Module 3
+  usecase "CU-06\nBénéficier du soutien\némotionnel" as CU06
+
+  ' Classificateur — Module 4
+  usecase "CU-07\nClassifier un texte" as CU07
+
+  ' Administration
+  usecase "CU-08\nSuperviser le système\n(statistiques, caches)" as CU08
+}
+
+' ─── Relations acteurs humains → use cases ────────────────
+Visiteur       --> CU01
+Visiteur       --> CU02
+UserInterne    --> CU03
+UserInterne    --> CU04
+UserInterne    --> CU05
+UserInterne    --> CU06
+SysNet         --> CU07
+Admin          --> CU08
+
+' ─── Relations use cases → acteurs IA ─────────────────────
+CU01 --> Noa
+CU02 --> Noa
+CU03 --> Support
+CU04 --> Support
+CU05 --> Support
+CU06 --> Emo
+CU07 --> Classif
+
+' ─── Include / Extend ─────────────────────────────────────
+CU03b .> CU03   : <<include>>
+CU05b .> CU04   : <<extend>>
+
+' ─── Relations vers LLM ───────────────────────────────────
+Noa    --> LLM
+Support --> LLM
+Classif --> LLM
+
+' ─── Supervision ──────────────────────────────────────────
+Admin --> Noa    : supervise
+Admin --> Support : supervise
+
+@enduml

@@ -1,0 +1,57 @@
+@startuml etat_noa
+!theme plain
+skinparam stateBorderColor #2C6EA0
+skinparam stateBackgroundColor #EBF4FB
+skinparam stateArrowColor #2C6EA0
+skinparam defaultFontName Arial
+skinparam defaultFontSize 11
+
+title Diagramme d'état-transition — Module Noa
+
+[*] --> Inactif : démarrage du service
+
+Inactif --> ClassificationIntention : message reçu
+
+state ClassificationIntention {
+  [*] --> Analyse
+  Analyse --> [*]
+}
+
+ClassificationIntention --> TraitementBavardage   : intent = chitchat
+ClassificationIntention --> RefusDemande          : intent = forbidden
+ClassificationIntention --> CollecteReservation   : intent = reservation
+ClassificationIntention --> VerificationCache     : intent = factual / follow-up
+
+TraitementBavardage --> Inactif : réponse prédéfinie envoyée
+RefusDemande        --> Inactif : message de refus envoyé
+
+' ─── Flux factuel ────────────────────────────────────────
+VerificationCache --> Inactif            : cache hit\nréponse < 1 ms
+VerificationCache --> RechercheDocs      : cache miss
+
+RechercheDocs     --> GenerationReponse  : chunks récupérés (k=5)
+GenerationReponse --> MiseAJourCache     : réponse LLM générée
+MiseAJourCache    --> MiseAJourSession   : cache mis à jour
+MiseAJourSession  --> Inactif            : session sauvegardée dans Redis
+
+' ─── Flux réservation (agent FSM) ────────────────────────
+CollecteReservation --> AttenteEmail     : début collecte
+
+state "AttenteEmail" as AttenteEmail {
+  [*] --> DemandeEmail
+  DemandeEmail --> ValidationEmail
+  ValidationEmail --> [*]
+}
+
+AttenteEmail  --> AttenteTelephone : email validé
+
+state "AttenteTelephone" as AttenteTelephone {
+  [*] --> DemandeTelephone
+  DemandeTelephone --> ValidationTelephone
+  ValidationTelephone --> [*]
+}
+
+AttenteTelephone --> ConfirmationReservation : téléphone validé
+ConfirmationReservation --> Inactif          : réservation enregistrée
+
+@enduml

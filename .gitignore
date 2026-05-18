@@ -1,0 +1,23 @@
+# Fichiers compilés LaTeX
+*.aux
+*.log
+*.toc
+*.lof
+*.lot
+*.out
+*.bbl
+*.blg
+*.synctex.gz
+*.fls
+*.fdb_latexmk
+*.nav
+*.snm
+*.vrb
+*.idx
+*.ind
+*.ilg
+*.glo
+*.gls
+*.md
+# PDF compilé (chacun compile localement avec MiKTeX)
+Main.pdf

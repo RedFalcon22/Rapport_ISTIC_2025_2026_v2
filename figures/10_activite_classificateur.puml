@@ -1,0 +1,51 @@
+@startuml activite_classificateur
+!theme plain
+skinparam activityBorderColor #2C6EA0
+skinparam activityBackgroundColor #FCE4EC
+skinparam activityArrowColor #2C6EA0
+skinparam diamondBorderColor #880000
+skinparam diamondBackgroundColor #FCE4EC
+skinparam defaultFontName Arial
+skinparam defaultFontSize 11
+
+title Diagramme d'activité — Classificateur (chaîne de repli)
+
+start
+
+:Réception du texte\n(depuis la plateforme Netethic);
+
+:Prétraitement\n— Suppression des URLs\n— Normalisation des espaces\n— Mise en minuscules;
+
+:Tentative 1 — Stratégie LLM seul\n(inférence directe, zéro-shot);
+
+if (LLM répond correctement ?) then (Oui)
+  :labels ← résultat LLM;
+else (Non)
+
+  :Tentative 2 — Stratégie LLM + Ancrage juridique\n(récupération des passages légaux pertinents\ndepuis ChromaDB, injection dans le prompt);
+
+  if (LLM+Juridique répond correctement ?) then (Oui)
+    :labels ← résultat LLM + Juridique;
+  else (Non)
+
+    :Tentative 3 — Heuristiques par mots-clés\n(correspondance rapide sans appel au LLM);
+
+    if (Heuristiques trouvent une correspondance ?) then (Oui)
+      :labels ← résultat heuristiques;
+    else (Non)
+      #LightGray:labels ← étiquette neutre\n"non_classifié";
+    endif
+
+  endif
+
+endif
+
+:Vérification indicateur d'urgence\n(idéation suicidaire → urgencyFlag = true);
+
+:Journalisation du résultat\n{textId, labels, strategy, confidence,\nlatency, urgencyFlag, timestamp};
+
+:Retour à la plateforme Netethic\n{labels, confidence, strategy,\nurgencyFlag, latency};
+
+stop
+
+@enduml

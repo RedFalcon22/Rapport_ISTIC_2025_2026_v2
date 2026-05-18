@@ -1,0 +1,98 @@
+@startuml classes_application
+!theme plain
+skinparam classBorderColor #2C6EA0
+skinparam classBackgroundColor #EBF4FB
+skinparam classArrowColor #2C6EA0
+skinparam classAttributeFontColor #333333
+skinparam defaultFontName Arial
+skinparam defaultFontSize 11
+skinparam linetype ortho
+
+title Diagramme de classes — Architecture de l'application
+
+' ─── Classes principales ──────────────────────────────────
+
+class ChatSession {
+  + sessionId : String
+  + userId : String
+  + moduleType : String
+  + createdAt : DateTime
+  + expiresAt : DateTime
+}
+
+class Message {
+  + messageId : String
+  + content : String
+  + role : String
+  + timestamp : DateTime
+}
+
+class IntentClassification {
+  + intent : String
+  + confidence : Float
+}
+
+class DocumentChunk {
+  + chunkId : String
+  + content : String
+  + embedding : Float[]
+  + category : String
+  + sourceDocument : String
+}
+
+class Response {
+  + responseId : String
+  + content : String
+  + sourceChunks : List<String>
+  + latency : Float
+  + cached : Boolean
+}
+
+class ReservationRequest {
+  + requestId : String
+  + email : String
+  + phone : String
+  + requestedDate : DateTime
+  + channel : String
+  + subject : String
+}
+
+class HarassmentClassification {
+  + textId : String
+  + labels : List<String>
+  + strategy : String
+  + confidence : Float
+  + urgencyFlag : Boolean
+  + timestamp : DateTime
+}
+
+class EmotionalSignal {
+  + signalType : String
+  + severity : Float
+  + detectedAt : DateTime
+}
+
+' ─── Relations ────────────────────────────────────────────
+
+ChatSession    "1"  *--  "0..*"  Message              : contient >
+Message        "1"  -->  "1"     IntentClassification  : classifie >
+Message        "1"  -->  "0..1"  Response              : génère >
+Response       "1"  -->  "0..*"  DocumentChunk         : référence >
+ChatSession    "1"  -->  "0..1"  ReservationRequest    : crée >
+Message        "1"  -->  "0..1"  EmotionalSignal       : contient >
+
+' ─── Note explicative ─────────────────────────────────────
+
+note bottom of HarassmentClassification
+  Utilisée par le Module 4.
+  Indépendante du pipeline
+  conversationnel.
+end note
+
+note bottom of EmotionalSignal
+  Détectée par le Module 3,
+  intégré dans le Module 2.
+  Déclenche un flux empathique.
+end note
+
+@enduml
