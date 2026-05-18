@@ -36,31 +36,31 @@ Le Tableau~\ref{tab:bf_noa} présente ses besoins fonctionnels.
 \textbf{ID} & \textbf{Besoin} & \textbf{Description} \\
 \hline
 BF-N01 & Répondre aux questions
-        & L'assistant répond aux questions des visiteurs sur les services, les tarifs, le RGPD et les coordonnées de Netethic. \\
+        & L'assistant répond aux questions des visiteurs sur les fonctionnalités, les tarifs, le RGPD et les coordonnées de Netethic. \\
 \hline
 BF-N02 & Gérer la conversation et mémoriser les réponses
-        & Le système conserve un historique de session et mémorise les réponses fréquentes pour les retourner instantanément. \\
+        & Le système conserve l'historique des échanges pour maintenir la cohérence de la conversation et retourne instantanément les réponses déjà calculées. \\
 \hline
 BF-N03 & Classifier l'intention
-        & Chaque message est classifié selon son intention (bavardage, question factuelle, suivi ou requête interdite) pour appliquer le traitement approprié. \\
+        & Chaque message est analysé selon son intention — bavardage, question, suivi ou requête interdite — pour lui appliquer le traitement adapté. \\
 \hline
 BF-N05 & Gérer les bavardages
-        & Les salutations et messages hors sujet sont traités par des réponses prédéfinies, sans appel au modèle de génération. \\
+        & Les salutations, remerciements et messages hors sujet reçoivent des réponses prédéfinies immédiates. \\
 \hline
 BF-N06 & Appliquer des garde-fous
-        & Le système détecte et refuse les requêtes dangereuses : manipulation, demandes de code, conseils médicaux ou juridiques. \\
+        & Le système détecte et rejette les requêtes dangereuses ou hors périmètre, comme les tentatives de manipulation ou les demandes de conseils médicaux. \\
 \hline
 BF-N07 & Gérer les réservations
-        & Un agent conversationnel collecte l'e-mail et le téléphone du visiteur souhaitant planifier une démonstration. \\
+        & Lorsqu'un visiteur souhaite planifier une démonstration, l'assistant collecte son adresse e-mail et son numéro de téléphone. \\
 \hline
 BF-N09 & Normaliser les questions
-        & Les questions sémantiquement équivalentes sont associées à une même réponse mémorisée, évitant les recalculs inutiles. \\
+        & Deux questions ayant le même sens partagent la même réponse mémorisée, évitant de recalculer une réponse déjà connue. \\
 \hline
 BF-N10 & Rechercher dans la base documentaire
-        & Pour les questions factuelles, le système recherche et intègre les passages pertinents de la base de connaissances dans la réponse. \\
+        & Pour les questions factuelles, le système recherche les passages les plus pertinents dans la documentation et les intègre dans la réponse. \\
 \hline
 BF-N12 & Administrer le système
-        & L'administrateur peut consulter les statistiques, vider le cache et accéder aux rendez-vous via une interface dédiée. \\
+        & L'administrateur peut consulter les statistiques, effacer les réponses mémorisées et accéder aux rendez-vous collectés depuis une interface dédiée. \\
 \hline
 \end{tabular}
 \end{table}
@@ -84,31 +84,37 @@ Le Tableau~\ref{tab:bf_nesa} décrit ses besoins fonctionnels.
 \textbf{ID} & \textbf{Besoin} & \textbf{Description} \\
 \hline
 BF-S01 & Filtrer les résultats par catégorie
-        & La recherche est filtrée par catégorie parmi 11~thèmes fonctionnels de la plateforme pour améliorer la pertinence des réponses. \\
-\hline
-BF-S02 & Pipeline de traitement
-        & Le système orchestre un traitement en plusieurs étapes : garde-fou, correction, réécriture, récupération et génération de réponse. \\
+        & L'utilisateur choisit l'une des 11~catégories de la plateforme avant de poser sa question, ce qui limite la recherche aux documents de ce thème et améliore la précision des réponses. \\
 \hline
 BF-S03 & Mise en mémoire des réponses
-        & Les réponses générées sont mémorisées et retournées directement pour les questions similaires ultérieures. \\
+        & Les réponses générées sont mémorisées. Pour les questions ultérieures similaires, la réponse est retournée directement sans solliciter le modèle. \\
 \hline
 BF-S04 & Gestion de session
-        & Les sessions utilisateurs sont conservées 24~heures avec l'historique de conversation et les métadonnées. \\
+        & Chaque session utilisateur est conservée 24~heures avec l'historique de conversation et les informations d'identité (nom, e-mail, téléphone). \\
 \hline
 BF-S05 & Questions suggérées
-        & Plus de 60~questions prédéfinies sont proposées dynamiquement pour aider l'utilisateur à explorer les fonctionnalités. \\
+        & Plus de 60~questions prédéfinies sont proposées à l'utilisateur pour l'aider à explorer les fonctionnalités de la plateforme. \\
 \hline
 BF-S06 & Données en temps réel
-        & En mode \textit{Insights}, le système interroge le tableau de bord et intègre les métriques dynamiques dans les réponses. \\
+        & En mode \textit{Insights}, l'assistant répond aux questions sur les données du tableau de bord (toxicité, profils à risque, climat scolaire, tendances) transmises par la plateforme à l'ouverture de la session. \\
+\hline
+BF-S07 & Génération automatique de description
+        & Avant l'affichage d'un formulaire de rendez-vous ou de signalement, l'assistant rédige automatiquement un motif ou une description à partir de la conversation. Ce texte pré-remplit le formulaire et reste modifiable. \\
 \hline
 BF-S08 & Analytique d'usage
-        & Le système enregistre les requêtes, thèmes consultés et événements de garde-fou pour améliorer la documentation. \\
+        & Le système enregistre chaque question avec son thème et les éventuels déclenchements de sécurité pour permettre l'amélioration continue de la documentation. \\
 \hline
 BF-S09 & Prise de rendez-vous
-        & L'assistant propose un rendez-vous de support lorsque la documentation ne permet pas de répondre, en collectant les coordonnées de l'utilisateur. \\
+        & Lorsque la documentation ne permet pas de répondre, l'assistant propose de planifier un rendez-vous de support sans que l'utilisateur ait à ressaisir ses informations. \\
 \hline
 BF-S10 & Signalement de dysfonctionnements
-        & L'utilisateur peut signaler un incident technique depuis l'interface ; l'assistant collecte les informations et transmet le rapport. \\
+        & L'utilisateur peut signaler un incident via un formulaire pré-rempli automatiquement. Le rapport est ensuite transmis à l'équipe technique de Netethic. \\
+\hline
+BF-S11 & Accès au portail de support
+        & Lorsqu'aucune réponse documentaire n'est trouvée, l'utilisateur peut accéder directement au portail de support en ligne. \\
+\hline
+BF-S12 & Détection des questions de suivi
+        & Le système détecte si une question fait suite au sujet précédent et, le cas échéant, réutilise les résultats de recherche déjà obtenus pour répondre de façon cohérente. \\
 \hline
 \end{tabular}
 \end{table}
@@ -132,19 +138,28 @@ Le Tableau~\ref{tab:bf_emo} décrit ses besoins fonctionnels.
 \textbf{ID} & \textbf{Besoin} & \textbf{Description} \\
 \hline
 BF-E01 & Détecter la détresse
-        & Le système identifie six types de signaux de détresse dans les messages : dépression, idéation suicidaire, solitude, anxiété, colère et comportements addictifs. \\
+        & Le système détecte six types de signaux de détresse dans les messages : dépression, idéation suicidaire, solitude, anxiété, colère et comportements addictifs. \\
 \hline
 BF-E02 & Alerte urgente
-        & En cas d'idéation suicidaire détectée, le système interrompt le traitement standard et génère immédiatement une réponse d'urgence bienveillante. \\
+        & En cas d'idéation suicidaire, une réponse d'urgence est générée immédiatement avec les numéros d'aide (urgences, cyberviolences, CNAE), toujours présents quelle que soit la réponse générée. \\
 \hline
 BF-E03 & Répondre avec empathie
-        & Pour les signaux non urgents, le système génère une réponse empathique adaptée au type de détresse identifié. \\
+        & Pour les signaux non urgents, l'assistant génère une réponse chaleureuse et empathique, adaptée au type de détresse et à la langue de l'utilisateur. \\
 \hline
 BF-E04 & Orienter vers l'accompagnement
-        & Le module dirige l'utilisateur vers le module \textit{Accompagnement} de Netethic pour un suivi personnalisé. \\
+        & Après détection d'un signal de détresse, le module oriente l'utilisateur vers le module \textit{Accompagnement} de Netethic pour un suivi par un professionnel. \\
 \hline
 BF-E05 & Journaliser les événements
-        & Chaque détection est enregistrée avec son type, niveau de confiance et horodatage, sans conservation du contenu du message. \\
+        & Chaque détection est enregistrée avec son type et son horodatage, sans conserver le contenu du message, dans le respect de la confidentialité. \\
+\hline
+BF-E06 & Mémoriser le profil utilisateur
+        & L'assistant mémorise les informations révélées au fil des échanges (prénom, sources de stress, situation scolaire) dans un profil persistant de 30~jours pour personnaliser les réponses lors des sessions suivantes. \\
+\hline
+BF-E07 & Limiter le débit des messages
+        & Le nombre de messages envoyés par utilisateur est limité sur une courte période afin de protéger le service contre les abus. \\
+\hline
+BF-E08 & Prendre en charge l'arabe et le darija
+        & En plus du français et de l'anglais, le module prend en charge l'arabe et le darija tunisien. L'assistant répond toujours dans la langue de l'utilisateur, sans mélange ni traduction. \\
 \hline
 \end{tabular}
 \end{table}
@@ -233,7 +248,7 @@ BNF-06 & Conformité RGPD
         & Aucune donnée personnelle n'est conservée au-delà de la session ; les données de réservation sont stockées localement sans partage avec des tiers. \\
 \hline
 BNF-07 & Multilingue
-        & L'interface et les réponses sont disponibles en français et en anglais, avec détection automatique de la langue. \\
+        & L'interface et les réponses sont disponibles en français, en anglais et en arabe, avec détection automatique de la langue. Le module de soutien émotionnel étend ce support au darija tunisien et au code-switching arabo-français. \\
 \hline
 BNF-08 & Robustesse
         & Chaque composant intègre une gestion explicite des erreurs avec des messages clairs pour l'utilisateur et des traces journalisées côté serveur. \\
