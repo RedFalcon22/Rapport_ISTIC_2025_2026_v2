@@ -51,7 +51,7 @@ BF-N06 & Appliquer des garde-fous
         & Le système détecte et rejette les requêtes dangereuses ou hors périmètre, comme les tentatives de manipulation ou les demandes de conseils médicaux. \\
 \hline
 BF-N07 & Gérer les réservations
-        & Lorsqu'un visiteur souhaite planifier une démonstration, l'assistant collecte son adresse e-mail et son numéro de téléphone. \\
+        & Lorsqu'un visiteur souhaite planifier une démonstration, l'assistant collecte ses données et lui résèrve une démonstration de netethic\\
 \hline
 BF-N09 & Normaliser les questions
         & Deux questions ayant le même sens partagent la même réponse mémorisée, évitant de recalculer une réponse déjà connue. \\
@@ -84,16 +84,16 @@ Le Tableau~\ref{tab:bf_nesa} décrit ses besoins fonctionnels.
 \textbf{ID} & \textbf{Besoin} & \textbf{Description} \\
 \hline
 BF-S01 & Filtrer les résultats par catégorie
-        & L'utilisateur choisit l'une des 11~catégories de la plateforme avant de poser sa question, ce qui limite la recherche aux documents de ce thème et améliore la précision des réponses. \\
+        & L'utilisateur choisit l'une des catégories de la plateforme avant de poser sa question, ce qui limite la recherche aux documents de ce thème et améliore la précision des réponses. \\
 \hline
 BF-S03 & Mise en mémoire des réponses
         & Les réponses générées sont mémorisées. Pour les questions ultérieures similaires, la réponse est retournée directement sans solliciter le modèle. \\
 \hline
 BF-S04 & Gestion de session
-        & Chaque session utilisateur est conservée 24~heures avec l'historique de conversation et les informations d'identité (nom, e-mail, téléphone). \\
+        & Chaque session utilisateur est conservée temporairement avec l'historique de conversation et les informations d'identité (nom, e-mail, téléphone). \\
 \hline
 BF-S05 & Questions suggérées
-        & Plus de 60~questions prédéfinies sont proposées à l'utilisateur pour l'aider à explorer les fonctionnalités de la plateforme. \\
+        & Des questions prédéfinies sont proposées à l'utilisateur pour l'aider à explorer les fonctionnalités de la plateforme. \\
 \hline
 BF-S06 & Données en temps réel
         & En mode \textit{Insights}, l'assistant répond aux questions sur les données du tableau de bord (toxicité, profils à risque, climat scolaire, tendances) transmises par la plateforme à l'ouverture de la session. \\
@@ -153,13 +153,7 @@ BF-E05 & Journaliser les événements
         & Chaque détection est enregistrée avec son type et son horodatage, sans conserver le contenu du message, dans le respect de la confidentialité. \\
 \hline
 BF-E06 & Mémoriser le profil utilisateur
-        & L'assistant mémorise les informations révélées au fil des échanges (prénom, sources de stress, situation scolaire) dans un profil persistant de 30~jours pour personnaliser les réponses lors des sessions suivantes. \\
-\hline
-BF-E07 & Limiter le débit des messages
-        & Le nombre de messages envoyés par utilisateur est limité sur une courte période afin de protéger le service contre les abus. \\
-\hline
-BF-E08 & Prendre en charge l'arabe et le darija
-        & En plus du français et de l'anglais, le module prend en charge l'arabe et le darija tunisien. L'assistant répond toujours dans la langue de l'utilisateur, sans mélange ni traduction. \\
+        & L'assistant mémorise les informations révélées au fil des échanges (prénom, sources de stress, situation scolaire) dans un profil temporaire pour personnaliser les réponses lors des sessions suivantes. \\
 \hline
 \end{tabular}
 \end{table}
@@ -182,8 +176,8 @@ Le Tableau~\ref{tab:bf_class} détaille ses besoins fonctionnels.
 \hline
 \textbf{ID} & \textbf{Besoin} & \textbf{Description} \\
 \hline
-BF-C01 & Classification multi-méthodes
-        & Le système compare quatre stratégies : inférence LLM seul, avec ancrage juridique, heuristiques par mots-clés, et approche hybride avec repli automatique. \\
+BF-C01 & Classifier les textes automatiquement
+        & Le système analyse chaque texte soumis et détermine automatiquement la stratégie adaptée : LLM avec ancrage documentaire si des références juridiques pertinentes sont disponibles, LLM seul sinon. En cas d'échec, il bascule sur les heuristiques pour garantir une réponse. \\
 \hline
 BF-C02 & Taxonomie à 16 catégories
         & Chaque texte reçoit plusieurs étiquettes simultanées : 10 actes de harcèlement (Groupe A) et 6 signaux de détresse (Groupe B). \\
@@ -202,12 +196,6 @@ BF-C06 & Alerte urgente
 \hline
 BF-C07 & Journalisation des résultats
         & Chaque classification est enregistrée avec son horodatage, sa stratégie, son niveau de confiance et sa latence. \\
-\hline
-BF-C08 & Suivi des expériences
-        & Le système peut récupérer et retraiter les données d'expériences passées pour comparer et améliorer les méthodes. \\
-\hline
-BF-C09 & Traitement en parallèle
-        & Le pipeline traite plusieurs textes simultanément et calcule des métriques d'évaluation agrégées sur l'ensemble des méthodes. \\
 \hline
 \end{tabular}
 \end{table}
@@ -233,22 +221,22 @@ BNF-01 & Performance
         & Le temps de réponse est inférieur à 1~ms pour les questions mémorisées et inférieur à 5~secondes pour un traitement complet. \\
 \hline
 BNF-02 & Sécurité
-        & Les clés de connexion ne sont jamais exposées côté navigateur, les communications sensibles transitent via HTTPS et les requêtes malveillantes sont filtrées. \\
+        & Les clés de connexion ne sont jamais exposées côté navigateur, les communications sensibles transitent via HTTPS, les requêtes malveillantes sont filtrées, et le débit des messages par utilisateur est limité afin de protéger le service contre les abus. \\
 \hline
 BNF-03 & Disponibilité
         & Les services sont accessibles 24h/24 et 7j/7, avec des mécanismes de repli en cas d'indisponibilité du modèle externe. \\
 \hline
 BNF-04 & Scalabilité
-        & Tous les composants sont conteneurisés via Docker \cite{docker}, permettant le déploiement de plusieurs instances selon la charge. \\
+        & Tous les composants sont conteneurisés via Docker \cite{docker}, permettant le déploiement de plusieurs instances selon la charge. Le classificateur traite plusieurs textes simultanément grâce à Apache Spark. \\
 \hline
 BNF-05 & Maintenabilité
         & L'architecture modulaire isole chaque fonctionnalité dans un module distinct, facilitant les mises à jour et les corrections. \\
 \hline
 BNF-06 & Conformité RGPD
-        & Aucune donnée personnelle n'est conservée au-delà de la session ; les données de réservation sont stockées localement sans partage avec des tiers. \\
+        & Aucun contenu de message n'est conservé au-delà de la session. Les profils utilisateurs du module de soutien émotionnel sont stockés temporairement pour personnaliser les échanges, sans conservation permanente ni partage avec des tiers. \\
 \hline
 BNF-07 & Multilingue
-        & L'interface et les réponses sont disponibles en français, en anglais et en arabe, avec détection automatique de la langue. Le module de soutien émotionnel étend ce support au darija tunisien et au code-switching arabo-français. \\
+        & L'interface et les réponses sont disponibles en français et en anglais, avec détection automatique de la langue de l'utilisateur. \\
 \hline
 BNF-08 & Robustesse
         & Chaque composant intègre une gestion explicite des erreurs avec des messages clairs pour l'utilisateur et des traces journalisées côté serveur. \\
