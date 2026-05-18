@@ -1,0 +1,104 @@
+@startuml sequence_support_repli
+
+actor "Utilisateur interne" as U
+participant "Streamlit\nFrontend" as FE
+participant "FastAPI" as API
+participant "LLM\n(Génération\ndescription)" as LLM
+participant "Redis\n(Session)" as Redis
+participant "API\nNetEthic" as NetEthic
+
+note over U, NetEthic
+  Ce flux est déclenché lorsque no_results=true :
+  aucun document pertinent trouvé dans ChromaDB.
+  Le frontend affiche trois boutons de repli.
+end note
+
+== Option A — Prise de rendez-vous ==
+
+U -> FE : 1. Cliquer "Prendre un rendez-vous"
+activate FE
+
+FE -> API : 2. POST /generate-description\n{session_id, mode: "motif"}
+activate API
+
+API -> Redis : 3. get_session(session_id)
+activate Redis
+Redis --> API : session (historique de conversation)
+deactivate Redis
+
+API -> LLM : 4. generate_description(session, "motif")
+activate LLM
+LLM --> API : motif_auto (1-2 phrases)
+deactivate LLM
+
+API --> FE : 5. {description: motif_auto}
+deactivate API
+
+FE --> FE : 6. Afficher formulaire RDV pré-rempli\n(date, heure, canal, motif)
+
+U -> FE : 7. Vérifier et valider le formulaire
+
+FE -> API : 8. POST /appointments\n{session_id, date, heure, canal}
+activate API
+
+API -> Redis : 9. get_session(session_id)\n[lire nom, email, téléphone]
+activate Redis
+Redis --> API : {username, email, phone}
+deactivate Redis
+
+API -> NetEthic : 10. POST makeAppointment\n{username, email, phone,\nmotif, date, heure, canal}
+activate NetEthic
+NetEthic --> API : {success: true}
+deactivate NetEthic
+
+API --> FE : 11. {success: true}
+deactivate API
+
+FE --> FE : 12. Afficher "Rendez-vous enregistré avec succès"
+deactivate FE
+
+== Option B — Signalement de bug ==
+
+U -> FE : 1. Cliquer "Signaler un bug"
+activate FE
+
+FE -> API : 2. POST /generate-description\n{session_id, mode: "bug_report"}
+activate API
+
+API -> Redis : 3. get_session(session_id)
+activate Redis
+Redis --> API : session (historique de conversation)
+deactivate Redis
+
+API -> LLM : 4. generate_description(session, "bug_report")
+activate LLM
+LLM --> API : description_bug (3-5 phrases structurées)
+deactivate LLM
+
+API --> FE : 5. {description: description_bug}
+deactivate API
+
+FE --> FE : 6. Afficher formulaire bug pré-rempli\n(description du problème)
+
+U -> FE : 7. Vérifier et valider le formulaire
+
+FE -> API : 8. POST /bug-reports\n{session_id, description}
+activate API
+
+API -> Redis : 9. get_session(session_id)\n[lire nom, email, téléphone]
+activate Redis
+Redis --> API : {username, email, phone}
+deactivate Redis
+
+API -> NetEthic : 10. POST signalBug\n{username, email, phone,\ndescription}
+activate NetEthic
+NetEthic --> API : {success: true}
+deactivate NetEthic
+
+API --> FE : 11. {success: true}
+deactivate API
+
+FE --> FE : 12. Afficher "Bug signalé avec succès"
+deactivate FE
+
+@enduml

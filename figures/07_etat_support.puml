@@ -1,4 +1,4 @@
-@startuml etat_support
+@startuml etat_support_repli
 !theme plain
 skinparam stateBorderColor #2C6EA0
 skinparam stateBackgroundColor #E8F5E9
@@ -6,65 +6,45 @@ skinparam stateArrowColor #2C6EA0
 skinparam defaultFontName Arial
 skinparam defaultFontSize 11
 
-title Diagramme d'état-transition — NetEthic Support Assistant
+title Diagramme d'état-transition — Support Assistant (2/2) : flux de repli
 
-[*] --> Inactif : démarrage du service
+[*] --> AttenteQuestion : (suite du diagramme 1/2)
 
-Inactif --> SelectionCategorie : interface ouverte
+AttenteQuestion --> FluxRepli : aucun résultat trouvé
 
-SelectionCategorie --> AttenteQuestion : catégorie sélectionnée\n(1 parmi 11 thèmes)
+state FluxRepli {
+  [*] --> AffichageOptions
 
-AttenteQuestion --> TraitementPipeline : question soumise
-AttenteQuestion --> FluxRendezVous     : demande RDV de support
-AttenteQuestion --> FluxSignalement    : signalement incident
+  AffichageOptions : Trois options proposées :\nPrendre un rendez-vous\nSignaler un bug\nAccéder au portail support
 
-' ─── Pipeline principal ───────────────────────────────────
-state TraitementPipeline {
-  [*]                --> VerificationGardefou
-  VerificationGardefou --> RefusDemande       : requête interdite
-  RefusDemande        --> [*]
-  VerificationGardefou --> CorrectionOrthographe : requête valide
-  CorrectionOrthographe --> ReecritureRequete
-  ReecritureRequete   --> RechercheDocs
-  RechercheDocs       --> DetectionEmotionnelle
-  DetectionEmotionnelle --> FluxEmotionnel    : signal détresse détecté
-  DetectionEmotionnelle --> GenerationReponse : aucun signal
-  GenerationReponse   --> MiseAJourSession
-  MiseAJourSession    --> [*]
+  AffichageOptions --> FluxRendezVous  : clic "Prendre un rendez-vous"
+  AffichageOptions --> FluxSignalement : clic "Signaler un bug"
+  AffichageOptions --> PortailExterne  : clic "Portail support"
+
+  state FluxRendezVous {
+    [*] --> GenMotif
+    GenMotif : Génération automatique\ndu motif depuis l'historique
+    GenMotif --> SaisieRDV
+    SaisieRDV : Formulaire pré-rempli\n(date, heure, canal)
+    SaisieRDV --> EnvoiRDV
+    EnvoiRDV : Transmission à NetEthic\n(identité lue depuis la session)
+    EnvoiRDV --> [*]
+  }
+
+  state FluxSignalement {
+    [*] --> GenDescription
+    GenDescription : Génération automatique\nde la description depuis l'historique
+    GenDescription --> SaisieBug
+    SaisieBug : Formulaire pré-rempli\n(description du problème)
+    SaisieBug --> EnvoiSignalement
+    EnvoiSignalement : Transmission à NetEthic\n(identité lue depuis la session)
+    EnvoiSignalement --> [*]
+  }
+
+  PortailExterne : Ouverture du portail\nsupport en ligne
+  PortailExterne --> [*]
 }
 
-TraitementPipeline --> AttenteQuestion : réponse envoyée
-
-' ─── Flux de soutien émotionnel ───────────────────────────
-state FluxEmotionnel {
-  [*]              --> IdentificationSignal
-  IdentificationSignal --> AlerteUrgente    : idéation suicidaire
-  IdentificationSignal --> ReponseEmpathe   : autre signal
-  AlerteUrgente    --> OrientationAccompagnement
-  ReponseEmpathe   --> OrientationAccompagnement
-  OrientationAccompagnement --> [*]
-}
-
-FluxEmotionnel --> AttenteQuestion : traitement terminé
-
-' ─── Flux rendez-vous (FSM) ──────────────────────────────
-state FluxRendezVous {
-  [*]         --> CollecteEmail
-  CollecteEmail   --> CollecteTelephone : email valide
-  CollecteTelephone --> ConfirmationRDV : téléphone valide
-  ConfirmationRDV --> [*]
-}
-
-FluxRendezVous --> AttenteQuestion : RDV enregistré
-
-' ─── Flux signalement (FSM) ──────────────────────────────
-state FluxSignalement {
-  [*]              --> CollecteDescription
-  CollecteDescription --> CollecteCapture : description fournie
-  CollecteCapture     --> ConfirmationSignalement
-  ConfirmationSignalement --> [*]
-}
-
-FluxSignalement --> AttenteQuestion : signalement soumis
+FluxRepli --> AttenteQuestion : action terminée
 
 @enduml

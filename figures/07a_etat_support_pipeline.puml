@@ -1,0 +1,79 @@
+@startuml etat_support_pipeline
+!theme plain
+skinparam stateBorderColor #2C6EA0
+skinparam stateBackgroundColor #E8F5E9
+skinparam stateArrowColor #2C6EA0
+skinparam defaultFontName Arial
+skinparam defaultFontSize 11
+
+title Diagramme d'état-transition — Support Assistant (1/2) : pipeline principal
+
+[*] --> Inactif : démarrage du service
+
+Inactif --> SessionCreee : ouverture de session\n(identité + tableau de bord)
+
+SessionCreee --> AttenteQuestion : session active
+
+AttenteQuestion --> SelectionCategorie : filtrage par catégorie\n(facultatif)
+SelectionCategorie --> AttenteQuestion : catégorie appliquée\n(1 parmi 11 modules)
+
+AttenteQuestion --> TraitementPipeline : question soumise
+
+state TraitementPipeline {
+  [*] --> GardefouBrut
+
+  GardefouBrut : Garde-fou LLM\n(injection / XSS / haine)
+  GardefouBrut --> RequeteBloquee  : requête dangereuse
+  GardefouBrut --> DetectionPolie  : requête acceptable
+
+  RequeteBloquee : Message de rejet
+  RequeteBloquee --> [*]
+
+  DetectionPolie : Correction ortho +\ndétection sociale\n(1 appel LLM)
+  DetectionPolie --> ReponseSociale : salutation / merci
+  DetectionPolie --> ClassifIntent  : vraie question
+
+  ReponseSociale : Réponse cordiale\nsans recherche documentaire
+  ReponseSociale --> [*]
+
+  ClassifIntent : Classification\nd'intention LLM\n(données temps réel\nou documentation)
+  ClassifIntent --> ReecritureRequete
+
+  ReecritureRequete : Réécriture RAG +\ndétection suivi\n(1 appel LLM)
+  ReecritureRequete --> ConsultationCache   : documentation
+  ReecritureRequete --> RecuperationVivante : données temps réel
+
+  ConsultationCache : Cache Redis\n(similarité sémantique)
+  ConsultationCache --> ReponseCache     : résultat en cache
+  ConsultationCache --> RechercheVecteur : pas en cache
+
+  ReponseCache : Réponse depuis le cache
+  ReponseCache --> [*]
+
+  RechercheVecteur : ChromaDB\nfiltré par catégorie
+  RechercheVecteur --> SansResultat      : aucun document pertinent
+  RechercheVecteur --> GenerationReponse : documents trouvés
+
+  SansResultat : Aucun résultat\n(flux de repli déclenché)
+  SansResultat --> [*]
+
+  RecuperationVivante : Données tableau de bord\n(depuis la session)
+  RecuperationVivante --> ErreurDonnees     : données manquantes
+  RecuperationVivante --> GenerationReponse : données disponibles
+
+  ErreurDonnees : Données temps réel\nmanquantes
+  ErreurDonnees --> [*]
+
+  GenerationReponse : Appel LLM principal\n(contexte + historique\n+ question)
+  GenerationReponse --> PostTraitement
+
+  PostTraitement : Nettoyage sécurité\n+ mise en cache\n+ sauvegarde session
+  PostTraitement --> [*]
+}
+
+TraitementPipeline --> AttenteQuestion : réponse envoyée
+TraitementPipeline --> FluxRepli       : aucun résultat trouvé\n(voir diagramme suivant)
+
+FluxRepli : Flux de repli\n(voir diagramme 2/2)
+
+@enduml

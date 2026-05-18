@@ -1,0 +1,80 @@
+@startuml sequence_support_init
+
+actor "Utilisateur interne" as U
+participant "Streamlit\nFrontend" as FE
+participant "FastAPI" as API
+participant "LLM\n(Guardrail/Polite)" as LLM
+participant "Redis\n(Session)" as Redis
+
+== Création de session ==
+
+U -> FE : 1. Ouvrir l'assistant\n(identité + données tableau de bord)
+activate FE
+
+FE -> API : 2. POST /start-session\n{user_id, school_id, username,\nemail, phone, live_data}
+activate API
+
+API -> Redis : 3. create_session() + save_session()
+activate Redis
+Redis --> API : session_id
+deactivate Redis
+
+API --> FE : 4. {session_id}
+deactivate API
+
+FE --> FE : Session prête
+
+== Soumission de la question ==
+
+opt Filtrage par catégorie (facultatif)
+  U -> FE : 5. Sélectionner une catégorie\n(1 parmi 11 modules)
+  FE --> FE : Mettre à jour la catégorie sélectionnée
+end
+
+U -> FE : 6. Saisir et soumettre la question
+
+FE -> API : 7. POST /chat\n{session_id, query,\nselected_category (optionnel)}
+activate API
+deactivate FE
+
+== Étape 0-a — Garde-fou brut ==
+
+API -> LLM : 8. check_query_appropriateness(query)
+activate LLM
+LLM --> API : {classification: "SAFE"|"UNSAFE", message}
+deactivate LLM
+
+alt Requête UNSAFE (injection / XSS / haine)
+    API --> FE : {response: message_rejet,\nguardrail_triggered: true}
+    activate FE
+    FE --> FE : Afficher message de rejet
+    deactivate FE
+end
+
+== Étape 0 — Correction orthographique + détection sociale ==
+
+API -> LLM : 9. _check_polite(query)
+activate LLM
+LLM --> API : {case: "A" ou "B", message, corrected}
+deactivate LLM
+
+alt Cas A — Salutation / merci / au revoir
+    API -> Redis : save_session() [ajout à l'historique]
+    activate Redis
+    Redis --> API : OK
+    deactivate Redis
+    API --> FE : {response: réponse_cordiale,\nguardrail_triggered: false}
+    activate FE
+    FE --> FE : Afficher réponse cordiale
+    deactivate FE
+else Cas B — Vraie question (query ← corrected)
+    API -> Redis : 10. get_session(session_id)
+    activate Redis
+    Redis --> API : session (historique, last_chunks, last_category)
+    deactivate Redis
+    note right of API : Suite dans le\ndiagramme suivant\n(étapes 11 → 20)
+end
+
+deactivate API
+
+@enduml

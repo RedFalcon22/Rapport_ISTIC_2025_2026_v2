@@ -115,43 +115,110 @@ destiné aux utilisateurs internes de la plateforme.
 Son architecture inclut des fonctionnalités non présentes dans le module Noa :
 
 \begin{itemize}
-    \item \textbf{Filtrage par catégorie :} l'utilisateur sélectionne l'une des onze catégories
-          fonctionnelles avant de poser sa question.
+    \item \textbf{Filtrage par catégorie (BF-S01) :} l'utilisateur sélectionne l'une des onze
+          catégories fonctionnelles avant de poser sa question.
           La recherche documentaire est restreinte à cette catégorie,
           améliorant la précision des résultats.
     \item \textbf{Correction orthographique et réécriture :} la question est corrigée
           et reformulée avant la recherche, ce qui améliore la pertinence des documents récupérés.
-    \item \textbf{Mode Insights (données en temps réel) :} l'assistant peut interroger
-          le tableau de bord de la plateforme et intégrer des métriques dynamiques
-          dans ses réponses.
-    \item \textbf{Flux guidés :} deux flux conversationnels à états finis gèrent
-          respectivement la prise de rendez-vous de support
-          et le signalement de dysfonctionnements.
+    \item \textbf{Mise en mémoire des réponses (BF-S03) :} les réponses générées sont mémorisées
+          dans Redis. Les questions ultérieures similaires reçoivent une réponse immédiate
+          sans solliciter le modèle.
+    \item \textbf{Gestion de session (BF-S04) :} chaque session conserve l'historique de
+          conversation ainsi que les informations d'identité de l'utilisateur
+          (nom, e-mail, téléphone).
+    \item \textbf{Questions suggérées (BF-S05) :} plus de soixante questions prédéfinies
+          sont proposées à l'utilisateur pour guider l'exploration des fonctionnalités.
+    \item \textbf{Données en temps réel --- double pipeline LIVE/PDF (BF-S06) :}
+          à l'ouverture de session, la plateforme injecte un instantané JSON du tableau de bord
+          (toxicité, profils à risque, climat scolaire, tendances) directement dans la session,
+          aux côtés des informations d'identité de l'utilisateur.
+          Un classificateur d'intention LLM distingue ensuite les questions portant sur des métriques
+          en temps réel (\textit{LIVE}) des questions documentaires (\textit{PDF}) :
+          les premières reçoivent une réponse construite exclusivement à partir des données
+          de session, sans recours à la base documentaire ;
+          les secondes suivent le pipeline RAG standard avec recherche dans ChromaDB.
+    \item \textbf{Génération automatique de description (BF-S07) :} avant l'affichage d'un
+          formulaire de rendez-vous ou de signalement, l'assistant rédige automatiquement
+          un motif ou une description à partir de l'historique de conversation ;
+          ce texte pré-remplit le formulaire et reste modifiable.
+    \item \textbf{Flux guidés --- Contacter le support (BF-S09) :} lorsque la documentation
+          ne permet pas de répondre, trois flux conversationnels à états finis sont déclenchés :
+          prise de rendez-vous, signalement de dysfonctionnement transmis à l'équipe technique,
+          ou accès direct au portail de support en ligne.
+    \item \textbf{Détection des questions de suivi (BF-S12) :} le système détecte si une
+          question fait suite au sujet précédent et réutilise les résultats de recherche
+          déjà obtenus pour maintenir la cohérence de la conversation.
+    \item \textbf{Détection automatique de la langue (BF-S13) :} la langue de l'utilisateur
+          est détectée automatiquement ; l'assistant répond en français ou en anglais.
     \item \textbf{Interface Streamlit :} l'interface est développée avec Streamlit
           pour un déploiement rapide côté interne.
 \end{itemize}
 
-\subsection{Diagramme de séquences}
+\subsection{Diagrammes de séquences}
 
-La Figure~\ref{fig:seq_support} illustre le traitement d'une question
-par le Support Assistant.
+Le traitement d'une question par le Support Assistant est décrit en deux parties.
+La Figure~\ref{fig:seq_support_init} couvre la création de session,
+la sélection de catégorie et la phase de validation incluant le garde-fou,
+la correction orthographique et la détection des messages sociaux, soit les étapes 1 à 10.
 
 \begin{figure}[H]
 \centering
-\fbox{\parbox{0.9\textwidth}{\centering\vspace{3.5cm}[Diagramme de séquences — NetEthic Support Assistant]\vspace{3.5cm}}}
-\caption{Diagramme de séquences — NetEthic Support Assistant}
+\includegraphics[width=0.95\textwidth]{diagramme/06a_sequence_support_init.png}
+\caption{Diagramme de séquences — Support Assistant (1/2) : session et validation}
+\label{fig:seq_support_init}
+\end{figure}
+
+La Figure~\ref{fig:seq_support} détaille ensuite le pipeline RAG proprement dit :
+classification d'intention, réécriture de requête, consultation du cache,
+recherche vectorielle filtrée par catégorie, génération par le LLM,
+écriture en cache et sauvegarde de session (étapes 11 à 20).
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{diagramme/06_sequence_support.png}
+\caption{Diagramme de séquences — Support Assistant (2/2) : pipeline RAG}
 \label{fig:seq_support}
 \end{figure}
 
-\subsection{Diagramme d'état-transition}
+Lorsque la recherche documentaire ne trouve aucun document pertinent,
+le frontend affiche trois boutons de repli.
+La Figure~\ref{fig:seq_support_repli} détaille les deux flux guidés :
+prise de rendez-vous et signalement de bug.
+Dans les deux cas, l'assistant génère automatiquement un motif ou une description
+à partir de l'historique de conversation, et l'identité de l'utilisateur
+est lue directement depuis la session sans que le client ait à la retransmettre.
 
-La Figure~\ref{fig:etat_support} représente les états du Support Assistant,
-incluant les états de traitement standard et les états des flux guidés.
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{diagramme/06b_sequence_support_repli.png}
+\caption{Diagramme de séquences — Support Assistant (flux de repli)}
+\label{fig:seq_support_repli}
+\end{figure}
+
+\subsection{Diagrammes d'état-transition}
+
+La Figure~\ref{fig:etat_support_pipeline} représente le cycle de vie du Support Assistant
+depuis le démarrage du service jusqu'à la génération de la réponse.
+Elle couvre la création de session, la sélection de catégorie,
+et l'ensemble des états internes du pipeline de traitement.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{diagramme/07a_etat_support_pipeline.png}
+\caption{Diagramme d'état-transition — Support Assistant (1/2) : pipeline principal}
+\label{fig:etat_support_pipeline}
+\end{figure}
+
+La Figure~\ref{fig:etat_support} détaille les états du flux de repli,
+déclenché lorsqu'aucun document pertinent n'est trouvé.
+L'utilisateur peut alors prendre un rendez-vous, signaler un bug
+ou accéder directement au portail de support en ligne.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.95\textwidth]{diagramme/07_etat_support.png}
-\caption{Diagramme d'état-transition — NetEthic Support Assistant}
+\caption{Diagramme d'état-transition — Support Assistant (2/2) : flux de repli}
 \label{fig:etat_support}
 \end{figure}
 

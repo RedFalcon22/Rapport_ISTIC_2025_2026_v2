@@ -1,65 +1,101 @@
-@startuml sequence_support
-!theme plain
-skinparam sequenceArrowColor #2C6EA0
-skinparam sequenceLifeLineBorderColor #2C6EA0
-skinparam sequenceParticipantBorderColor #2C6EA0
-skinparam sequenceParticipantBackgroundColor #E8F5E9
-skinparam sequenceActorBorderColor #1A3550
-skinparam sequenceGroupBorderColor #888888
-skinparam defaultFontName Arial
-skinparam defaultFontSize 11
+@startuml sequence_support_rag
 
-title Diagramme de séquences — NetEthic Support Assistant
-
-actor       "Utilisateur interne" as U
+actor "Utilisateur interne" as U
 participant "Streamlit\nFrontend" as FE
-participant "FastAPI\n(Support)" as API
-participant "Garde-fou\n(Guardrail)" as Guard
-participant "Correcteur +\nRéécriture" as Rewrite
-participant "ChromaDB\n(catégorie)" as Chroma
-participant "Détecteur\némotionnel" as Emo
-participant "Serveur LLM\n(kaisens.fr)" as LLM
-participant "Redis\n(session/cache)" as Redis
+participant "FastAPI" as API
+participant "LLM\n(Rewriter)" as LLM
+participant "Redis\n(Session/Cache)" as Redis
+participant "ChromaDB" as Chroma
+participant "LLM\n(Génération)" as LLM_G
 
-U  -> FE  : sélectionne catégorie\n+ saisit question
-FE -> API : POST /support/chat\n{message, sessionId, category}
+note over U, LLM_G
+  Suite du flux principal — la session est déjà créée
+  et la question a passé le garde-fou (étapes 1 à 10).
+end note
 
-group Garde-fou
-  API -> Guard : check(message)
-  Guard --> API : safe = true
+== Étapes 3-4 — Classification d'intention + réécriture ==
+
+API -> LLM : 11. _classify_intent(query)
+activate API
+activate LLM
+LLM --> API : "LIVE" ou "PDF"
+deactivate LLM
+
+API -> LLM : 12. _rewrite_and_detect_followup\n(query, historique)
+activate LLM
+LLM --> API : {rewritten_query, is_followup}
+deactivate LLM
+
+== Étape 5 — Cache sémantique (PDF uniquement) ==
+
+alt Intention = PDF
+    API -> Redis : 13. get(query)\n[similarité cosinus ≥ 0,85]
+    activate Redis
+
+    alt Cache HIT
+        Redis --> API : réponse_en_cache
+        deactivate Redis
+        API -> Redis : save_session()
+        activate Redis
+        Redis --> API : OK
+        deactivate Redis
+        API --> FE : {response: réponse_en_cache,\nfrom_cache: true, no_results: false}
+        activate FE
+        FE --> FE : Afficher la réponse
+        deactivate FE
+    else Cache MISS
+        Redis --> API : null
+        deactivate Redis
+
+        == Étape 7 — Recherche vectorielle filtrée par catégorie ==
+
+        API -> Chroma : 14. search(rewritten_query,\nselected_category, k=5)
+        activate Chroma
+        Chroma --> API : [chunks avec scores de pertinence]
+        deactivate Chroma
+
+        alt Aucun chunk au-dessus du seuil (0,35)
+            API -> Redis : save_session() [réponse de repli]
+            activate Redis
+            Redis --> API : OK
+            deactivate Redis
+            API --> FE : {response: message_repli,\nno_results: true}
+            activate FE
+            FE --> FE : Afficher boutons de repli\n(RDV / Bug / Portail)
+            deactivate FE
+        end
+    end
+else Intention = LIVE
+    API --> API : 13b. _resolve_live_data()\n(depuis session.live_data)
 end
 
-group Correction et réécriture
-  API -> Rewrite : correct(message)
-  Rewrite --> API : correctedMessage
-  API -> Rewrite : rewrite(correctedMessage, history)
-  Rewrite --> API : refinedQuery
+== Étape 8 — Génération de réponse ==
+
+API -> LLM_G : 15. invoke(prompt)\n[contexte + historique + question]
+activate LLM_G
+LLM_G --> API : response_text
+deactivate LLM_G
+
+== Étape 9 — Post-traitement ==
+
+API --> API : 16. XSS sanitize (bleach.clean)\n+ détection repli LLM
+
+alt Intention originale = PDF et pas de repli
+    API -> Redis : 17. set(query, search_query, résultat)
+    activate Redis
+    Redis --> API : OK
+    deactivate Redis
 end
 
-group Recherche documentaire (RAG filtré par catégorie)
-  API -> Chroma : searchSimilar(refinedQuery, category, k=5)
-  Chroma --> API : [DocumentChunk × 5]
-end
-
-group Détection émotionnelle (Module 3)
-  API -> Emo : detect(message)
-  Emo  --> API : {signal: null, confidence: 0.08}
-end
-
-note over Emo : Si signal détecté,\nle flux émotionnel\nprend la main.
-
-group Génération de réponse
-  API -> Redis : getFromCache(refinedQuery, category)
-  Redis --> API : [cache miss]
-  API -> LLM  : POST /v1/chat/completions\n{refinedQuery + chunks + historique}
-  LLM --> API : responseText
-end
-
-API -> Redis : cacheResponse(refinedQuery, category, responseText)
-API -> Redis : updateSession(sessionId, ...)
+API -> Redis : 18. save_session()\n[historique + chunks + catégorie]
+activate Redis
 Redis --> API : OK
+deactivate Redis
 
-API --> FE : {response, sessionId, suggestedQuestions}
-FE  --> U  : affiche la réponse + suggestions
+API --> FE : 19. {session_id, response,\nguardrail_triggered: false, no_results: false}
+deactivate API
+activate FE
+FE --> FE : 20. Afficher la réponse
+deactivate FE
 
 @enduml
