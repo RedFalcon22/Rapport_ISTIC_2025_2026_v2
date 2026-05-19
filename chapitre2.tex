@@ -1,6 +1,6 @@
 \chapter{Spécification des besoins}
 
-\section{Introduction}
+\section*{Introduction}
 
 Le chapitre précédent a présenté le cadre général du projet au sein de Smart-Conseil,
 l'analyse des solutions existantes face au harcèlement scolaire et leurs limites,
@@ -189,7 +189,7 @@ BF-C03 & Ancrage sur textes juridiques
         & Les documents légaux français (Loi 2022 \cite{sparkloi}, Code pénal) sont indexés et intégrés dans l'analyse pour ancrer les décisions dans le cadre légal. \\
 \hline
 BF-C04 & Prétraitement du texte
-        & Avant classification, chaque texte est normalisé : suppression des URLs, normalisation des espaces et mise en minuscules. \\
+        & Chaque texte est nettoyé et normalisé avant d'être soumis au classificateur. \\
 \hline
 BF-C05 & Chaîne de repli
         & En cas d'échec du modèle principal, le système bascule sur les heuristiques, puis sur une étiquette neutre, garantissant toujours une réponse. \\
@@ -258,8 +258,6 @@ BNF-08 & Robustesse
 
 Un acteur représente toute entité externe qui interagit avec le système.
 Sept acteurs principaux sont identifiés.
-Conformément aux consignes de l'ISTIC, les assistants virtuels sont représentés
-comme des acteurs à part entière avec le stéréotype \textit{«Actor»}.
 
 \subsection{Visiteur du site public}
 
@@ -318,12 +316,6 @@ Il est sollicité par les deux assistants virtuels ainsi que par le classificate
 
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Diagramme de cas d'utilisation}
-
-Le diagramme de cas d'utilisation illustre les interactions entre les acteurs du système
-et les fonctionnalités disponibles.
-Conformément aux consignes spécifiques aux projets intégrant un module d'IA générative,
-les assistants Noa et NetEthic Support Assistant sont représentés comme des acteurs
-portant le stéréotype \textit{«Actor»}.
 
 La Figure~\ref{fig:use_case} illustre le système global.
 Le visiteur est l'acteur principal de Noa : il initie les conversations, pose des questions
@@ -430,54 +422,11 @@ Modélisation UML      & Power AMC \\
 \end{tabular}
 \end{table}
 
-\subsection{Environnement logiciel}
-
-Le Tableau~\ref{tab:env_logiciel} présente la pile logicielle utilisée.
-Les choix technologiques ont été guidés par des critères d'efficacité, d'ouverture
-et d'adéquation avec les exigences de chaque module.
-
-\vspace{6pt}
-\begin{table}[H]
-\caption{Environnement logiciel global}
-\label{tab:env_logiciel}
-\centering
-\small
-\setlength{\tabcolsep}{3pt}
-\begin{tabular}{|p{2.5cm}|p{4.5cm}|p{1.8cm}|p{5.5cm}|}
-\hline
-\textbf{Couche} & \textbf{Technologie} & \textbf{Version} & \textbf{Rôle} \\
-\hline
-Backend Python  & Python               & 3.11             & Langage principal — modules Noa et Support Assistant \\
-\hline
-Backend Python  & FastAPI \cite{fastapi} & $\geq$ 0.110   & Framework web — expose les interfaces de programmation REST \\
-\hline
-Backend Scala   & Scala                & 2.12.18          & Langage principal — module classificateur \\
-\hline
-Backend Scala   & Apache Spark         & 3.5.0            & Moteur de traitement de données à grande échelle \\
-\hline
-Orchestration   & LangChain \cite{langchain} & $\geq$ 0.2.0 & Orchestration des étapes de traitement conversationnel \\
-\hline
-Représentation sémantique & sentence-transformers \cite{sbert} & $\geq$ 2.7.0 & Calcul des vecteurs de représentation sémantique \\
-\hline
-Base documentaire & ChromaDB \cite{chromadb} & $\geq$ 0.5    & Stockage et recherche documentaire par similarité \\
-\hline
-Serveur LLM     & vLLM — kaisens.fr \cite{vllm2023} & —       & Serveur d'inférence externe, compatible API OpenAI \\
-\hline
-Modèle LLM      & Mistral-7B-Instruct \cite{mistral2023} & —   & Modèle de génération et de classification de texte \\
-\hline
-Sessions / Cache & Redis \cite{redis}  & $\geq$ 5.0       & Historique conversationnel et mémoire des réponses \\
-\hline
-Interface Noa   & React + Vite         & 18 / 5           & Interface chatbot — site public \\
-\hline
-Interface Support & Streamlit          & $\geq$ 1.32.0    & Interface assistant support interne \\
-\hline
-Déploiement     & Docker Compose \cite{docker} & —          & Conteneurisation et orchestration des services \\
-\hline
-\end{tabular}
-\end{table}
+% La pile logicielle complète est présentée au Chapitre~3 (Tableau~\ref{tab:env_logiciel}),
+% après la justification des choix technologiques.
 
 % ─────────────────────────────────────────────────────────────────────────────
-\section{Conclusion}
+\section*{Conclusion}
 
 Ce chapitre a défini les besoins du système dans sa globalité.
 Les besoins fonctionnels ont établi les fonctionnalités attendues de chacun des quatre modules.

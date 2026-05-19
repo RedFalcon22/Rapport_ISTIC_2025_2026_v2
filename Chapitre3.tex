@@ -1,6 +1,6 @@
 \chapter{État de l'art et choix technologiques}
 
-\section{Introduction}
+\section*{Introduction}
 
 Ce chapitre présente une étude des approches existantes dans les domaines couverts par le projet,
 et justifie les choix technologiques retenus pour chacun des quatre modules.
@@ -27,7 +27,7 @@ Ces systèmes sont rapides et prévisibles, mais incapables de traiter
 des formulations non anticipées.
 
 \textbf{Chatbots à intentions.}
-À partir des années 2010, des plateformes comme Dialogflow ont introduit
+À partir des années 2010, des plateformes comme Dialogflow \cite{dialogflow} ont introduit
 la classification d'intention à partir d'exemples d'entraînement.
 Ces systèmes sont plus souples, mais restent limités aux catégories définies
 à l'avance et nécessitent un travail d'annotation important.
@@ -112,7 +112,7 @@ Le modèle d'encodage retenu est \texttt{paraphrase-multilingual-mpnet-base-v2} 
 pour sa compatibilité française et anglaise, sa robustesse aux reformulations
 et son fonctionnement sans processeur graphique dédié.
 La base vectorielle retenue est \textbf{ChromaDB} \cite{chromadb},
-pour sa persistance locale, sa légèreté et son intégration native avec LangChain.
+pour sa persistance locale, sa légèreté et son intégration aisée dans les pipelines Python.
 
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Modèles de génération de langage}
@@ -337,7 +337,54 @@ Traitement en volume & Apache Spark & Traitement distribué et parallèle \\
 \end{table}
 
 % ─────────────────────────────────────────────────────────────────────────────
-\section{Conclusion}
+\section{Pile logicielle retenue}
+
+Le Tableau~\ref{tab:env_logiciel} présente la pile logicielle complète du système.
+Les versions et les rôles de chaque composant découlent directement des choix
+justifiés dans ce chapitre.
+
+\vspace{6pt}
+\begin{table}[H]
+\caption{Environnement logiciel global}
+\label{tab:env_logiciel}
+\centering
+\small
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{|p{2.5cm}|p{4.5cm}|p{1.8cm}|p{5.5cm}|}
+\hline
+\textbf{Couche} & \textbf{Technologie} & \textbf{Version} & \textbf{Rôle} \\
+\hline
+Backend Python  & Python               & 3.11             & Langage principal — modules Noa et Support Assistant \\
+\hline
+Backend Python  & FastAPI \cite{fastapi} & $\geq$ 0.110   & Framework web — expose les interfaces de programmation REST \\
+\hline
+Backend Scala   & Scala                & 2.12.18          & Langage principal — module classificateur \\
+\hline
+Backend Scala   & Apache Spark         & 3.5.0            & Moteur de traitement de données à grande échelle \\
+\hline
+Orchestration   & LangChain \cite{langchain} & $\geq$ 0.2.0 & Orchestration des étapes de traitement conversationnel \\
+\hline
+Représentation sémantique & sentence-transformers \cite{sbert} & $\geq$ 2.7.0 & Calcul des vecteurs de représentation sémantique \\
+\hline
+Base documentaire & ChromaDB \cite{chromadb} & $\geq$ 0.5    & Stockage et recherche documentaire par similarité \\
+\hline
+Serveur LLM     & vLLM — kaisens.fr \cite{vllm2023} & —       & Serveur d'inférence externe, compatible API OpenAI \\
+\hline
+Modèle LLM      & Mistral-7B-Instruct \cite{mistral2023} & —   & Modèle de génération et de classification de texte \\
+\hline
+Sessions / Cache & Redis \cite{redis}  & $\geq$ 5.0       & Historique conversationnel et mémoire des réponses \\
+\hline
+Interface Noa   & React + Vite         & 18 / 5           & Interface chatbot — site public \\
+\hline
+Interface Support & Streamlit          & $\geq$ 1.32.0    & Interface assistant support interne \\
+\hline
+Déploiement     & Docker Compose \cite{docker} & —          & Conteneurisation et orchestration des services \\
+\hline
+\end{tabular}
+\end{table}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section*{Conclusion}
 
 Ce chapitre a établi, pour chaque domaine technique couvert par le projet,
 un panorama des approches existantes et une justification des choix retenus.

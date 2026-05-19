@@ -1,7 +1,7 @@
 \chapter{Réalisation et tests}
 
 % ─────────────────────────────────────────────────────────────────────────────
-\section{Introduction}
+\section*{Introduction}
 
 Ce chapitre présente la phase de réalisation du système et les résultats obtenus.
 La préparation des données et la mise en place des modèles d'IA ayant été traitées
@@ -14,35 +14,11 @@ les optimisations de performance et le déploiement.
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Environnement de développement}
 
-\subsection{Environnement matériel et logiciel}
-
 Le développement a été réalisé sur des machines sous Windows~11 avec accès au serveur
 d'inférence kaisens.fr.
-Le Tableau~\ref{tab:env_dev} présente les outils et technologies utilisés.
-
-\vspace{6pt}
-\begin{table}[H]
-\centering
-\caption{Environnement de développement}
-\label{tab:env_dev}
-\begin{tabular}{|l|l|}
-\hline
-\textbf{Catégorie} & \textbf{Outil / Version} \\
-\hline
-Langage principal & Python 3.11 \\
-Langage traitement de données & Scala 2.12.18 / Apache Spark 3.5 \\
-Interface interne & Streamlit 1.32 \\
-Interface publique & React 18 + Vite \\
-Backend API & FastAPI 0.110 \\
-Orchestration LLM & LangChain 0.2 \\
-Base documentaire & ChromaDB 0.5 \\
-Mémoire de session & Redis 7.2 \\
-Évaluation RAG & RAGAS 0.1 (juge LLM : Groq API) \\
-Conteneurisation & Docker / Docker Compose \\
-Contrôle de version & Git / GitLab (\texttt{gitlab.dataforethic.fr}) \\
-\hline
-\end{tabular}
-\end{table}
+La pile logicielle complète est décrite au Chapitre~3 (Tableau~\ref{tab:env_logiciel}).
+L'outil supplémentaire utilisé pour cette phase est le framework d'évaluation
+\textbf{RAGAS}~0.1 avec le juge LLM Groq API (\texttt{llama-3.3-70b-versatile}).
 
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Module 1 — Noa : assistant virtuel du site public}
@@ -733,8 +709,8 @@ pour ancrer la décision dans le cadre légal.
 \section{Sécurité}
 \label{sec:securite_donnees}
 
-La sécurité du système s'appuie sur le référentiel \textbf{OWASP Top~10 for LLM
-Applications}~\cite{owasp_llm_2025}, qui recense les risques critiques propres
+La sécurité du système s'appuie sur le référentiel OWASP Top~10 for LLM
+Applications~\cite{owasp_llm_2025}, qui recense les risques critiques propres
 aux applications fondées sur des modèles de langage.
 Le Tableau~\ref{tab:owasp_mitigations} résume les mesures mises en place pour chacun.
 
@@ -847,7 +823,7 @@ avec et sans pooling, mesurées sous charge de 50~requêtes concurrentes.
 \label{tab:redis_pool}
 \begin{tabular}{|l|c|c|}
 \hline
-\textbf{Configuration} & \textbf{Latence moyenne} & \textbf{Latence P99} \\
+\textbf{Configuration} & \textbf{Latence moyenne} & \textbf{Latence P99\footnote{P99 : 99\textsuperscript{e} percentile — latence dépassée par seulement 1\,\% des requêtes.}} \\
 \hline
 Sans pooling (connexion par requête) & $\approx$ 12\,ms & $\approx$ 45\,ms \\
 Avec pooling (20 connexions) & $\approx$ 1,2\,ms & $\approx$ 4\,ms \\
@@ -1030,7 +1006,7 @@ Le module Noa (interface React) est accessible via le navigateur,
 et le Support Assistant (Streamlit) via son port dédié.
 
 % ─────────────────────────────────────────────────────────────────────────────
-\section{Conclusion}
+\section*{Conclusion}
 
 Ce chapitre a présenté la phase de réalisation, les résultats des tests
 et les stratégies de qualité, de sécurité et de performance mises en œuvre.
@@ -1045,7 +1021,7 @@ les deux échecs concernent les scénarios de cache, dont les seuils stricts
 en raison de l'absence de correspondance dans le cache sémantique.
 
 La sécurité du système a été structurée autour du référentiel
-\textbf{OWASP Top~10 for LLM Applications}, couvrant les risques spécifiques
+OWASP Top~10 for LLM Applications, couvrant les risques spécifiques
 aux applications fondées sur des modèles de langage :
 injections de prompt, divulgation de données, hallucinations et vol de modèle.
 Le module de soutien émotionnel fait l'objet d'un tableau OWASP dédié
