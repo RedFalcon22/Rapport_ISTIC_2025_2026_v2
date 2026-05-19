@@ -1,0 +1,93 @@
+@startuml sequence_emotionnel
+!theme plain
+skinparam sequenceArrowColor #2C6EA0
+skinparam sequenceLifeLineBorderColor #2C6EA0
+skinparam sequenceParticipantBorderColor #2C6EA0
+skinparam sequenceParticipantBackgroundColor #EBF4FB
+skinparam sequenceActorBorderColor #1A3550
+skinparam sequenceGroupBorderColor #888888
+skinparam defaultFontName Arial
+skinparam defaultFontSize 11
+
+title Diagramme de séquences — Module de soutien émotionnel
+
+actor       "Étudiant"              as U
+participant "Streamlit\nFrontend"   as FE
+participant "FastAPI\n(api.py)"     as API
+participant "Redis\n(mémoire)"      as Redis
+participant "LLM\nClassificateur"   as CLS
+participant "LLM\nPrincipal"        as LLM
+
+U  -> FE  : saisit un message
+activate FE
+FE -> API : POST /chat {session_id, message, lang}
+activate API
+
+== Étape 1 — Validation de la session ==
+
+API -> Redis : vérifier session_id
+activate Redis
+Redis --> API : {user_id, langue}
+deactivate Redis
+
+== Étape 2 — Contrôle du débit ==
+
+API -> Redis : compter les messages récents (30 s)
+activate Redis
+Redis --> API : compteur actuel
+deactivate Redis
+
+== Étape 3 — Analyse par le garde-fou ==
+
+API -> CLS : classifier(message)
+activate CLS
+CLS --> API : catégorie\n[safe | injection | inappropriate | suicidal | violence]
+deactivate CLS
+
+alt Limite dépassée
+  note over API : réponse de blocage immédiate\n— étapes suivantes ignorées
+
+else Injection ou contenu inapproprié
+  note over API : réponse de refus bienveillant\n(guardrail_triggered: true)
+
+else Idéation suicidaire ou violence
+  API -> LLM : générer réponse de crise\n(langue de l'utilisateur)
+  activate LLM
+  LLM --> API : texte d'accompagnement
+  deactivate LLM
+  API -> API : ajouter systématiquement\nles numéros d'urgence\n(112 / 0800 737 800 / 3919)
+
+else Message sûr
+
+  == Étapes 4-6 — Contexte mémorisé ==
+
+  API -> Redis : charger le profil utilisateur
+  activate Redis
+  Redis --> API : {prénom, stresseurs, situation scolaire, réussites...}
+  deactivate Redis
+  API -> API : enrichir le prompt système\n(langue + profil mémorisé)
+
+  == Étapes 7-8 — Génération de la réponse ==
+
+  API -> LLM : invoquer(prompt système + historique + message)
+  activate LLM
+  LLM --> API : réponse brute
+  deactivate LLM
+
+  == Étape 9 — Post-traitement et sauvegarde ==
+
+  API -> API : limiter à ≤ 3 phrases\n+ nettoyer les balises HTML
+  API -> Redis : sauvegarder dans l'historique
+  activate Redis
+  Redis --> API : OK
+  deactivate Redis
+
+end
+
+API --> FE : {response, guardrail_triggered, language}
+deactivate API
+
+FE --> U : affiche la réponse à l'utilisateur
+deactivate FE
+
+@enduml

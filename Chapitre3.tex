@@ -108,9 +108,9 @@ et ChromaDB (base locale persistante et légère).
 
 \subsection{Choix retenus}
 
-Le modèle d'encodage retenu est \texttt{paraphrase-multilingual-MiniLM-L12-v2} \cite{sbert},
-pour sa compatibilité française et anglaise et sa légèreté
-(fonctionne sans processeur graphique).
+Le modèle d'encodage retenu est \texttt{paraphrase-multilingual-mpnet-base-v2} \cite{sbert},
+pour sa compatibilité française et anglaise, sa robustesse aux reformulations
+et son fonctionnement sans processeur graphique dédié.
 La base vectorielle retenue est \textbf{ChromaDB} \cite{chromadb},
 pour sa persistance locale, sa légèreté et son intégration native avec LangChain.
 
@@ -314,7 +314,9 @@ et leur justification principale.
 \centering
 \caption{Synthèse des choix technologiques retenus}
 \label{tab:synthese_choix}
-\begin{tabular}{|l|l|l|}
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{|p{4.5cm}|p{4cm}|p{6cm}|}
 \hline
 \textbf{Brique} & \textbf{Solution retenue} & \textbf{Justification principale} \\
 \hline

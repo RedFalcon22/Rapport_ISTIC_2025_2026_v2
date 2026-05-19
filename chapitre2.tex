@@ -86,6 +86,9 @@ Le Tableau~\ref{tab:bf_nesa} décrit ses besoins fonctionnels.
 BF-S01 & Filtrer les résultats par catégorie
         & L'utilisateur choisit l'une des 11~catégories de la plateforme avant de poser sa question, ce qui limite la recherche aux documents de ce thème et améliore la précision des réponses. \\
 \hline
+BF-S02 & Répondre aux questions via la documentation
+        & L'assistant recherche les passages les plus pertinents dans la documentation de la plateforme et génère une réponse adaptée à la question de l'utilisateur, en s'appuyant uniquement sur le contenu sélectionné. \\
+\hline
 BF-S03 & Mise en mémoire des réponses
         & Les réponses générées sont mémorisées. Pour les questions ultérieures similaires, la réponse est retournée directement sans solliciter le modèle. \\
 \hline
@@ -96,13 +99,13 @@ BF-S05 & Questions suggérées
         & Plus de 60~questions prédéfinies sont proposées à l'utilisateur pour l'aider à explorer les fonctionnalités de la plateforme. \\
 \hline
 BF-S06 & Données en temps réel
-        & l'assistant répond aux questions sur les données du tableau de bord (toxicité, profils à risque, climat scolaire, tendances) transmises par la plateforme à l'ouverture de la session. \\
+        & Les données du tableau de bord (toxicité, profils à risque, climat scolaire, tendances) sont transmises par la plateforme à l'ouverture de la session. L'assistant reconnaît automatiquement si une question porte sur ces données ou sur la documentation, et adapte sa réponse en conséquence. \\
 \hline
 BF-S07 & Génération automatique de description
         & Avant l'affichage d'un formulaire de rendez-vous ou de signalement, l'assistant rédige automatiquement un motif ou une description à partir de la conversation. Ce texte pré-remplit le formulaire et reste modifiable. \\
 \hline
 BF-S09 & Contacter le support
-        & Lorsque la documentation ne permet pas de répondre, l'assistant offre trois options : planifier un rendez-vous de support sans que l'utilisateur ait à ressaisir ses informations, signaler un dysfonctionnement via un formulaire pré-rempli automatiquement transmis à l'équipe technique, ou accéder directement au portail de support en ligne. \\
+        & Lorsque la documentation ne permet pas de répondre, l'assistant offre trois options : planifier un rendez-vous sans que l'utilisateur ait à ressaisir ses informations, signaler un dysfonctionnement via un formulaire pré-rempli automatiquement transmis à l'équipe technique, ou accéder directement au portail de support en ligne. \\
 \hline
 BF-S12 & Détection des questions de suivi
         & Le système détecte si une question fait suite au sujet précédent et, le cas échéant, réutilise les résultats de recherche déjà obtenus pour répondre de façon cohérente. \\
@@ -116,8 +119,8 @@ BF-S13 & Détection automatique de la langue
 % ── Module 3 : Soutien émotionnel ─────────────────────────────────────────────
 \subsection{Module 3 — Module de soutien émotionnel}
 
-Ce module détecte les signaux de détresse psychologique dans les messages des utilisateurs.
-Il y répond avec empathie et oriente vers les ressources disponibles.
+Ce module accompagne les étudiants en difficulté à travers une conversation bienveillante et continue.
+Il détecte les signaux de mal-être, y répond avec empathie et protège la confidentialité des échanges.
 Le Tableau~\ref{tab:bf_emo} décrit ses besoins fonctionnels.
 
 \vspace{6pt}
@@ -131,29 +134,29 @@ Le Tableau~\ref{tab:bf_emo} décrit ses besoins fonctionnels.
 \hline
 \textbf{ID} & \textbf{Besoin} & \textbf{Description} \\
 \hline
-BF-E01 & Détecter la détresse
-        & Le système détecte six types de signaux de détresse dans les messages : dépression, idéation suicidaire, solitude, anxiété, colère et comportements addictifs. \\
+BF-E01 & Dialoguer avec l'étudiant
+        & L'assistant engage une conversation bienveillante et continue avec l'étudiant. Il s'adapte à ce que l'étudiant exprime et répond de façon personnalisée, en tenant compte des échanges précédents de la session. \\
 \hline
-BF-E02 & Alerte urgente
-        & En cas d'idéation suicidaire, une réponse d'urgence est générée immédiatement avec les numéros d'aide (urgences, cyberviolences, CNAE), toujours présents quelle que soit la réponse générée. \\
+BF-E02 & Détecter les signaux de détresse
+        & Le système analyse chaque message pour identifier si l'étudiant exprime une forme de mal-être : anxiété, sentiment de solitude, tristesse, colère, comportement à risque ou pensées suicidaires. \\
 \hline
 BF-E03 & Répondre avec empathie
-        & Pour les signaux non urgents, l'assistant génère une réponse chaleureuse et empathique, adaptée au type de détresse et à la langue de l'utilisateur. \\
+        & Lorsqu'un signal de détresse non urgent est détecté, l'assistant génère une réponse chaleureuse et brève, formulée dans la langue de l'étudiant et centrée sur ce qu'il ressent. \\
 \hline
-BF-E04 & Orienter vers l'accompagnement
-        & Après détection d'un signal de détresse, le module oriente l'utilisateur vers le module \textit{Accompagnement} de Netethic pour un suivi par un professionnel. \\
+BF-E04 & Alerter en cas de crise
+        & Si le message révèle des pensées suicidaires ou une intention de violence, l'assistant déclenche immédiatement une réponse d'urgence. Les numéros d'aide (urgences, soutien aux victimes, lutte contre les violences) sont toujours affichés, quelle que soit la réponse générée. \\
 \hline
-BF-E05 & Journaliser les événements
-        & Chaque détection est enregistrée avec son type et son horodatage, sans conserver le contenu du message, dans le respect de la confidentialité. \\
+BF-E05 & Mémoriser le profil de l'étudiant
+        & Au fil des échanges, l'assistant retient les informations partagées par l'étudiant — prénom, sources de stress, situation scolaire, réussites — pour personnaliser ses réponses lors des sessions suivantes. \\
 \hline
-BF-E06 & Mémoriser le profil utilisateur
-        & L'assistant mémorise les informations révélées au fil des échanges (prénom, sources de stress, situation scolaire) dans un profil persistant de 30~jours pour personnaliser les réponses lors des sessions suivantes. \\
+BF-E06 & Respecter la confidentialité
+        & Aucun contenu de message n'est conservé dans les journaux. Seuls le type d'événement détecté et son horodatage sont enregistrés, dans le respect strict de la vie privée de l'étudiant. \\
 \hline
-BF-E07 & Limiter le débit des messages
-        & Le nombre de messages envoyés par utilisateur est limité sur une courte période afin de protéger le service contre les abus. \\
+BF-E07 & Filtrer les messages abusifs
+        & Les messages contenant des tentatives de manipulation du système, des propos injurieux ou des contenus inappropriés sont automatiquement bloqués. La session de l'étudiant n'est pas interrompue pour autant. \\
 \hline
-BF-E08 & Prendre en charge l'arabe et le darija
-        & En plus du français et de l'anglais, le module prend en charge l'arabe et le darija tunisien. L'assistant répond toujours dans la langue de l'utilisateur, sans mélange ni traduction. \\
+BF-E08 & Converser dans la langue de l'étudiant
+        & L'assistant répond exclusivement dans la langue choisie par l'étudiant — français ou anglais — sans jamais mélanger les deux langues dans une même réponse. \\
 \hline
 \end{tabular}
 \end{table}
@@ -272,7 +275,7 @@ L'utilisateur interne est un membre du personnel d'un établissement disposant
 d'un accès authentifié à la plateforme Netethic.
 Il interagit avec le \textit{NetEthic Support Assistant} pour obtenir de l'aide sur
 les fonctionnalités de la plateforme, déclarer un incident technique ou planifier
-un rendez-vous de support.
+un rendez-vous.
 
 \subsection{Administrateur}
 
@@ -368,12 +371,11 @@ CU-03 & Poser une question (support interne)
 \hline
 CU-03b & Consulter les suggestions de questions
         & Utilisateur interne
-        & Inclus dans CU-03. L'assistant propose plus de 60~questions prédéfinies réparties
-          sur les 11~catégories pour guider l'utilisateur dans l'exploration des fonctionnalités. \\
+        & Inclus dans CU-03. L'utilisateur choisit une des questions prédéfinies pour explorer les fonctionnalités. \\
 \hline
 CU-04 & Contacter le support
        & Utilisateur interne
-       & Si la documentation ne permet pas de répondre, l'assistant offre trois options : planifier un rendez-vous de support et collecter les informations nécessaires, signaler un dysfonctionnement via un formulaire qui sera transmis à l'équipe technique, ou accéder directement au portail de support en ligne pour consulter les ressources additionnelles. \\
+       & Si pas d'information dans la documentation, l'utilisateur choisit l'une de trois options : planifier un rendez-vous, signaler un dysfonctionnement via un formulaire pré-rempli transmis à l'équipe technique, ou accéder au portail de support en ligne. \\
 \hline
 CU-06 & Bénéficier du soutien émotionnel
        & Utilisateur interne

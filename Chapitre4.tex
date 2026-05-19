@@ -61,25 +61,30 @@ La Figure~\ref{fig:deploiement} montre l'architecture de déploiement du systèm
 \subsection{Conception générale}
 
 Noa est l'assistant virtuel accessible sur le site public de Netethic.
-Son architecture repose sur un pipeline de traitement à cinq étapes :
-classification de l'intention, vérification de la mémoire cache,
-recherche dans la base documentaire, génération de la réponse
-et mise à jour de la mémoire.
+Son architecture repose sur un pipeline à cinq étapes :
+classification de l'intention, vérification du cache, recherche documentaire,
+génération de la réponse et mise à jour du cache.
 
-Les éléments spécifiques à ce module sont :
-\begin{itemize}
-    \item \textbf{Routage par intention :} chaque message est classifié avant tout traitement.
-          Les salutations et les demandes hors sujet reçoivent des réponses prédéfinies immédiates.
-    \item \textbf{Stratégie parent-enfant :} les documents sont indexés à deux niveaux.
-          Les segments courts servent à la recherche précise ;
-          les segments longs fournissent un contexte riche au modèle de génération.
-    \item \textbf{Normalisation des questions fréquentes :} deux questions au sens identique
-          partagent la même réponse mémorisée, grâce à une normalisation par synonymes.
-    \item \textbf{Agent de réservation :} un automate à états finis guide l'utilisateur
-          à travers la collecte de son adresse e-mail et de son numéro de téléphone.
-    \item \textbf{Interface React :} l'interface de Noa est développée en React
-          et intégrée au site Netethic sous forme de fenêtre de conversation flottante.
-\end{itemize}
+\textbf{Routage par intention.}
+Chaque message est classifié avant tout traitement.
+Les salutations et demandes hors sujet reçoivent des réponses prédéfinies immédiates,
+court-circuitant le pipeline RAG complet.
+
+\textbf{Stratégie parent-enfant.}
+Les documents sont indexés à deux niveaux : les segments courts (enfants) servent
+à la recherche par similarité sémantique, tandis que les segments longs (parents)
+sont transmis au LLM pour générer une réponse contextuellement riche.
+
+\textbf{Normalisation des questions fréquentes.}
+Deux questions au sens identique partagent la même réponse mémorisée,
+grâce à une normalisation par synonymes avant la consultation du cache Redis.
+
+\textbf{Agent de réservation.}
+Un automate à états finis guide l'utilisateur lors de la collecte de son adresse
+e-mail et de son numéro de téléphone pour planifier une démonstration.
+
+L'interface est développée en React et intégrée au site Netethic
+sous forme de fenêtre de conversation flottante.
 
 \subsection{Diagramme de séquences}
 
@@ -88,7 +93,7 @@ pour une question factuelle.
 
 \begin{figure}[H]
 \centering
-\fbox{\parbox{0.9\textwidth}{\centering\vspace{3.5cm}[Diagramme de séquences — Module Noa (question factuelle)]\vspace{3.5cm}}}
+\includegraphics[width=0.95\textwidth]{diagramme/04_sequence_noa.png}
 \caption{Diagramme de séquences — Module Noa (question factuelle)}
 \label{fig:seq_noa}
 \end{figure}
@@ -112,48 +117,26 @@ au cours d'une session de conversation.
 
 Le \textit{NetEthic Support Assistant} est l'assistant de support technique
 destiné aux utilisateurs internes de la plateforme.
-Son architecture inclut des fonctionnalités non présentes dans le module Noa :
+Son pipeline repose sur les mêmes composants partagés que Noa
+(serveur LLM, ChromaDB, Redis, LangChain),
+mais introduit deux mécanismes architecturaux distincts.
 
-\begin{itemize}
-    \item \textbf{Filtrage par catégorie (BF-S01) :} l'utilisateur sélectionne l'une des onze
-          catégories fonctionnelles avant de poser sa question.
-          La recherche documentaire est restreinte à cette catégorie,
-          améliorant la précision des résultats.
-    \item \textbf{Correction orthographique et réécriture :} la question est corrigée
-          et reformulée avant la recherche, ce qui améliore la pertinence des documents récupérés.
-    \item \textbf{Mise en mémoire des réponses (BF-S03) :} les réponses générées sont mémorisées
-          dans Redis. Les questions ultérieures similaires reçoivent une réponse immédiate
-          sans solliciter le modèle.
-    \item \textbf{Gestion de session (BF-S04) :} chaque session conserve l'historique de
-          conversation ainsi que les informations d'identité de l'utilisateur
-          (nom, e-mail, téléphone).
-    \item \textbf{Questions suggérées (BF-S05) :} plus de soixante questions prédéfinies
-          sont proposées à l'utilisateur pour guider l'exploration des fonctionnalités.
-    \item \textbf{Données en temps réel --- double pipeline LIVE/PDF (BF-S06) :}
-          à l'ouverture de session, la plateforme injecte un instantané JSON du tableau de bord
-          (toxicité, profils à risque, climat scolaire, tendances) directement dans la session,
-          aux côtés des informations d'identité de l'utilisateur.
-          Un classificateur d'intention LLM distingue ensuite les questions portant sur des métriques
-          en temps réel (\textit{LIVE}) des questions documentaires (\textit{PDF}) :
-          les premières reçoivent une réponse construite exclusivement à partir des données
-          de session, sans recours à la base documentaire ;
-          les secondes suivent le pipeline RAG standard avec recherche dans ChromaDB.
-    \item \textbf{Génération automatique de description (BF-S07) :} avant l'affichage d'un
-          formulaire de rendez-vous ou de signalement, l'assistant rédige automatiquement
-          un motif ou une description à partir de l'historique de conversation ;
-          ce texte pré-remplit le formulaire et reste modifiable.
-    \item \textbf{Flux guidés --- Contacter le support (BF-S09) :} lorsque la documentation
-          ne permet pas de répondre, trois flux conversationnels à états finis sont déclenchés :
-          prise de rendez-vous, signalement de dysfonctionnement transmis à l'équipe technique,
-          ou accès direct au portail de support en ligne.
-    \item \textbf{Détection des questions de suivi (BF-S12) :} le système détecte si une
-          question fait suite au sujet précédent et réutilise les résultats de recherche
-          déjà obtenus pour maintenir la cohérence de la conversation.
-    \item \textbf{Détection automatique de la langue (BF-S13) :} la langue de l'utilisateur
-          est détectée automatiquement ; l'assistant répond en français ou en anglais.
-    \item \textbf{Interface Streamlit :} l'interface est développée avec Streamlit
-          pour un déploiement rapide côté interne.
-\end{itemize}
+\textbf{Double pipeline LIVE/PDF.}
+À l'ouverture de session, la plateforme injecte un instantané JSON du tableau de bord
+directement dans la session utilisateur.
+Un classificateur d'intention LLM sépare ensuite les questions portant sur des métriques
+en temps réel (\textit{LIVE}) des questions documentaires (\textit{PDF}).
+Les premières sont traitées à partir des données de session uniquement,
+sans appel à ChromaDB ; les secondes suivent le pipeline RAG standard.
+
+\textbf{Flux de repli guidés.}
+Lorsqu'aucun document pertinent n'est trouvé, le frontend déclenche trois flux
+conversationnels à états finis : prise de rendez-vous, signalement de dysfonctionnement
+(avec description auto-générée à partir de l'historique) et accès au portail de support.
+Les informations d'identité de l'utilisateur, déjà présentes en session, pré-remplissent
+les formulaires sans ressaisie.
+
+L'interface est développée en Streamlit pour un déploiement rapide côté interne.
 
 \subsection{Diagrammes de séquences}
 
@@ -227,31 +210,75 @@ ou accéder directement au portail de support en ligne.
 
 \subsection{Conception générale}
 
-Le module de soutien émotionnel est un sous-système intégré à l'assistant de support interne.
-Il est activé lorsque le texte d'un utilisateur contient des indicateurs de détresse psychologique.
-Son fonctionnement repose sur trois étapes :
+Le module de soutien émotionnel est un assistant conversationnel dédié aux étudiants,
+accessible via une interface Streamlit.
+Il traite chaque message à travers un pipeline structuré reposant sur quatre mécanismes
+complémentaires.
 
-\begin{enumerate}
-    \item \textbf{Détection :} le message est analysé pour identifier l'un des six types
-          de signaux de détresse : idéation dépressive, idéation suicidaire,
-          solitude, anxiété, colère, comportement addictif.
-    \item \textbf{Génération de réponse :} une réponse empathique est générée par le LLM,
-          adaptée au type de signal détecté.
-          En cas d'idéation suicidaire, une réponse prioritaire est déclenchée immédiatement.
-    \item \textbf{Orientation :} l'utilisateur est dirigé vers le module
-          Accompagnement de la plateforme.
-\end{enumerate}
+\textbf{Protection de l'échange.}
+Chaque message passe par deux vérifications avant tout traitement :
+une limitation du débit par fenêtre glissante Redis,
+puis une analyse par un classifieur LLM à température nulle.
+Les messages abusifs ou les tentatives de manipulation sont bloqués
+à cette étape sans interrompre la session.
+
+\textbf{Détection et réponse de crise.}
+Si le classifieur identifie un signal de crise (idéation suicidaire ou intention de violence),
+une réponse d'urgence est générée dans la langue de l'étudiant.
+Les numéros d'aide sont ajoutés de façon systématique — jamais laissés à la discrétion du LLM.
+
+\textbf{Mémoire persistante.}
+Les informations partagées par l'étudiant (prénom, sources de stress, situation scolaire,
+réussites) sont extraites automatiquement et stockées dans Redis avec une durée de vie
+de trente jours. Ce profil enrichit le prompt système à chaque nouvelle session.
+
+\textbf{Génération empathique.}
+Pour les messages sûrs, l'assistant construit un prompt enrichi du profil mémorisé
+et de l'historique de conversation, puis génère une réponse adaptée à la langue
+et au contexte de l'étudiant, limitée à trois phrases.
 
 \subsection{Diagramme d'activité}
 
-La Figure~\ref{fig:activite_emo} représente le flux de traitement
-du module de soutien émotionnel.
+La Figure~\ref{fig:activite_emo} représente le flux de traitement complet
+d'un message par le module de soutien émotionnel,
+depuis la réception jusqu'à la journalisation de l'événement.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.95\textwidth]{diagramme/08_activite_emotionnel.png}
 \caption{Diagramme d'activité — Module de soutien émotionnel}
 \label{fig:activite_emo}
+\end{figure}
+
+\subsection{Diagramme de séquences}
+
+La Figure~\ref{fig:seq_emotionnel} détaille les interactions entre les composants
+du système lors du traitement d'un message par l'assistant émotionnel.
+Elle couvre les neuf étapes du pipeline : validation de la session,
+contrôle du débit, analyse par le garde-fou, chargement du profil mémorisé,
+enrichissement du prompt, appel au LLM principal, post-traitement
+et sauvegarde de l'historique dans Redis.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{diagramme/08b_sequence_emotionnel.png}
+\caption{Diagramme de séquences — Module de soutien émotionnel}
+\label{fig:seq_emotionnel}
+\end{figure}
+
+\subsection{Diagramme d'état-transition}
+
+La Figure~\ref{fig:etat_emotionnel} représente les états possibles du module
+au cours d'une session de conversation.
+Elle distingue les chemins de blocage (débit dépassé, contenu inapproprié),
+le chemin de crise (alerte immédiate avec numéros d'urgence)
+et le chemin nominal (chargement du profil, génération empathique, sauvegarde).
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{diagramme/08c_etat_emotionnel.png}
+\caption{Diagramme d'état-transition — Module de soutien émotionnel}
+\label{fig:etat_emotionnel}
 \end{figure}
 
 % ─────────────────────────────────────────────────────────────────────────────
@@ -261,19 +288,24 @@ du module de soutien émotionnel.
 
 Le classificateur de harcèlement est un système d'analyse automatique des textes
 soumis à la plateforme Netethic.
-Sa conception repose sur quatre stratégies de classification comparées en parallèle :
+Sa conception repose sur la comparaison de quatre stratégies exécutées en parallèle,
+permettant d'identifier la plus adaptée selon le type de texte et les conditions d'exécution.
 
-\begin{enumerate}
-    \item \textbf{Modèle seul :} inférence directe du LLM sans contexte additionnel.
-          Rapide et généraliste.
-    \item \textbf{Modèle avec ancrage juridique :} les passages de loi les plus pertinents
-          sont récupérés et injectés dans la requête,
-          ancrant la décision dans le droit français.
-    \item \textbf{Règles heuristiques :} correspondance par mots-clés spécifiques au français.
-          Sert de méthode de repli rapide.
-    \item \textbf{Hybride :} appel au LLM avec repli automatique sur les heuristiques
-          en cas d'échec.
-\end{enumerate}
+\textbf{Modèle seul.}
+Inférence directe du LLM sans contexte additionnel.
+Approche généraliste et rapide, servant de référence de comparaison.
+
+\textbf{Modèle avec ancrage juridique.}
+Les passages de loi les plus pertinents sont récupérés depuis ChromaDB et injectés
+dans la requête, ancrant la décision dans le droit français sur le harcèlement.
+
+\textbf{Règles heuristiques.}
+Correspondance par mots-clés spécifiques au français, sans recours au LLM.
+Sert de mécanisme de repli rapide en cas d'indisponibilité du modèle.
+
+\textbf{Hybride.}
+Appel au LLM avec repli automatique sur les heuristiques en cas d'échec ou d'ambiguïté.
+Cette stratégie combine la richesse sémantique du LLM et la robustesse des règles.
 
 \subsection{Taxonomie des catégories}
 

@@ -1,0 +1,40 @@
+@startuml etat_emotionnel
+!theme plain
+skinparam stateBorderColor #2C6EA0
+skinparam stateBackgroundColor #EBF4FB
+skinparam stateArrowColor #2C6EA0
+skinparam defaultFontName Arial
+skinparam defaultFontSize 11
+
+title Diagramme d'état-transition — Module de soutien émotionnel
+
+[*] --> Inactif : démarrage du service
+
+Inactif --> VerificationDebit : message reçu
+
+' ── Contrôle du débit ────────────────────────────────────
+VerificationDebit --> MessageBloque   : limite dépassée
+VerificationDebit --> AnalyseContenu  : débit acceptable
+
+' ── Analyse du contenu (garde-fou) ───────────────────────
+AnalyseContenu --> MessageBloque    : injection / contenu inapproprié
+AnalyseContenu --> AlerteCrise      : idéation suicidaire / violence
+AnalyseContenu --> ChargementProfil : message sûr
+
+' ── Sorties courtes ───────────────────────────────────────
+MessageBloque --> Inactif : réponse de refus envoyée
+
+AlerteCrise --> Inactif : réponse de crise générée\n+ numéros d'urgence ajoutés\n(112 / 0800 737 800 / 3919)
+
+' ── Chemin nominal ────────────────────────────────────────
+ChargementProfil --> EnrichissementPrompt : profil chargé depuis Redis
+
+EnrichissementPrompt --> GenerationReponse : prompt système enrichi\n(langue + profil mémorisé)
+
+GenerationReponse --> PostTraitement : réponse LLM générée
+
+PostTraitement --> SauvegardeSession : ≤ 3 phrases\nbalises HTML supprimées
+
+SauvegardeSession --> Inactif : historique mis à jour dans Redis
+
+@enduml
