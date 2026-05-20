@@ -504,6 +504,42 @@ $\;\longrightarrow\;$ \texttt{NEUTRAL} (réponse de sécurité par défaut)
 \end{center}
 
 % ─────────────────────────────────────────────────────────────────────────────
+\subsection{Tests}
+
+Une suite de 20~tests automatisés couvre l'ensemble des composants du classificateur.
+Elle est exécutée via \texttt{pytest}, sans dépendance au serveur LLM~:
+les appels au modèle sont simulés par des \emph{mocks} Python,
+garantissant une exécution reproductible indépendamment de la disponibilité
+du serveur kaisens.fr.
+Le Tableau~\ref{tab:tests_classif} présente les résultats par groupe fonctionnel.
+
+\vspace{6pt}
+\begin{table}[H]
+\centering
+\caption{Résultats des tests automatisés — Classificateur de harcèlement (20~tests)}
+\label{tab:tests_classif}
+\begin{tabular}{|l|c|c|}
+\hline
+\textbf{Groupe de tests} & \textbf{Nombre} & \textbf{Résultat} \\
+\hline
+Prétraitement (\texttt{TextPreprocessor})       & 5 & 100\,\% \\
+\hline
+Heuristiques (\texttt{classify\_heuristic})     & 3 & 100\,\% \\
+\hline
+Client LLM — mocked (\texttt{LLMClient})        & 4 & 100\,\% \\
+\hline
+Chargement des données (\texttt{load\_data})    & 4 & 100\,\% \\
+\hline
+Configuration (\texttt{config})                 & 4 & 100\,\% \\
+\hline
+\textbf{Total} & \textbf{20} & \textbf{100\,\%} \\
+\hline
+\end{tabular}
+\end{table}
+
+Les 20~tests ont été exécutés avec succès.
+
+% ─────────────────────────────────────────────────────────────────────────────
 \section{Sécurité}
 \label{sec:securite_donnees}
 
