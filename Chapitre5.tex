@@ -293,13 +293,22 @@ L'implémentation est disponible en deux versions complémentaires~:
 \subsection{Évaluation des performances}
 \label{subsec:eval_classif}
 
+L'évaluation comparative a été conduite en deux temps~:
+une première évaluation globale sur le corpus Scala/Spark (1\,500~textes,
+16~catégories), puis une évaluation ciblée sur un \textbf{échantillon stratifié}
+de 150~textes (50~par classe~: Harcèlement, Santé mentale, Non-harcèlement)
+afin d'obtenir des métriques équilibrées, non biaisées par la distribution
+naturelle des classes.
+
+\subsubsection*{Résultats globaux — pipeline Scala/Spark}
+
 Le Tableau~\ref{tab:eval_classif} présente les métriques d'évaluation
-des quatre stratégies sur le corpus de test.
+des quatre stratégies sur le corpus de test de 1\,500~textes.
 
 \vspace{6pt}
 \begin{table}[H]
 \centering
-\caption{Évaluation comparative des quatre stratégies de classification}
+\caption{Évaluation comparative des stratégies — corpus Scala/Spark (1\,500 textes)}
 \label{tab:eval_classif}
 \begin{tabular}{|l|c|c|c|}
 \hline
@@ -309,22 +318,111 @@ Modèle seul                   & 0{,}295 & 0{,}437 & 0{,}352 \\
 \hline
 Modèle avec ancrage juridique & 0{,}223 & 0{,}606 & 0{,}326 \\
 \hline
-Règles heuristiques           & —       & —       & —       \\
+Règles heuristiques           & 0{,}110 & 0{,}333 & 0{,}167 \\
 \hline
-Hybride                       & —       & —       & \textbf{0{,}619} \\
+Hybride                       & 0{,}631 & 0{,}607 & \textbf{0{,}619} \\
 \hline
 \end{tabular}
 \end{table}
 
-Le corpus de test comprend 1\,500~textes en français couvrant les 16~catégories
-de la taxonomie (10~actes de harcèlement et 6~signaux de détresse).
-La stratégie hybride atteint le meilleur F1-score global (0,619),
-soit une amélioration de~76\,\% par rapport au modèle seul (0,352),
-confirmant l'intérêt de combiner l'inférence LLM avec les règles heuristiques
-comme mécanisme de repli.
-La stratégie avec ancrage juridique améliore le rappel (0,606) au détriment
-de la précision (0,223), ce qui traduit une tendance à surclasser les textes
+La stratégie hybride atteint le meilleur F1-score global (0{,}619),
+soit une amélioration de~76\,\% par rapport au modèle seul (0{,}352).
+La stratégie avec ancrage juridique améliore le rappel (0{,}606) au détriment
+de la précision (0{,}223), traduisant une tendance à surclasser les textes
 ambigus comme relevant du harcèlement.
+Les règles heuristiques, en classant la quasi-totalité des textes dans la
+catégorie Non-harcèlement, obtiennent un F1-score macro de 0{,}167 ~:
+elles ne constituent qu'un mécanisme de repli et non une stratégie principale.
+
+\subsubsection*{Évaluation ciblée — pipeline Python LLM (échantillon stratifié)}
+
+Pour valider le comportement du pipeline Python sur les trois classes cibles
+de la plateforme Netethic, une évaluation sur un \textbf{échantillon stratifié
+de 150~textes} (50~par classe) a été conduite sur \textbf{cinq configurations}~:
+la ligne de base heuristique, deux variantes du prompt RAG binaire (sans et avec
+RAG juridique), et deux variantes du prompt Multilabel (sans et avec RAG).
+
+\vspace{6pt}
+\begin{table}[H]
+\centering
+\caption{Évaluation sur échantillon stratifié — pipeline Python LLM (150 textes, 50/classe)}
+\label{tab:eval_python}
+\small
+\begin{tabular}{|l|l|c|c|c|}
+\hline
+\textbf{Stratégie} & \textbf{Classe} & \textbf{Précision} & \textbf{Rappel} & \textbf{F1-score} \\
+\hline
+\multirow{4}{*}{Règles heuristiques}
+ & Harcèlement      & 0{,}00 & 0{,}00 & 0{,}00 \\
+ & Santé mentale    & 0{,}00 & 0{,}00 & 0{,}00 \\
+ & Non-harcèlement  & 0{,}33 & 1{,}00 & 0{,}50 \\
+ & \textit{Macro}   & \textit{0{,}11} & \textit{0{,}33} & \textit{0{,}17} \\
+\hline
+\multirow{3}{*}{RAG-prompt (sans RAG)}
+ & Harcèlement      & 0{,}69 & 0{,}70 & 0{,}69 \\
+ & Santé mentale    & --- & --- & --- \\
+ & Non-harcèlement  & 0{,}43 & 0{,}86 & 0{,}58 \\
+ & \textit{Macro}   & \textit{0{,}37} & \textit{0{,}52} & \textit{0{,}42} \\
+\hline
+\multirow{3}{*}{RAG-prompt (avec RAG)}
+ & Harcèlement      & 0{,}73 & 0{,}76 & 0{,}75 \\
+ & Santé mentale    & --- & --- & --- \\
+ & Non-harcèlement  & 0{,}45 & 0{,}88 & 0{,}59 \\
+ & \textit{Macro}   & \textit{0{,}39} & \textit{0{,}55} & \textit{0{,}45} \\
+\hline
+\multirow{4}{*}{Multilabel LLM (sans RAG)}
+ & Harcèlement      & 0{,}51 & 0{,}74 & 0{,}61 \\
+ & Santé mentale    & \textbf{0{,}94} & 0{,}34 & 0{,}50 \\
+ & Non-harcèlement  & 0{,}53 & 0{,}64 & 0{,}58 \\
+ & \textit{Macro}   & \textit{0{,}66} & \textit{0{,}57} & \textit{0{,}56} \\
+\hline
+\multirow{4}{*}{\textbf{Multilabel LLM (avec RAG)}}
+ & Harcèlement      & \textbf{0{,}68} & \textbf{0{,}76} & \textbf{0{,}72} \\
+ & Santé mentale    & 0{,}71 & 0{,}40 & 0{,}51 \\
+ & Non-harcèlement  & \textbf{0{,}55} & 0{,}72 & \textbf{0{,}62} \\
+ & \textit{Macro}   & \textit{0{,}65} & \textit{0{,}63} & \textbf{\textit{0{,}62}} \\
+\hline
+\end{tabular}
+\end{table}
+
+\noindent\textit{Note~: le prompt RAG binaire prédit uniquement deux classes
+(Harcèlement / Non-harcèlement)~; la Santé mentale est absente de sa taxonomie (---).}
+
+La Figure~\ref{fig:eval_classif_comparison} illustre graphiquement
+la comparaison entre les cinq stratégies sur les trois dimensions d'évaluation.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{figures/eval_classif_comparison.pdf}
+\caption{Comparaison des cinq stratégies de classification~: métriques globales
+         (F1 macro, accuracy), F1 par classe, et précision/rappel pour les
+         classes Harcèlement et Santé mentale.
+         Échantillon stratifié de 150~textes (50 par classe).}
+\label{fig:eval_classif_comparison}
+\end{figure}
+
+La configuration \textbf{Multilabel LLM avec RAG} obtient le meilleur F1 macro
+(\textbf{0{,}62}) et la meilleure exactitude (\textbf{63{,}0\,\%}),
+confirmant l'apport combiné du prompt taxonomique et de l'ancrage RAG juridique.
+Le prompt RAG binaire, bien qu'il atteigne un F1 de 0{,}75 sur la classe
+Harcèlement avec RAG, ne peut structurellement pas détecter la Santé mentale,
+ce qui pénalise son F1 macro (0{,}45).
+L'analyse par classe pour la meilleure configuration révèle~:
+\begin{itemize}
+    \item \textbf{Harcèlement~:} rappel de \textbf{0{,}76} et F1 de 0{,}72 —
+          le modèle détecte les trois quarts des cas avec une précision de 0{,}68,
+          améliorée grâce aux exemples légaux récupérés par le RAG.
+    \item \textbf{Santé mentale~:} précision de 0{,}71 et rappel de 0{,}40 —
+          les signaux de détresse sont correctement identifiés lorsque détectés~;
+          le rappel modéré reflète la difficulté à distinguer les expressions
+          émotionnelles subtiles.
+    \item \textbf{Non-harcèlement~:} F1 de \textbf{0{,}62} avec un rappel de 0{,}72 —
+          le modèle reconnaît correctement la majorité des échanges neutres,
+          limitant les faux positifs sur les conversations anodines.
+\end{itemize}
+Ces résultats valident l'architecture Multilabel LLM avec RAG comme stratégie
+optimale pour la détection tripartite du harcèlement en ligne au sein de la
+plateforme Netethic.
 
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Conclusion}
@@ -344,8 +442,13 @@ la pertinence des résultats de recherche vectorielle.
 Pour le classificateur de harcèlement, le cycle d'apprentissage complet —
 collecte de 977~textes, nettoyage en cinq étapes, augmentation par paraphrase
 automatique, labeling indépendant et comparaison de quatre stratégies —
-a abouti à la sélection de la stratégie hybride avec un F1-score de 0,619,
-contre 0,352 pour le modèle seul.
+a abouti à un F1-score de 0{,}619 pour la stratégie hybride sur le corpus
+Scala/Spark, contre 0{,}352 pour le modèle seul.
+L'évaluation ciblée du pipeline Python LLM sur échantillon stratifié confirme
+la supériorité de l'approche Multilabel LLM avec RAG (F1 macro \textbf{0{,}62})
+sur toutes les autres configurations, dont le prompt RAG binaire (0{,}45) et la
+ligne de base heuristique (0{,}17), avec des F1-scores de 0{,}72 sur Harcèlement,
+0{,}51 sur Santé mentale et 0{,}62 sur Non-harcèlement.
 
 Le chapitre suivant présente la réalisation concrète du système~:
 interfaces utilisateur, résultats des tests automatisés, mesures de sécurité

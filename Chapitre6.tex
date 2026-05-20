@@ -703,6 +703,94 @@ pour ancrer la décision dans le cadre légal.
 \end{tabular}
 \end{table}
 
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Résultats d'évaluation}
+\label{subsec:eval_classif_ch6}
+
+L'évaluation a été conduite sur un \textbf{échantillon stratifié de 150~textes}
+(50~par classe~: Harcèlement, Santé mentale, Non-harcèlement), garantissant
+une mesure équilibrée indépendante de la distribution naturelle des classes.
+Quatre stratégies LLM ont été comparées à la ligne de base heuristique,
+selon deux axes~: le \textbf{format de prompt} (RAG-prompt binaire \textit{vs}
+Multilabel taxonomique) et l'activation du \textbf{module RAG}.
+
+\vspace{6pt}
+\begin{table}[H]
+\centering
+\caption{Résultats d'évaluation sur échantillon stratifié (150 textes, 50/classe)}
+\label{tab:eval_classif_ch6}
+\small
+\begin{tabular}{|l|l|c|c|c|}
+\hline
+\textbf{Stratégie} & \textbf{Classe} & \textbf{Précision} & \textbf{Rappel} & \textbf{F1-score} \\
+\hline
+\multirow{4}{*}{Règles heuristiques}
+ & Harcèlement      & 0{,}00 & 0{,}00 & 0{,}00 \\
+ & Santé mentale    & 0{,}00 & 0{,}00 & 0{,}00 \\
+ & Non-harcèlement  & 0{,}33 & 1{,}00 & 0{,}50 \\
+ & \textit{Macro}   & \textit{0{,}11} & \textit{0{,}33} & \textit{0{,}17} \\
+\hline
+\multirow{3}{*}{RAG-prompt (sans RAG)}
+ & Harcèlement      & 0{,}69 & 0{,}70 & 0{,}69 \\
+ & Santé mentale    & --- & --- & --- \\
+ & Non-harcèlement  & 0{,}43 & 0{,}86 & 0{,}58 \\
+ & \textit{Macro}   & \textit{0{,}37} & \textit{0{,}52} & \textit{0{,}42} \\
+\hline
+\multirow{3}{*}{RAG-prompt (avec RAG)}
+ & Harcèlement      & 0{,}73 & 0{,}76 & 0{,}75 \\
+ & Santé mentale    & --- & --- & --- \\
+ & Non-harcèlement  & 0{,}45 & 0{,}88 & 0{,}59 \\
+ & \textit{Macro}   & \textit{0{,}39} & \textit{0{,}55} & \textit{0{,}45} \\
+\hline
+\multirow{4}{*}{Multilabel LLM (sans RAG)}
+ & Harcèlement      & 0{,}51 & 0{,}74 & 0{,}61 \\
+ & Santé mentale    & \textbf{0{,}94} & 0{,}34 & 0{,}50 \\
+ & Non-harcèlement  & 0{,}53 & 0{,}64 & 0{,}58 \\
+ & \textit{Macro}   & \textit{0{,}66} & \textit{0{,}57} & \textit{0{,}56} \\
+\hline
+\multirow{4}{*}{\textbf{Multilabel LLM (avec RAG)}}
+ & Harcèlement      & \textbf{0{,}68} & \textbf{0{,}76} & \textbf{0{,}72} \\
+ & Santé mentale    & 0{,}71 & 0{,}40 & 0{,}51 \\
+ & Non-harcèlement  & \textbf{0{,}55} & 0{,}72 & \textbf{0{,}62} \\
+ & \textit{Macro}   & \textit{0{,}65} & \textit{0{,}63} & \textbf{\textit{0{,}62}} \\
+\hline
+\end{tabular}
+\end{table}
+
+\noindent\textit{Note~: le prompt RAG binaire ne prédit que deux classes (Harcèlement / Non-harcèlement)~;
+la classe Santé mentale est structurellement absente de sa taxonomie (---)}.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{figures/eval_classif_comparison.pdf}
+\caption{Comparaison des cinq stratégies de classification~: métriques globales
+         (F1 macro, accuracy), F1 par classe et précision/rappel pour les deux
+         classes à enjeu (Harcèlement et Santé mentale).
+         Échantillon stratifié de 150~textes (50 par classe).}
+\label{fig:eval_classif_ch6}
+\end{figure}
+
+La stratégie \textbf{Multilabel LLM avec RAG} obtient le meilleur F1 macro
+(\textbf{0{,}62}), surpassant toutes les autres configurations.
+L'apport du RAG est visible sur la classe Harcèlement~: la précision passe
+de 0{,}51 à 0{,}68 grâce aux exemples légaux récupérés, qui ancrent
+la décision dans des définitions formelles.
+Le prompt RAG binaire, bien qu'efficace sur la classe Harcèlement (F1~=~0{,}75
+avec RAG), ne peut structurellement pas détecter la Santé mentale.
+L'analyse par classe révèle trois comportements complémentaires~:
+\begin{itemize}
+    \item \textbf{Harcèlement~:} le meilleur modèle (Multilabel+RAG) atteint un
+          rappel de \textbf{0{,}76} avec une précision de 0{,}68, détectant les
+          trois quarts des cas réels tout en limitant les faux positifs.
+    \item \textbf{Santé mentale~:} le modèle Multilabel sans RAG affiche une
+          précision de \textbf{0{,}94}~; avec RAG, la précision baisse à 0{,}71
+          mais le rappel remonte de 0{,}34 à 0{,}40, réduisant les cas non détectés.
+    \item \textbf{Non-harcèlement~:} F1 stable autour de 0{,}58--0{,}62 pour les
+          variantes Multilabel, montrant que le modèle reconnaît correctement
+          la majorité des échanges anodins.
+\end{itemize}
+
+% ─────────────────────────────────────────────────────────────────────────────
 \subsection{Interface utilisateur}
 
 La Figure~\ref{fig:classif_interface} montre les résultats produits par le classificateur
@@ -714,6 +802,42 @@ pour un texte d'exemple.
 \caption{Classificateur de harcèlement — résultats sur un texte d'exemple}
 \label{fig:classif_interface}
 \end{figure}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\subsection{Tests}
+
+Une suite de 20~tests automatisés couvre l'ensemble des composants du classificateur.
+Elle est exécutée via \texttt{pytest}, sans dépendance au serveur LLM~:
+les appels au modèle sont simulés par des \emph{mocks} Python,
+garantissant une exécution reproductible indépendamment de la disponibilité
+du serveur kaisens.fr.
+Le Tableau~\ref{tab:tests_classif} présente les résultats par groupe fonctionnel.
+
+\vspace{6pt}
+\begin{table}[H]
+\centering
+\caption{Résultats des tests automatisés — Classificateur de harcèlement (20~tests)}
+\label{tab:tests_classif}
+\begin{tabular}{|l|c|c|}
+\hline
+\textbf{Groupe de tests} & \textbf{Nombre} & \textbf{Résultat} \\
+\hline
+Prétraitement (\texttt{TextPreprocessor})       & 5 & 100\,\% \\
+\hline
+Heuristiques (\texttt{classify\_heuristic})     & 3 & 100\,\% \\
+\hline
+Client LLM — mocked (\texttt{LLMClient})        & 4 & 100\,\% \\
+\hline
+Chargement des données (\texttt{load\_data})    & 4 & 100\,\% \\
+\hline
+Configuration (\texttt{config})                 & 4 & 100\,\% \\
+\hline
+\textbf{Total} & \textbf{20} & \textbf{100\,\%} \\
+\hline
+\end{tabular}
+\end{table}
+
+Les 20~tests ont été exécutés avec succès.
 
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Sécurité}
