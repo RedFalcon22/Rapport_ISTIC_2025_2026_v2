@@ -1,12 +1,14 @@
-\chapter{Conception}
+\chapter{Conception et Mise en place}
 
 \section*{Introduction}
 
-Ce chapitre présente la conception du système dans son ensemble.
-Il est structuré en deux parties.
-La première décrit l'architecture commune aux quatre modules.
-La seconde détaille la conception spécifique de chacun d'eux,
-illustrée par des diagrammes UML (Unified Modeling Language — langage de modélisation unifié).
+Le chapitre précédent a établi les choix technologiques retenus pour chaque module :
+l'architecture RAG avec ChromaDB et Mistral-7B pour les modules conversationnels,
+le LLM conversationnel avec profil persistant pour le soutien émotionnel,
+et l'ancrage juridique combiné aux règles heuristiques pour le classificateur.
+Ce chapitre couvre deux phases étroitement liées : la conception du système et la mise en place des modèles d'intelligence artificielle.
+La première partie présente l'architecture commune aux quatre modules et la conception spécifique de chacun d'eux, illustrée par des diagrammes UML (Unified Modeling Language — langage de modélisation unifié).
+La seconde partie décrit la préparation des données et la construction des bases de connaissances pour les modules RAG, ainsi que le cycle complet d'apprentissage du classificateur de harcèlement.
 
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Architecture commune du système}
@@ -19,7 +21,7 @@ La Figure~\ref{fig:composants_global} illustre l'architecture globale.
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.95\textwidth]{diagramme/02_composants_global.png}
+\hspace*{-0.1\textwidth}\includegraphics[width=1.2\textwidth]{diagramme/12_composants_architecture.png}
 \caption{Diagramme de composants — Architecture globale du système}
 \label{fig:composants_global}
 \end{figure}
@@ -29,34 +31,43 @@ La Figure~\ref{fig:composants_global} illustre l'architecture globale.
 Les composants suivants sont utilisés par plusieurs modules :
 
 \begin{itemize}
-    \item \textbf{Serveur LLM (kaisens.fr) :} point central de génération de réponses
-          en langage naturel, utilisé par les modules Noa, Support Assistant et le classificateur.
-    \item \textbf{Base documentaire vectorielle (ChromaDB) :} stocke les extraits de documents
-          indexés pour la recherche par similarité.
-          Chaque module possède sa propre collection de documents.
-    \item \textbf{Gestionnaire de mémoire (Redis) :} assure la persistance des sessions
-          conversationnelles et la mémorisation des réponses fréquentes \cite{redis}.
-    \item \textbf{Orchestrateur LangChain :} coordonne les étapes de traitement
-          (classification d'intention, recherche documentaire, appel au LLM,
-          gestion de session) \cite{langchain}.
-    \item \textbf{Conteneurisation Docker :} tous les services sont déployés
-          dans des conteneurs isolés, garantissant la reproductibilité
-          et la portabilité de l'environnement \cite{docker}.
+    \item \textbf{Serveur LLM partagé (kaisens.fr) :} Point central de génération de réponses
+          en langage naturel pour les quatre modules.
+          Il s'appuie sur vLLM avec le modèle Mistral-7B-Instruct v0.3 sur GPU NVIDIA A100,
+          exposé via une interface compatible OpenAI (\texttt{POST /v1/chat/completions}).
+    \item \textbf{Base documentaire vectorielle (ChromaDB) :} Stocke les extraits de documents
+          indexés pour la recherche par similarité sémantique.
+          Chaque module possède sa propre collection : le module Noa et le Support Assistant
+          embarquent ChromaDB directement dans leur conteneur API,
+          tandis que le Classificateur l'instancie comme service Docker dédié.
+    \item \textbf{Gestionnaire de mémoire (Redis) :} Assure la persistance des sessions
+          conversationnelles, le cache sémantique cosinus et la limitation de débit \cite{redis}.
+    \item \textbf{Orchestrateur LangChain :} Coordonne les étapes de traitement
+          pour les modules conversationnels (Noa, Support, Soutien émotionnel) :
+          classification d'intention, recherche documentaire, appel LLM
+          et gestion de session \cite{langchain}.
+    \item \textbf{Conteneurisation Docker :} Chaque module est déployé dans sa propre stack
+          Docker Compose isolée, garantissant la reproductibilité, la portabilité
+          et l'indépendance entre modules \cite{docker}.
 \end{itemize}
 
 \subsection{Architecture de déploiement}
 
-La Figure~\ref{fig:deploiement} montre l'architecture de déploiement du système global.
+Chaque module est déployé de manière indépendante dans sa propre stack Docker Compose.
+Cette isolation garantit qu'un module peut être mis à jour, redémarré ou remplacé
+sans affecter les autres.
+La Figure~\ref{fig:deploiement} présente la vue d'ensemble du déploiement avec les quatre stacks et le LLM partagé.
+Les diagrammes de déploiement détaillés de chaque module sont fournis dans les sections correspondantes.
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.95\textwidth]{diagramme/03_deploiement_docker.png}
-\caption{Diagramme de déploiement — Infrastructure Docker du système}
+\hspace*{-0.1\textwidth}\includegraphics[width=1.2\textwidth]{diagramme/13_deploiement_uml.png}
+\caption{Vue d'ensemble du déploiement — 4 stacks indépendantes de la plateforme NetEthic AI}
 \label{fig:deploiement}
 \end{figure}
 
 % ─────────────────────────────────────────────────────────────────────────────
-\section{Module 1 — Noa : assistant virtuel du site public}
+\section{Module 1 — Noa : Assistant virtuel du site public}
 
 \subsection{Conception générale}
 
@@ -83,6 +94,28 @@ grâce à une normalisation par synonymes avant la consultation du cache Redis.
 Un automate à états finis guide l'utilisateur lors de la collecte de son adresse
 e-mail et de son numéro de téléphone pour planifier une démonstration.
 
+\subsection{Diagramme de composants}
+
+La Figure~\ref{fig:composants_noa} illustre l'organisation interne du module Noa en trois couches (présentation, métier et données) ainsi que les interactions entre ses composants principaux.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{diagramme/18_composants_noa.png}
+\caption{Diagramme de composants — Module Noa}
+\label{fig:composants_noa}
+\end{figure}
+
+\subsection{Diagramme de déploiement}
+
+La Figure~\ref{fig:deploiement_noa} présente la stack Docker Compose du module Noa avec ses conteneurs et leurs interconnexions.
+
+\begin{figure}[H]
+\centering
+\hspace*{-0.1\textwidth}\includegraphics[width=1.2\textwidth]{diagramme/14_deploiement_noa.png}
+\caption{Diagramme de déploiement — Module Noa (stack Docker Compose)}
+\label{fig:deploiement_noa}
+\end{figure}
+
 \subsection{Diagramme de séquences}
 
 La Figure~\ref{fig:seq_noa} illustre le déroulement d'une interaction typique avec Noa
@@ -90,7 +123,7 @@ pour une question factuelle.
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.95\textwidth]{diagramme/04_sequence_noa.png}
+\hspace*{-0.1\textwidth}\includegraphics[width=1.2\textwidth]{diagramme/04_sequence_noa.png}
 \caption{Diagramme de séquences — Module Noa (question factuelle)}
 \label{fig:seq_noa}
 \end{figure}
@@ -102,7 +135,7 @@ au cours d'une session de conversation.
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.95\textwidth]{diagramme/05_etat_noa.png}
+\hspace*{-0.1\textwidth}\includegraphics[width=1.2\textwidth]{diagramme/05_etat_noa.png}
 \caption{Diagramme d'état-transition — Module Noa}
 \label{fig:etat_noa}
 \end{figure}
@@ -135,12 +168,32 @@ les formulaires sans ressaisie.
 
 L'interface est développée en Streamlit pour un déploiement rapide côté interne.
 
+\subsection{Diagramme de composants}
+
+La Figure~\ref{fig:composants_support} illustre l'architecture interne du Support Assistant et les interactions entre ses composants.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{diagramme/19_composants_support.png}
+\caption{Diagramme de composants — Module Support Assistant}
+\label{fig:composants_support}
+\end{figure}
+
+\subsection{Diagramme de déploiement}
+
+La Figure~\ref{fig:deploiement_support} présente la stack Docker Compose du Support Assistant avec ses conteneurs et leurs interconnexions.
+
+\begin{figure}[H]
+\centering
+\hspace*{-0.1\textwidth}\includegraphics[width=1.2\textwidth]{diagramme/15_deploiement_support.png}
+\caption{Diagramme de déploiement — Module Support Assistant (stack Docker Compose)}
+\label{fig:deploiement_support}
+\end{figure}
+
 \subsection{Diagrammes de séquences}
 
 Le traitement d'une question par le Support Assistant est décrit en deux parties.
-La Figure~\ref{fig:seq_support_init} couvre la création de session,
-la sélection de catégorie et la phase de validation incluant le garde-fou,
-la correction orthographique et la détection des messages sociaux, soit les étapes 1 à 10.
+La Figure~\ref{fig:seq_support_init} couvre la phase d'initialisation et de validation (étapes 1 à 10).
 
 \begin{figure}[H]
 \centering
@@ -149,10 +202,7 @@ la correction orthographique et la détection des messages sociaux, soit les ét
 \label{fig:seq_support_init}
 \end{figure}
 
-La Figure~\ref{fig:seq_support} détaille ensuite le pipeline RAG proprement dit :
-classification d'intention, réécriture de requête, consultation du cache,
-recherche vectorielle filtrée par catégorie, génération par le LLM,
-écriture en cache et sauvegarde de session (étapes 11 à 20).
+La Figure~\ref{fig:seq_support} détaille le pipeline RAG (étapes 11 à 20).
 
 \begin{figure}[H]
 \centering
@@ -161,45 +211,15 @@ recherche vectorielle filtrée par catégorie, génération par le LLM,
 \label{fig:seq_support}
 \end{figure}
 
-Lorsque la recherche documentaire ne trouve aucun document pertinent,
-le frontend affiche trois boutons de repli.
-La Figure~\ref{fig:seq_support_repli} détaille les deux flux guidés :
-prise de rendez-vous et signalement de bug.
-Dans les deux cas, l'assistant génère automatiquement un motif ou une description
-à partir de l'historique de conversation, et l'identité de l'utilisateur
-est lue directement depuis la session sans que le client ait à la retransmettre.
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.95\textwidth]{diagramme/06b_sequence_support_repli.png}
-\caption{Diagramme de séquences — Support Assistant (flux de repli)}
-\label{fig:seq_support_repli}
-\end{figure}
-
 \subsection{Diagrammes d'état-transition}
 
-La Figure~\ref{fig:etat_support_pipeline} représente le cycle de vie du Support Assistant
-depuis le démarrage du service jusqu'à la génération de la réponse.
-Elle couvre la création de session, la sélection de catégorie,
-et l'ensemble des états internes du pipeline de traitement.
+La Figure~\ref{fig:etat_support_pipeline} représente le cycle de vie du Support Assistant, du démarrage jusqu'à la génération de la réponse, incluant les flux de repli.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.95\textwidth]{diagramme/07a_etat_support_pipeline.png}
-\caption{Diagramme d'état-transition — Support Assistant (1/2) : pipeline principal}
+\caption{Diagramme d'état-transition — Support Assistant : pipeline et flux de repli}
 \label{fig:etat_support_pipeline}
-\end{figure}
-
-La Figure~\ref{fig:etat_support} détaille les états du flux de repli,
-déclenché lorsqu'aucun document pertinent n'est trouvé.
-L'utilisateur peut alors prendre un rendez-vous, signaler un bug
-ou accéder directement au portail de support en ligne.
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.95\textwidth]{diagramme/07_etat_support.png}
-\caption{Diagramme d'état-transition — Support Assistant (2/2) : flux de repli}
-\label{fig:etat_support}
 \end{figure}
 
 % ─────────────────────────────────────────────────────────────────────────────
@@ -234,6 +254,28 @@ Pour les messages sûrs, l'assistant construit un prompt enrichi du profil mémo
 et de l'historique de conversation, puis génère une réponse adaptée à la langue
 et au contexte de l'étudiant, limitée à trois phrases.
 
+\subsection{Diagramme de composants}
+
+La Figure~\ref{fig:composants_emotionnel} illustre l'architecture en couches du module de soutien émotionnel et les interactions entre ses composants.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{diagramme/20_composants_emotionnel.png}
+\caption{Diagramme de composants — Module de soutien émotionnel}
+\label{fig:composants_emotionnel}
+\end{figure}
+
+\subsection{Diagramme de déploiement}
+
+La Figure~\ref{fig:deploiement_emotionnel} présente la stack Docker Compose du module de soutien émotionnel avec ses conteneurs et leurs interconnexions.
+
+\begin{figure}[H]
+\centering
+\hspace*{-0.1\textwidth}\includegraphics[width=1.2\textwidth]{diagramme/16_deploiement_emotionnel.png}
+\caption{Diagramme de déploiement — Module de soutien émotionnel (stack Docker Compose)}
+\label{fig:deploiement_emotionnel}
+\end{figure}
+
 \subsection{Diagramme d'activité}
 
 La Figure~\ref{fig:activite_emo} représente le flux de traitement complet
@@ -242,19 +284,14 @@ depuis la réception jusqu'à la journalisation de l'événement.
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.95\textwidth]{diagramme/08_activite_emotionnel.png}
+\includegraphics[width=0.6\textwidth]{diagramme/08_activite_emotionnel.png}
 \caption{Diagramme d'activité — Module de soutien émotionnel}
 \label{fig:activite_emo}
 \end{figure}
 
 \subsection{Diagramme de séquences}
 
-La Figure~\ref{fig:seq_emotionnel} détaille les interactions entre les composants
-du système lors du traitement d'un message par l'assistant émotionnel.
-Elle couvre les neuf étapes du pipeline : validation de la session,
-contrôle du débit, analyse par le garde-fou, chargement du profil mémorisé,
-enrichissement du prompt, appel au LLM principal, post-traitement
-et sauvegarde de l'historique dans Redis.
+La Figure~\ref{fig:seq_emotionnel} détaille les interactions entre les composants lors du traitement d'un message par l'assistant émotionnel.
 
 \begin{figure}[H]
 \centering
@@ -265,11 +302,7 @@ et sauvegarde de l'historique dans Redis.
 
 \subsection{Diagramme d'état-transition}
 
-La Figure~\ref{fig:etat_emotionnel} représente les états possibles du module
-au cours d'une session de conversation.
-Elle distingue les chemins de blocage (débit dépassé, contenu inapproprié),
-le chemin de crise (alerte immédiate avec numéros d'urgence)
-et le chemin nominal (chargement du profil, génération empathique, sauvegarde).
+La Figure~\ref{fig:etat_emotionnel} représente les états possibles du module au cours d'une session, incluant les chemins de blocage, de crise et nominal.
 
 \begin{figure}[H]
 \centering
@@ -304,36 +337,27 @@ Sert de mécanisme de repli rapide en cas d'indisponibilité du modèle.
 Appel au LLM avec repli automatique sur les heuristiques en cas d'échec ou d'ambiguïté.
 Cette stratégie combine la richesse sémantique du LLM et la robustesse des règles.
 
-\subsection{Taxonomie des catégories}
+\subsection{Diagramme de composants}
 
-Le système attribue plusieurs étiquettes simultanément selon une taxonomie à seize catégories.
-Le Tableau~\ref{tab:taxonomie} présente la répartition entre actes de harcèlement
-et signaux de détresse.
+La Figure~\ref{fig:composants_classificateur} illustre l'architecture interne du classificateur et la distribution des quatre stratégies de classification.
 
-\vspace{6pt}
-\begin{table}[H]
+\begin{figure}[H]
 \centering
-\caption{Taxonomie des catégories du classificateur}
-\label{tab:taxonomie}
-\begin{tabular}{|l|l|}
-\hline
-\textbf{Type} & \textbf{Catégories} \\
-\hline
-Actes de harcèlement (10) &
-Insultes, menaces, humiliation, exclusion, \\ &
-rumeurs, usurpation d'identité, chantage, \\ &
-harcèlement physique, cyberharcèlement, discrimination \\
-\hline
-Signaux de détresse (6) &
-Idéation dépressive, idéation suicidaire, \\ &
-solitude, anxiété, colère, comportement addictif \\
-\hline
-\end{tabular}
-\end{table}
+\hspace*{-0.1\textwidth}\includegraphics[width=1.2\textwidth]{diagramme/21_composants_classificateur.png}
+\caption{Diagramme de composants — Classificateur de harcèlement}
+\label{fig:composants_classificateur}
+\end{figure}
 
-Le système est implémenté en deux versions :
-Scala/Spark pour le traitement en parallèle à grande échelle,
-et Python pour les expérimentations rapides sur des corpus réduits.
+\subsection{Diagramme de déploiement}
+
+La Figure~\ref{fig:deploiement_classificateur} présente la stack Docker Compose du classificateur avec ses services et leurs interactions.
+
+\begin{figure}[H]
+\centering
+\hspace*{-0.1\textwidth}\includegraphics[width=1.2\textwidth]{diagramme/17_deploiement_classificateur.png}
+\caption{Diagramme de déploiement — Classificateur de harcèlement (stack Docker Compose)}
+\label{fig:deploiement_classificateur}
+\end{figure}
 
 \subsection{Diagramme de séquences}
 
@@ -341,7 +365,7 @@ La Figure~\ref{fig:seq_classif} illustre le flux de classification d'un texte.
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.95\textwidth]{diagramme/09_sequence_classificateur.png}
+\hspace*{-0.1\textwidth}\includegraphics[width=1.2\textwidth]{diagramme/09_sequence_classificateur.png}
 \caption{Diagramme de séquences — Classificateur de harcèlement}
 \label{fig:seq_classif}
 \end{figure}
@@ -368,23 +392,23 @@ les relations qui les unissent.
 Les classes centrales sont les suivantes :
 
 \begin{itemize}
-    \item \textbf{ChatSession :} représente une session conversationnelle.
+    \item \textbf{ChatSession :} Représente une session conversationnelle.
           Attributs : \texttt{sessionId}, \texttt{userId}, \texttt{moduleType}, \texttt{createdAt}, \texttt{expiresAt}.
           Une session agrège plusieurs instances de \texttt{Message}.
-    \item \textbf{Message :} représente un message échangé au cours d'une session.
+    \item \textbf{Message :} Représente un message échangé au cours d'une session.
           Attributs : \texttt{messageId}, \texttt{content}, \texttt{role} (utilisateur/assistant), \texttt{timestamp}.
           Chaque message est associé à une \texttt{IntentClassification} et peut référencer un \texttt{Response}.
-    \item \textbf{IntentClassification :} encapsule le résultat de la classification d'intention.
+    \item \textbf{IntentClassification :} Encapsule le résultat de la classification d'intention.
           Attributs : \texttt{intent} (factual, chitchat, follow-up, forbidden), \texttt{confidence}.
-    \item \textbf{DocumentChunk :} représente un extrait de document indexé dans la base vectorielle.
+    \item \textbf{DocumentChunk :} Représente un extrait de document indexé dans la base vectorielle.
           Attributs : \texttt{chunkId}, \texttt{content}, \texttt{embedding}, \texttt{category}, \texttt{sourceDocument}.
-    \item \textbf{Response :} encapsule la réponse générée par le LLM.
+    \item \textbf{Response :} Encapsule la réponse générée par le LLM.
           Attributs : \texttt{responseId}, \texttt{content}, \texttt{sourceChunks}, \texttt{latency}, \texttt{cached}.
-    \item \textbf{ReservationRequest :} modélise une demande de réservation collectée par Noa ou le Support Assistant.
+    \item \textbf{ReservationRequest :} Modélise une demande de réservation collectée par Noa ou le Support Assistant.
           Attributs : \texttt{requestId}, \texttt{email}, \texttt{phone}, \texttt{requestedDate}, \texttt{channel}, \texttt{subject}.
-    \item \textbf{HarassmentClassification :} encapsule le résultat de l'analyse d'un texte par le classificateur.
+    \item \textbf{HarassmentClassification :} Encapsule le résultat de l'analyse d'un texte par le classificateur.
           Attributs : \texttt{textId}, \texttt{labels}, \texttt{strategy}, \texttt{confidence}, \texttt{urgencyFlag}, \texttt{timestamp}.
-    \item \textbf{EmotionalSignal :} représente un signal de détresse détecté dans un message.
+    \item \textbf{EmotionalSignal :} Représente un signal de détresse détecté dans un message.
           Attributs : \texttt{signalType} (dépression, idéation suicidaire, solitude, anxiété, colère, addiction),
           \texttt{severity}, \texttt{detectedAt}.
 \end{itemize}
@@ -397,13 +421,322 @@ Les classes centrales sont les suivantes :
 \end{figure}
 
 % ─────────────────────────────────────────────────────────────────────────────
+% PARTIE 2 — Mise en place du modèle d'IA générative
+% ─────────────────────────────────────────────────────────────────────────────
+
+\section{Préparation des bases de connaissances RAG}
+
+Les modules Noa et Support Assistant reposent sur une architecture
+\textit{Retrieval-Augmented Generation} (RAG) dont la qualité des réponses
+dépend directement de la qualité et de la structure des documents indexés.
+La phase de préparation consiste à transformer les sources documentaires brutes
+en fichiers Markdown structurés et enrichis, exploitables par la base
+vectorielle ChromaDB.
+
+\subsection{Module Noa — sources documentaires publiques}
+
+\paragraph{Extraction et conversion}\mbox{}\newline
+
+La base de connaissances de Noa est constituée à partir du contenu du site public
+de Netethic.
+Les vingt-et-une pages du site ont été extraites et converties au format Markdown.
+Cette conversion produit des fichiers textuels structurés,
+plus adaptés au découpage en segments que les sources HTML brutes.
+
+\paragraph{Enrichissement des fichiers Markdown}\mbox{}\newline
+
+Après conversion, chaque fichier Markdown a été relu et enrichi
+pour corriger les problèmes courants liés à l'extraction automatique~:
+
+\begin{itemize}
+    \item \textbf{Clarification des sous-titres :} Les intitulés de section trop courts
+          ou ambigus ont été reformulés pour décrire explicitement le contenu
+          de la rubrique et améliorer la précision de la recherche par similarité.
+    \item \textbf{Complétion des informations manquantes :} Certains passages
+          incomplets (tarifs, conditions d'accès, coordonnées) ont été complétés
+          à partir des sources officielles.
+    \item \textbf{Suppression des éléments non informatifs :} Les menus de navigation,
+          pieds de page et formulaires ont été retirés pour ne conserver
+          que le contenu textuel utile à la réponse.
+\end{itemize}
+
+\paragraph{Stratégie d'indexation parent-enfant}\mbox{}\newline
+
+Les documents enrichis ont été découpés selon une stratégie parent-enfant~:
+les segments courts (enfants) servent à la recherche par similarité sémantique,
+tandis que les segments longs (parents) sont transmis au LLM pour générer
+une réponse contextuellement riche.
+Cette stratégie permet d'allier précision de la recherche et richesse
+du contexte fourni au modèle de génération.
+
+Le Tableau~\ref{tab:kb_noa} présente les statistiques de la base de connaissances
+constituée pour Noa.
+
+\vspace{6pt}
+\begin{table}[H]
+\centering
+\caption{Statistiques de la base de connaissances — Module Noa}
+\label{tab:kb_noa}
+\begin{tabular}{|l|c|}
+\hline
+\textbf{Paramètre} & \textbf{Valeur} \\
+\hline
+Nombre de pages indexées    & 21 \\
+\hline
+Nombre de segments (chunks) & 177 \\
+\hline
+Modèle d'embedding          & \texttt{paraphrase-multilingual-mpnet-base-v2} \\
+\hline
+Seuil de pertinence         & 0,35 \\
+\hline
+Base vectorielle            & ChromaDB \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{Module Support Assistant — documentation interne}
+
+\paragraph{Sources documentaires}\mbox{}\newline
+
+La base de connaissances du Support Assistant est constituée à partir
+de la documentation technique interne fournie par Smart-Conseil.
+Elle couvre les onze catégories fonctionnelles de la plateforme Netethic~:
+gestion des utilisateurs, paramétrage, tableaux de bord, rapports, notifications,
+intégration, sécurité, conformité RGPD, support technique, administration
+et facturation.
+
+\paragraph{Transformation et structuration}\mbox{}\newline
+
+Les documents fournis au format PDF ont été convertis au format Markdown.
+Chaque fichier Markdown a ensuite été structuré par catégorie fonctionnelle,
+en suivant le même processus d'enrichissement que pour la base de Noa~:
+clarification des sous-titres, complétion des informations manquantes
+et suppression des éléments non informatifs.
+
+La collection ChromaDB du Support Assistant est organisée en onze sous-collections,
+une par catégorie fonctionnelle.
+Cette organisation permet un filtrage précis lors de la recherche vectorielle~:
+lorsqu'une catégorie est sélectionnée par l'utilisateur, la recherche
+est restreinte aux documents de cette catégorie uniquement,
+ce qui améliore la pertinence des résultats retournés.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Mise en place du classificateur de harcèlement}
+
+Le classificateur de harcèlement est le module dont la mise en place
+diffère fondamentalement des modules conversationnels~:
+il ne repose pas sur un pipeline RAG mais sur un cycle complet
+d'apprentissage automatique, depuis la collecte des données
+jusqu'à l'évaluation comparative des stratégies de classification.
+
+\subsection{Collecte des données}
+
+Le corpus d'expérimentation est constitué de \textbf{977 textes multilingues}
+(français et anglais), issus d'une application mobile de modération de contenu.
+Tous les textes sont initialement étiquetés \textit{négatif} par l'application.
+Le Tableau~\ref{tab:corpus_classif} décrit les caractéristiques du jeu de données brut.
+
+\vspace{6pt}
+\begin{table}[H]
+\centering
+\caption{Caractéristiques du corpus brut — Classificateur de harcèlement}
+\label{tab:corpus_classif}
+\small
+\begin{tabular}{|l|l|}
+\hline
+\textbf{Caractéristique} & \textbf{Valeur} \\
+\hline
+Nombre de textes        & 977 \\
+\hline
+Langues                 & Français et anglais (mélangés) \\
+\hline
+Source                  & Application mobile de modération de contenu \\
+\hline
+Encodage                & Latin-1 (ISO-8859-1) \\
+\hline
+Étiquette initiale      & \textit{negative} (classification de l'application) \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{Nettoyage et prétraitement}
+
+L'analyse du corpus a révélé cinq catégories de bruits textuels~:
+entités HTML (8 occurrences), images Markdown (3),
+textes dépassant 128~caractères (152),
+mentions d'utilisateurs (14) et URLs (5).
+
+Un pipeline de prétraitement en cinq étapes a été développé pour normaliser
+les textes avant inférence.
+Le Tableau~\ref{tab:preprocessing_steps} décrit chaque étape.
+
+\vspace{6pt}
+\begin{table}[H]
+\centering
+\caption{Pipeline de prétraitement du corpus}
+\label{tab:preprocessing_steps}
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{|c|p{4cm}|p{8cm}|}
+\hline
+\textbf{Étape} & \textbf{Traitement} & \textbf{Description} \\
+\hline
+1 & Décodage HTML
+  & Conversion des entités HTML (\texttt{\&amp;}, \texttt{\&\#39;}, etc.)
+    en caractères lisibles. \\
+\hline
+2 & Suppression des balises
+  & Élimination des balises HTML résiduelles (\texttt{<br>}, \texttt{<a href=...>}, etc.). \\
+\hline
+3 & Normalisation des mentions
+  & Remplacement de toutes les mentions d'utilisateurs par un jeton générique. \\
+\hline
+4 & Normalisation des URLs
+  & Remplacement de toutes les URLs par un jeton générique. \\
+\hline
+5 & Normalisation des espaces
+  & Suppression des sauts de ligne multiples et collapsage des espaces superflus. \\
+\hline
+\end{tabular}
+\end{table}
+
+Le prétraitement conserve l'intégralité des 977~textes (aucune ligne vide
+après nettoyage) et ne modifie que 2~prédictions sur 977 (0,2\,\%),
+confirmant que les erreurs observées sont intrinsèques au modèle
+et non aux données brutes.
+
+\subsection{Augmentation des données}
+
+Le corpus initial présente un déséquilibre de classes~:
+après la phase de labeling (voir Section~\ref{subsec:labeling}),
+647~textes sont confirmés dans la catégorie négative contre 330~textes
+reclassifiés dans des catégories positives ou neutres.
+Pour atténuer ce déséquilibre et améliorer la robustesse du modèle,
+une stratégie d'augmentation des données a été appliquée à la classe minoritaire.
+
+L'augmentation repose sur la paraphrase automatique par LLM~:
+chaque texte de la classe minoritaire est soumis au modèle indépendant
+avec une instruction de paraphrase, produisant une version reformulée
+sémantiquement équivalente mais lexicalement différente.
+Cette technique élargit la diversité des exemples d'entraînement
+sans nécessiter de collecte de nouvelles données.
+
+\subsection{Stratégie de labeling — LLM comme juge indépendant}
+\label{subsec:labeling}
+
+Pour évaluer la qualité des étiquettes produites par le modèle de classification
+initial, une stratégie de \textit{LLM-as-a-Judge} a été adoptée~:
+les 977~textes sont soumis à un modèle indépendant (\textbf{Groq API},
+modèle \texttt{llama-3.1-8b-instant}) pour obtenir une annotation de référence.
+
+Cette approche évite l'évaluation circulaire dans laquelle un modèle validerait
+ses propres prédictions — biais qui rendrait les métriques sans valeur.
+
+Le Tableau~\ref{tab:labeling_results} présente les résultats obtenus.
+
+\vspace{6pt}
+\begin{table}[H]
+\centering
+\caption{Résultats du labeling indépendant — LLM-as-a-Judge}
+\label{tab:labeling_results}
+\small
+\begin{tabular}{|l|c|}
+\hline
+\textbf{Métrique} & \textbf{Valeur} \\
+\hline
+Textes confirmés dans la catégorie négative   & 647 / 977 \\
+\hline
+Textes reclassifiés (positif ou neutre)       & 330 / 977 \\
+\hline
+Précision du modèle initial                   & 66,2\,\% \\
+\hline
+Taux d'accord entre les deux modèles         & 63,4\,\% (619 / 977) \\
+\hline
+Impact du prétraitement sur les prédictions   & 0,2\,\% (2 / 977) \\
+\hline
+\end{tabular}
+\end{table}
+
+Les 33,8\,\% de désaccords s'expliquent principalement par un écart de domaine~:
+le modèle initial a été entraîné sur des données formelles anglophones,
+alors que le corpus contient de l'argot jeune francophone
+(\og trop sous coter \fg{}, \og le meilleurrrrrr \fg{})
+que ce modèle interprète incorrectement comme négatif.
+
+\subsection{Entraînement et optimisation}
+
+Quatre stratégies de classification ont été développées et comparées,
+correspondant aux approches définies dans la partie conception de ce chapitre~:
+
+\begin{enumerate}
+    \item \textbf{Modèle seul :} Inférence directe du LLM sans contexte additionnel.
+          Approche généraliste et rapide, servant de référence de comparaison.
+
+    \item \textbf{Modèle avec ancrage juridique :} Les passages de loi les plus
+          pertinents sont récupérés dynamiquement et injectés dans la requête,
+          ancrant la décision dans le droit français sur le harcèlement.
+
+    \item \textbf{Règles heuristiques :} Correspondance par mots-clés spécifiques
+          au français, sans recours au LLM.
+          Sert de mécanisme de repli rapide en cas d'indisponibilité du modèle.
+
+    \item \textbf{Hybride :} Appel au LLM avec repli automatique sur les heuristiques
+          en cas d'échec ou d'ambiguïté de la réponse du modèle.
+\end{enumerate}
+
+L'implémentation est disponible en deux versions complémentaires~:
+\begin{itemize}
+    \item \textbf{Version Python :} Adaptée aux expérimentations sur des corpus réduits,
+          permettant de tester rapidement les quatre stratégies et de comparer
+          leurs résultats avant mise en production.
+    \item \textbf{Version Scala/Spark :} Conçue pour le traitement en parallèle
+          à grande échelle avec Apache Spark~3.5, distribuant l'analyse sur
+          l'ensemble des messages soumis à la plateforme Netethic.
+\end{itemize}
+
+\subsection{Évaluation des performances}
+\label{subsec:eval_classif}
+
+Le Tableau~\ref{tab:eval_classif} présente les métriques d'évaluation
+des quatre stratégies sur le corpus de test.
+
+\vspace{6pt}
+\begin{table}[H]
+\centering
+\caption{Évaluation comparative des quatre stratégies de classification}
+\label{tab:eval_classif}
+\begin{tabular}{|l|c|c|c|}
+\hline
+\textbf{Stratégie} & \textbf{Précision} & \textbf{Rappel} & \textbf{F1-score} \\
+\hline
+Modèle seul                   & 0,295 & 0,437 & 0,352 \\
+\hline
+Modèle avec ancrage juridique & 0,223 & 0,606 & 0,326 \\
+\hline
+Règles heuristiques           & —     & —     & —     \\
+\hline
+Hybride                       & —     & —     & \textbf{0,619} \\
+\hline
+\end{tabular}
+\end{table}
+
+Le corpus de test comprend 1\,500~textes en français couvrant les 16~catégories
+de la taxonomie (10~actes de harcèlement et 6~signaux de détresse).
+La stratégie hybride atteint le meilleur F1-score global (0,619),
+soit une amélioration de~76\,\% par rapport au modèle seul (0,352),
+confirmant l'intérêt de combiner l'inférence LLM avec les règles heuristiques
+comme mécanisme de repli.
+La stratégie avec ancrage juridique améliore le rappel (0,606) au détriment
+de la précision (0,223), ce qui traduit une tendance à surclasser les textes
+ambigus comme relevant du harcèlement.
+
+% ─────────────────────────────────────────────────────────────────────────────
 \section*{Conclusion}
 
-Ce chapitre a présenté la conception du système à deux niveaux.
-L'architecture commune repose sur des composants partagés
-(serveur LLM, base documentaire, gestionnaire de mémoire, orchestrateur)
-qui garantissent la cohérence et la maintenabilité de l'ensemble du système.
-Chaque module présente ses spécificités de conception,
-illustrées par des diagrammes UML.
-
-Dans le chapitre suivant, nous présentons la phase de réalisation et les tests effectués.
+Ce chapitre a couvert la conception du système et la mise en place des modèles d'IA.
+La partie conception a présenté l'architecture commune et les diagrammes UML de chaque module.
+La mise en place a établi les bases de connaissances RAG (177~segments pour Noa,
+11~collections pour le Support Assistant) et validé la stratégie hybride
+pour le classificateur avec un F1-score de 0,619 sur 1\,500~textes de test.
+Le chapitre suivant présente la réalisation concrète du système, les interfaces développées,
+les résultats des tests automatisés et les évaluations de qualité.

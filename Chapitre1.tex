@@ -1,10 +1,10 @@
-\chapter{Cadre du projet}
+\chapter{Cadre général et Spécification des besoins}
 
 \section*{Introduction}
 
-Ce chapitre présente le cadre général du projet au sein de Smart-Conseil.
-Nous commençons par une présentation de l'entreprise d'accueil, puis nous étudions les solutions existantes face au harcèlement scolaire et leurs limites.
-Nous décrivons ensuite la solution proposée, le pipeline de développement suivi, ainsi que la méthodologie adoptée.
+Ce chapitre pose les fondements du projet en deux parties complémentaires.
+La première partie présente l'entreprise d'accueil Smart-Conseil, analyse les solutions existantes face au harcèlement scolaire et leurs limites, puis décrit la solution proposée et la méthodologie adoptée.
+La seconde partie spécifie les besoins du système : fonctionnalités attendues de chaque module, contraintes de qualité, acteurs identifiés et diagramme de cas d'utilisation.
 
 \section{Présentation de l'organisme d'accueil}
 
@@ -43,12 +43,12 @@ Face à ce problème, plusieurs solutions ont été développées :
 \begin{itemize}
     \item Des lignes téléphoniques d'écoute et des questionnaires remplis manuellement par les élèves.
     \item Des outils de signalement intégrés aux plateformes de réseaux sociaux.
-    \item \textbf{SafeBar} \cite{safebar} : un outil numérique développé par l'association e-Enfance qui permet de détecter des situations de cyberharcèlement à partir de signalements.
+    \item \textbf{SafeBar} \cite{safebar} : Un outil numérique développé par l'association e-Enfance qui permet de détecter des situations de cyberharcèlement à partir de signalements.
           Il est destiné aux établissements scolaires et aux parents souhaitant surveiller les activités en ligne.
           Il intervient après l'identification d'une victime et ne propose pas de mécanisme de détection préventive.
-    \item \textbf{Stop Bashing!} \cite{stopbashing} : une application mobile permettant à un enfant de prendre une capture d'écran d'un message harcelant et de l'envoyer immédiatement à ses parents ou à un adulte référent.
+    \item \textbf{Stop Bashing!} \cite{stopbashing} : Une application mobile permettant à un enfant de prendre une capture d'écran d'un message harcelant et de l'envoyer immédiatement à ses parents ou à un adulte référent.
           Le processus de signalement reste entièrement manuel.
-    \item \textbf{Netethic} \cite{netethic} : une plateforme numérique développée par Smart-Conseil, dédiée à la détection et à la gestion du harcèlement en milieu scolaire.
+    \item \textbf{Netethic} \cite{netethic} : Une plateforme numérique développée par Smart-Conseil, dédiée à la détection et à la gestion du harcèlement en milieu scolaire.
           Elle offre un tableau de bord interactif pour visualiser les cas qui demandent l'attention des responsables, un système de gestion et de suivi des signalements, des outils d'analyse et une interface d'administration dédiée aux équipes pédagogiques.
 \end{itemize}
 
@@ -57,11 +57,11 @@ Face à ce problème, plusieurs solutions ont été développées :
 Ces solutions présentent des limites qui laissent plusieurs besoins sans réponse :
 
 \begin{itemize}
-    \item \textbf{Disponibilité limitée :} les services d'écoute et de signalement ne sont pas automatisés.
+    \item \textbf{Disponibilité limitée :} Les services d'écoute et de signalement ne sont pas automatisés.
           Les utilisateurs ne peuvent obtenir de l'aide qu'aux heures ouvrées.
-    \item \textbf{Barrière psychologique :} une victime peut hésiter à s'adresser directement à un adulte, par crainte des représailles ou de la stigmatisation.
-    \item \textbf{Réactivité insuffisante :} un délai important s'écoule entre le signalement et la prise en charge effective de la victime.
-    \item \textbf{Absence de support automatisé sur Netethic :} la plateforme ne dispose pas d'un assistant virtuel pour informer les visiteurs extérieurs, ni d'un outil de support automatisé pour le personnel, ni d'un mécanisme de soutien pour les élèves en difficulté, ni d'une analyse automatique des textes soumis.
+    \item \textbf{Barrière psychologique :} Une victime peut hésiter à s'adresser directement à un adulte, par crainte des représailles ou de la stigmatisation.
+    \item \textbf{Réactivité insuffisante :} Un délai important s'écoule entre le signalement et la prise en charge effective de la victime.
+    \item \textbf{Absence de support automatisé sur Netethic :} La plateforme ne dispose pas d'un assistant virtuel pour informer les visiteurs extérieurs, ni d'un outil de support automatisé pour le personnel, ni d'un mécanisme de soutien pour les élèves en difficulté, ni d'une analyse automatique des textes soumis.
 \end{itemize}
 
 \section{Solution envisagée}
@@ -70,14 +70,14 @@ Notre projet s'inscrit dans la plateforme \textbf{Netethic} et a pour objectif d
 Ces modules répondent directement aux besoins identifiés :
 
 \begin{enumerate}
-    \item \textbf{Assistant virtuel public (Noa) :} un assistant conversationnel disponible sur le site de Netethic en français et en anglais, accessible à toute heure, sans intervention humaine.
+    \item \textbf{Assistant virtuel public (Noa) :} Un assistant conversationnel disponible sur le site de Netethic en français et en anglais, accessible à toute heure, sans intervention humaine.
           Il répond aux questions des visiteurs sur la plateforme, ses fonctionnalités et ses tarifs.
           Il accompagne également les prospects qui souhaitent planifier une démonstration en collectant leurs coordonnées.
           Sa disponibilité continue élimine la dépendance aux horaires du personnel et garantit un accueil permanent des visiteurs.
-    \item \textbf{Assistant de support interne :} un assistant destiné au personnel des établissements utilisant Netethic.
+    \item \textbf{Assistant de support interne :} Un assistant destiné au personnel des établissements utilisant Netethic.
           Il répond aux questions sur les fonctionnalités de la plateforme, gère les demandes de rendez-vous et recueille les signalements de dysfonctionnements techniques.
-    \item \textbf{Module de soutien émotionnel :} un système qui détecte les signaux de détresse dans les messages des utilisateurs et génère des réponses empathiques adaptées, en orientant l'utilisateur vers les ressources disponibles sur la plateforme.
-    \item \textbf{Classificateur de harcèlement :} un système d'analyse automatique des textes qui identifie les types de comportements nécessitant une attention particulière, en s'appuyant sur les références juridiques françaises en vigueur.
+    \item \textbf{Module de soutien émotionnel :} Un système qui détecte les signaux de détresse dans les messages des utilisateurs et génère des réponses empathiques adaptées, en orientant l'utilisateur vers les ressources disponibles sur la plateforme.
+    \item \textbf{Classificateur de harcèlement :} Un système d'analyse automatique des textes qui identifie les types de comportements nécessitant une attention particulière, en s'appuyant sur les références juridiques françaises en vigueur.
 \end{enumerate}
 
 \section{Pipeline du projet}
@@ -85,11 +85,11 @@ Ces modules répondent directement aux besoins identifiés :
 Le projet suit un processus de développement structuré en plusieurs phases :
 
 \begin{enumerate}
-    \item \textbf{Phase préalable — Recherche et étude :} recherche bibliographique, analyse des solutions existantes et recueil des besoins auprès des parties prenantes.
-    \item \textbf{Collecte et préparation :} recueil des documents de référence (contenu du site Netethic, documentation interne, textes de loi français).
-    \item \textbf{Conception :} modélisation de l'architecture générale et des flux de traitement de chaque module.
-    \item \textbf{Développement :} implémentation des modules à l'aide de cadres de développement spécialisés en intelligence artificielle.
-    \item \textbf{Validation :} tests de performance, évaluation de la qualité des réponses et retours utilisateurs.
+    \item \textbf{Phase préalable — Recherche et étude :} Recherche bibliographique, analyse des solutions existantes et recueil des besoins auprès des parties prenantes.
+    \item \textbf{Collecte et préparation :} Recueil des documents de référence (contenu du site Netethic, documentation interne, textes de loi français).
+    \item \textbf{Conception :} Modélisation de l'architecture générale et des flux de traitement de chaque module.
+    \item \textbf{Développement :} Implémentation des modules à l'aide de cadres de développement spécialisés en intelligence artificielle.
+    \item \textbf{Validation :} Tests de performance, évaluation de la qualité des réponses et retours utilisateurs.
 \end{enumerate}
 
 \section{Méthodologie}
@@ -100,18 +100,421 @@ Elle divise le travail en périodes courtes appelées sprints ; chaque sprint du
 
 \begin{itemize}
     \item \textbf{Daily stand-ups (réunions quotidiennes) :}
-          chaque jour, une courte réunion sur Microsoft Teams permet de discuter des objectifs, de l'avancement et des difficultés rencontrées.
+          Chaque jour, une courte réunion sur Microsoft Teams permet de discuter des objectifs, de l'avancement et des difficultés rencontrées.
     \item \textbf{Sprint Reviews (révisions de sprint) :}
-          chaque semaine, une réunion d'équipe permet d'évaluer les tâches réalisées et de planifier le sprint suivant.
+          Chaque semaine, une réunion d'équipe permet d'évaluer les tâches réalisées et de planifier le sprint suivant.
 \end{itemize}
 
 La modélisation du système a été réalisée avec le langage UML (Unified Modeling Language — langage de modélisation unifié), en utilisant l'outil Power AMC pour la création des diagrammes.
 
+% ─────────────────────────────────────────────────────────────────────────────
+% PARTIE 2 — Spécification des besoins
+% ─────────────────────────────────────────────────────────────────────────────
+
+\section{Identification des besoins fonctionnels}
+
+Les besoins fonctionnels décrivent l'ensemble des fonctionnalités que le système doit
+offrir à ses utilisateurs. Ils sont organisés par module.
+
+% ── Module 1 : Noa ────────────────────────────────────────────────────────────
+\subsection{Module 1 — Noa : Assistant virtuel du site public}
+
+Noa est l'assistant virtuel intégré au site public de Netethic.
+Il aide les visiteurs à s'informer sur la plateforme et à planifier une démonstration.
+Le Tableau~\ref{tab:bf_noa} présente ses besoins fonctionnels.
+
+\vspace{6pt}
+\begin{table}[H]
+\caption{Besoins fonctionnels — Noa (assistant site public Netethic)}
+\label{tab:bf_noa}
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{|c|p{3.5cm}|p{9.5cm}|}
+\hline
+\textbf{ID} & \textbf{Besoin} & \textbf{Description} \\
+\hline
+BF-N01 & Répondre aux questions
+        & L'assistant répond aux questions des visiteurs sur les fonctionnalités, les tarifs, le RGPD et les coordonnées de Netethic. \\
+\hline
+BF-N02 & Gérer la conversation et mémoriser les réponses
+        & Le système conserve l'historique des échanges pour maintenir la cohérence de la conversation et retourne instantanément les réponses déjà calculées. \\
+\hline
+BF-N03 & Classifier l'intention
+        & Chaque message est analysé selon son intention — bavardage, question, suivi ou requête interdite — pour lui appliquer le traitement adapté. \\
+\hline
+BF-N05 & Gérer les bavardages
+        & Les salutations, remerciements et messages hors sujet reçoivent des réponses prédéfinies immédiates. \\
+\hline
+BF-N06 & Appliquer des garde-fous
+        & Le système détecte et rejette les requêtes dangereuses ou hors périmètre, comme les tentatives de manipulation ou les demandes de conseils médicaux. \\
+\hline
+BF-N07 & Gérer les réservations
+        & Lorsqu'un visiteur souhaite planifier une démonstration, l'assistant collecte son adresse e-mail et son numéro de téléphone. \\
+\hline
+BF-N09 & Normaliser les questions
+        & Deux questions ayant le même sens partagent la même réponse mémorisée, évitant de recalculer une réponse déjà connue. \\
+\hline
+BF-N10 & Rechercher dans la base documentaire
+        & Pour les questions factuelles, le système recherche les passages les plus pertinents dans la documentation et les intègre dans la réponse. \\
+\hline
+BF-N12 & Administrer le système
+        & L'administrateur peut consulter les statistiques, effacer les réponses mémorisées et accéder aux rendez-vous collectés depuis une interface dédiée. \\
+\hline
+\end{tabular}
+\end{table}
+
+% ── Module 2 : NetEthic Support Assistant ─────────────────────────────────────
+\subsection{Module 2 — NetEthic Support Assistant : Support technique interne}
+
+Le \textit{NetEthic Support Assistant} est un assistant destiné aux utilisateurs internes de la plateforme.
+Il aide le personnel des établissements à utiliser les fonctionnalités de Netethic.
+Le Tableau~\ref{tab:bf_nesa} décrit ses besoins fonctionnels.
+
+\vspace{6pt}
+\begin{table}[H]
+\caption{Besoins fonctionnels — NetEthic Support Assistant (support interne)}
+\label{tab:bf_nesa}
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{|c|p{3.5cm}|p{9.5cm}|}
+\hline
+\textbf{ID} & \textbf{Besoin} & \textbf{Description} \\
+\hline
+BF-S01 & Filtrer les résultats par catégorie
+        & L'utilisateur choisit l'une des 11~catégories de la plateforme avant de poser sa question, ce qui limite la recherche aux documents de ce thème et améliore la précision des réponses. \\
+\hline
+BF-S02 & Répondre aux questions via la documentation
+        & L'assistant recherche les passages les plus pertinents dans la documentation de la plateforme et génère une réponse adaptée à la question de l'utilisateur, en s'appuyant uniquement sur le contenu sélectionné. \\
+\hline
+BF-S03 & Mise en mémoire des réponses
+        & Les réponses générées sont mémorisées. Pour les questions ultérieures similaires, la réponse est retournée directement sans solliciter le modèle. \\
+\hline
+BF-S04 & Gestion de session
+        & Chaque session utilisateur est conservée avec l'historique de conversation et les informations d'identité (nom, e-mail, téléphone). \\
+\hline
+BF-S05 & Questions suggérées
+        & Plus de 60~questions prédéfinies sont proposées à l'utilisateur pour l'aider à explorer les fonctionnalités de la plateforme. \\
+\hline
+BF-S06 & Données en temps réel
+        & Les données du tableau de bord (toxicité, profils à risque, climat scolaire, tendances) sont transmises par la plateforme à l'ouverture de la session. L'assistant reconnaît automatiquement si une question porte sur ces données ou sur la documentation, et adapte sa réponse en conséquence. \\
+\hline
+BF-S07 & Génération automatique de description
+        & Avant l'affichage d'un formulaire de rendez-vous ou de signalement, l'assistant rédige automatiquement un motif ou une description à partir de la conversation. Ce texte pré-remplit le formulaire et reste modifiable. \\
+\hline
+BF-S09 & Contacter le support
+        & Lorsque la documentation ne permet pas de répondre, l'assistant offre trois options : planifier un rendez-vous sans que l'utilisateur ait à ressaisir ses informations, signaler un dysfonctionnement via un formulaire pré-rempli automatiquement transmis à l'équipe technique, ou accéder directement au portail de support en ligne. \\
+\hline
+BF-S12 & Détection des questions de suivi
+        & Le système détecte si une question fait suite au sujet précédent et, le cas échéant, réutilise les résultats de recherche déjà obtenus pour répondre de façon cohérente. \\
+\hline
+BF-S13 & Détection automatique de la langue
+        & Le système détecte automatiquement la langue de l'utilisateur et répond dans la même langue le français ou l'anglais. \\
+\hline
+\end{tabular}
+\end{table}
+
+% ── Module 3 : Soutien émotionnel ─────────────────────────────────────────────
+\subsection{Module 3 — Module de soutien émotionnel}
+
+Ce module accompagne les étudiants en difficulté à travers une conversation bienveillante et continue.
+Il détecte les signaux de mal-être, y répond avec empathie et protège la confidentialité des échanges.
+Le Tableau~\ref{tab:bf_emo} décrit ses besoins fonctionnels.
+
+\vspace{6pt}
+\begin{table}[H]
+\caption{Besoins fonctionnels — Module de soutien émotionnel}
+\label{tab:bf_emo}
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{|c|p{3.5cm}|p{9.5cm}|}
+\hline
+\textbf{ID} & \textbf{Besoin} & \textbf{Description} \\
+\hline
+BF-E01 & Dialoguer avec l'étudiant
+        & L'assistant engage une conversation bienveillante et continue avec l'étudiant. Il s'adapte à ce que l'étudiant exprime et répond de façon personnalisée, en tenant compte des échanges précédents de la session. \\
+\hline
+BF-E02 & Détecter les signaux de détresse
+        & Le système analyse chaque message pour identifier si l'étudiant exprime une forme de mal-être : anxiété, sentiment de solitude, tristesse, colère, comportement à risque ou pensées suicidaires. \\
+\hline
+BF-E03 & Répondre avec empathie
+        & Lorsqu'un signal de détresse non urgent est détecté, l'assistant génère une réponse chaleureuse et brève, formulée dans la langue de l'étudiant et centrée sur ce qu'il ressent. \\
+\hline
+BF-E04 & Alerter en cas de crise
+        & Si le message révèle des pensées suicidaires ou une intention de violence, l'assistant déclenche immédiatement une réponse d'urgence. Les numéros d'aide (urgences, soutien aux victimes, lutte contre les violences) sont toujours affichés, quelle que soit la réponse générée. \\
+\hline
+BF-E05 & Mémoriser le profil de l'étudiant
+        & Au fil des échanges, l'assistant retient les informations partagées par l'étudiant — prénom, sources de stress, situation scolaire, réussites — pour personnaliser ses réponses lors des sessions suivantes. \\
+\hline
+BF-E06 & Respecter la confidentialité
+        & Aucun contenu de message n'est conservé dans les journaux. Seuls le type d'événement détecté et son horodatage sont enregistrés, dans le respect strict de la vie privée de l'étudiant. \\
+\hline
+BF-E07 & Filtrer les messages abusifs
+        & Les messages contenant des tentatives de manipulation du système, des propos injurieux ou des contenus inappropriés sont automatiquement bloqués. La session de l'étudiant n'est pas interrompue pour autant. \\
+\hline
+BF-E08 & Converser dans la langue de l'étudiant
+        & L'assistant répond exclusivement dans la langue choisie par l'étudiant — français ou anglais — sans jamais mélanger les deux langues dans une même réponse. \\
+\hline
+\end{tabular}
+\end{table}
+
+% ── Module 4 : Classificateur de harcèlement ──────────────────────────────────
+\subsection{Module 4 — Classificateur de harcèlement}
+
+Ce module analyse automatiquement les textes soumis à la plateforme.
+Il identifie les comportements nécessitant une attention particulière et s'appuie sur le droit français.
+Le Tableau~\ref{tab:bf_class} détaille ses besoins fonctionnels.
+
+\vspace{6pt}
+\begin{table}[H]
+\caption{Besoins fonctionnels — Classificateur de harcèlement}
+\label{tab:bf_class}
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{|c|p{3.5cm}|p{9.5cm}|}
+\hline
+\textbf{ID} & \textbf{Besoin} & \textbf{Description} \\
+\hline
+BF-C01 & Classification multi-méthodes
+        & Le système compare quatre stratégies : inférence LLM seul, avec ancrage juridique, heuristiques par mots-clés, et approche hybride avec repli automatique. \\
+\hline
+BF-C02 & Taxonomie à 16 catégories
+        & Chaque texte reçoit plusieurs étiquettes simultanées : 10 actes de harcèlement (Groupe A) et 6 signaux de détresse (Groupe B). \\
+\hline
+BF-C03 & Ancrage sur textes juridiques
+        & Les documents légaux français (Loi 2022 \cite{sparkloi}, Code pénal) sont indexés et intégrés dans l'analyse pour ancrer les décisions dans le cadre légal. \\
+\hline
+BF-C04 & Prétraitement du texte
+        & Chaque texte est nettoyé et normalisé avant d'être soumis au classificateur. \\
+\hline
+BF-C05 & Chaîne de repli
+        & En cas d'échec du modèle principal, le système bascule sur les heuristiques, puis sur une étiquette neutre, garantissant toujours une réponse. \\
+\hline
+BF-C06 & Alerte urgente
+        & Une idéation suicidaire détectée active un indicateur d'urgence dans la sortie pour déclencher une prise en charge prioritaire. \\
+\hline
+BF-C07 & Journalisation des résultats
+        & Chaque classification est enregistrée avec son horodatage, sa stratégie, son niveau de confiance et sa latence. \\
+\hline
+BF-C08 & Suivi des expériences
+        & Le système peut récupérer et retraiter les données d'expériences passées pour comparer et améliorer les méthodes. \\
+\hline
+BF-C09 & Traitement en parallèle
+        & Le pipeline traite plusieurs textes simultanément et calcule des métriques d'évaluation agrégées sur l'ensemble des méthodes. \\
+\hline
+\end{tabular}
+\end{table}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Identification des besoins non fonctionnels}
+
+Les besoins non fonctionnels définissent les contraintes de qualité que l'ensemble du
+système doit respecter. Le Tableau~\ref{tab:besoins_non_fonctionnels} présente ces exigences.
+
+\vspace{6pt}
+\begin{table}[H]
+\caption{Besoins non fonctionnels du système global}
+\label{tab:besoins_non_fonctionnels}
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{|c|p{3cm}|p{9.8cm}|}
+\hline
+\textbf{ID} & \textbf{Catégorie} & \textbf{Description} \\
+\hline
+BNF-01 & Performance
+        & Le temps de réponse est inférieur à 1~ms pour les questions mémorisées et inférieur à 5~secondes pour un traitement complet. \\
+\hline
+BNF-02 & Sécurité
+        & Les clés de connexion ne sont jamais exposées côté navigateur, les communications sensibles transitent via HTTPS et les requêtes malveillantes sont filtrées. \\
+\hline
+BNF-03 & Disponibilité
+        & Les services sont accessibles 24h/24 et 7j/7, avec des mécanismes de repli en cas d'indisponibilité du modèle externe. \\
+\hline
+BNF-04 & Scalabilité
+        & Tous les composants sont conteneurisés via Docker \cite{docker}, permettant le déploiement de plusieurs instances selon la charge. \\
+\hline
+BNF-05 & Maintenabilité
+        & L'architecture modulaire isole chaque fonctionnalité dans un module distinct, facilitant les mises à jour et les corrections. \\
+\hline
+BNF-06 & Conformité RGPD
+        & Aucune donnée personnelle n'est conservée au-delà de la session ; les données de réservation sont stockées localement sans partage avec des tiers. \\
+\hline
+BNF-07 & Multilingue
+        & L'interface et les réponses sont disponibles en français, en anglais et en arabe, avec détection automatique de la langue. Le module de soutien émotionnel étend ce support au darija tunisien et au code-switching arabo-français. \\
+\hline
+BNF-08 & Robustesse
+        & Chaque composant intègre une gestion explicite des erreurs avec des messages clairs pour l'utilisateur et des traces journalisées côté serveur. \\
+\hline
+\end{tabular}
+\end{table}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Identification des acteurs}
+
+Un acteur représente toute entité externe qui interagit avec le système.
+Sept acteurs principaux sont identifiés.
+
+\subsection{Visiteur du site public}
+
+Le visiteur est toute personne qui accède au site web de Netethic.
+Il peut s'agir d'un directeur d'établissement scolaire, d'un conseiller principal d'éducation,
+d'un parent ou d'un représentant d'association.
+Il interagit avec Noa pour s'informer sur la plateforme, poser des questions en français
+ou en anglais, et réserver une démonstration.
+
+\subsection{Utilisateur interne de la plateforme}
+
+L'utilisateur interne est un membre du personnel d'un établissement disposant
+d'un accès authentifié à la plateforme Netethic.
+Il interagit avec le \textit{NetEthic Support Assistant} pour obtenir de l'aide sur
+les fonctionnalités de la plateforme, déclarer un incident technique ou planifier
+un rendez-vous.
+
+\subsection{Administrateur}
+
+L'administrateur est le responsable technique du système.
+Il surveille l'état des caches, consulte les statistiques d'usage, gère les sessions actives
+et accède aux rendez-vous collectés et aux signalements reçus.
+
+\subsection{Noa et NetEthic Support Assistant (stéréotype «Actor»)}
+
+Noa et le \textit{NetEthic Support Assistant} sont les deux assistants virtuels du système.
+Conformément aux consignes de l'ISTIC pour les projets intégrant un module d'IA générative,
+ils sont représentés dans le diagramme de cas d'utilisation avec le stéréotype \textit{«Actor»}.
+Chacun orchestre de manière autonome son pipeline de traitement.
+
+\subsection{Module de soutien émotionnel (stéréotype «Actor»)}
+
+Le module de soutien émotionnel est un composant intelligent de la plateforme Netethic.
+Il détecte les signaux de détresse dans les messages des utilisateurs, génère des réponses
+empathiques et déclenche les alertes en cas de crise.
+Il est représenté comme un acteur avec le stéréotype \textit{«Actor»} car il orchestre
+de manière autonome son pipeline de traitement.
+
+\subsection{Classificateur de harcèlement (stéréotype «Actor»)}
+
+Le classificateur de harcèlement est un module d'analyse automatique de textes soumis
+par la plateforme Netethic.
+Il identifie les comportements problématiques, les signaux de harcèlement et ancre ses
+décisions dans le cadre juridique français.
+Il est représenté comme un acteur avec le stéréotype \textit{«Actor»} car il conduit
+de manière autonome son pipeline d'analyse.
+
+\subsection{Serveur LLM (kaisens.fr)}
+
+Un LLM (Large Language Model) est un modèle de langage capable de générer du texte en langage naturel.
+Le serveur LLM est un service d'inférence externe hébergé sur kaisens.fr, exposant le modèle Mistral-7B \cite{mistral2023} via une API standard sollicitée par les deux assistants virtuels et le classificateur de harcèlement.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Diagramme de cas d'utilisation}
+
+Le diagramme de cas d'utilisation modélise les interactions entre les acteurs et les fonctionnalités du système.
+La Figure~\ref{fig:use_case} présente le système global : le visiteur interagit avec Noa, l'utilisateur interne avec le \textit{NetEthic Support Assistant} et le module de soutien émotionnel, tandis que l'administrateur supervise l'ensemble et que le serveur LLM externe alimente tous les modules.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{diagramme/use-case-diagram.png}
+\caption{Diagramme de cas d'utilisation global du système}
+\label{fig:use_case}
+\end{figure}
+
+Le Tableau~\ref{tab:cas_utilisation} décrit les cas d'utilisation essentiels du système.
+
+\vspace{6pt}
+\begin{table}[H]
+\caption{Description des cas d'utilisation essentiels}
+\label{tab:cas_utilisation}
+\centering
+\small
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{|c|p{3cm}|p{2.8cm}|p{7.2cm}|}
+\hline
+\textbf{ID} & \textbf{Cas d'utilisation} & \textbf{Acteur principal} & \textbf{Description} \\
+\hline
+CU-01 & Poser une question (site public)
+       & Visiteur
+       & Le visiteur pose une question en français ou en anglais.
+         Noa la traite selon son pipeline : classification, mémoire, recherche, génération. \\
+\hline
+CU-02 & Réserver une démonstration
+       & Visiteur
+       & Le visiteur exprime le souhait de planifier une démo.
+         L'agent conversationnel collecte son e-mail et son téléphone. \\
+\hline
+CU-03 & Poser une question (support interne)
+       & Utilisateur interne
+       & L'utilisateur sélectionne une catégorie parmi les 11~modules, puis pose sa question.
+         Le Support Assistant retourne une réponse ancrée dans la documentation. \\
+\hline
+CU-03b & Consulter les suggestions de questions
+        & Utilisateur interne
+        & Inclus dans CU-03. L'utilisateur choisit une des questions prédéfinies pour explorer les fonctionnalités. \\
+\hline
+CU-04 & Contacter le support
+       & Utilisateur interne
+       & Si pas d'information dans la documentation, l'utilisateur choisit l'une de trois options : planifier un rendez-vous, signaler un dysfonctionnement via un formulaire pré-rempli transmis à l'équipe technique, ou accéder au portail de support en ligne. \\
+\hline
+CU-06 & Bénéficier du soutien émotionnel
+       & Utilisateur interne
+       & Si un signal de détresse est détecté, le module génère une réponse empathique
+         et oriente vers le module Accompagnement. En cas d'idéation suicidaire, une alerte est déclenchée. \\
+\hline
+CU-07 & Classifier un texte
+       & Système Netethic
+       & La plateforme soumet un texte. Le classificateur retourne les étiquettes détectées,
+         le niveau de confiance et un indicateur d'urgence si nécessaire. \\
+\hline
+CU-08 & Superviser le système
+       & Administrateur
+       & L'administrateur consulte les statistiques, les rendez-vous collectés,
+         les signalements et l'état des caches. \\
+\hline
+\end{tabular}
+\end{table}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Identification des besoins techniques}
+
+Cette section décrit l'environnement matériel et logiciel utilisé pour le développement du projet.
+Le Tableau~\ref{tab:env_travail} présente les équipements et outils utilisés lors du développement.
+
+\vspace{6pt}
+\begin{table}[H]
+\caption{Environnement de travail}
+\label{tab:env_travail}
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{|p{4cm}|p{10.5cm}|}
+\hline
+\textbf{Composant} & \textbf{Description} \\
+\hline
+Système d'exploitation & Windows 11 Home (version 10.0.26200) \\
+\hline
+Environnement de développement & Visual Studio Code avec extensions Python, Scala et Docker \\
+\hline
+Gestion de version    & Git / GitLab (dépôt : \texttt{gitlab.dataforethic.fr}) \\
+\hline
+Conteneurisation      & Docker Desktop (Docker Compose v2) \cite{docker} \\
+\hline
+Gestion de projet     & Méthode Scrum \cite{scrumguide} — réunions hebdomadaires sur Microsoft Teams \\
+\hline
+Modélisation UML      & Power AMC \\
+\hline
+\end{tabular}
+\end{table}
+
+% ─────────────────────────────────────────────────────────────────────────────
 \section*{Conclusion}
 
-Ce chapitre a présenté le cadre général du projet.
-Nous avons décrit l'entreprise Smart-Conseil et son domaine d'activité.
-Nous avons analysé les solutions existantes face au harcèlement scolaire et mis en évidence leurs limites.
-Nous avons ensuite décrit les quatre modules que notre projet apporte à la plateforme Netethic, ainsi que le pipeline de développement et la méthode de gestion adoptés.
-
-Dans le chapitre suivant, nous détaillons la spécification des besoins du système.
+Ce chapitre a posé les bases du projet.
+La première partie a présenté Smart-Conseil, analysé les limites des solutions existantes
+et décrit la solution proposée ainsi que la méthodologie Scrum adoptée.
+La seconde partie a défini les besoins du système : fonctionnalités des quatre modules,
+contraintes de qualité, acteurs identifiés et cas d'utilisation.
+Ces spécifications constituent le référentiel de base pour la conception
+présentée au chapitre suivant.

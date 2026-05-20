@@ -27,6 +27,10 @@
 
 \setlength{\headheight}{14pt}
 
+% Paragraph numbering: a. b. c.
+\setcounter{secnumdepth}{4}
+\renewcommand{\theparagraph}{\alph{paragraph}.}
+
 \pagestyle{fancy}
 \fancyhead[L]{\nouppercase\leftmark}
 \fancyhead[C]{}
@@ -52,14 +56,12 @@
 \pagenumbering{arabic}
 \include{Introduction}
 \include{Chapitre1}
-\include{chapitre2}
 \include{Chapitre3}
 \include{Chapitre4}
-\include{Chapitre5}
 \include{Chapitre6}
 \include{Conclusion}
 
-\bibliographystyle{alpha}
+\bibliographystyle{unsrt}
 \bibliography{Biblio}
 \addcontentsline{toc}{chapter}{Bibliographie}
 \pagestyle{empty}

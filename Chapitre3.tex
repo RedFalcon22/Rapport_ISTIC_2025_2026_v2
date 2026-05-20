@@ -2,12 +2,15 @@
 
 \section*{Introduction}
 
+Le chapitre précédent a présenté le cadre du projet, analysé les solutions existantes
+et défini les besoins fonctionnels et non fonctionnels des quatre modules.
 Ce chapitre présente une étude des approches existantes dans les domaines couverts par le projet,
 et justifie les choix technologiques retenus pour chacun des quatre modules.
-Il est organisé en cinq axes : les assistants conversationnels,
+Il est organisé en six axes : les assistants conversationnels,
 la recherche documentaire intelligente, les modèles de génération de langage,
 le soutien émotionnel par intelligence artificielle,
-et la détection automatique du harcèlement.
+la détection automatique du harcèlement,
+et l'orchestration des pipelines conversationnels.
 Chaque axe se conclut par une justification du choix retenu.
 
 % ─────────────────────────────────────────────────────────────────────────────
@@ -33,11 +36,7 @@ Ces systèmes sont plus souples, mais restent limités aux catégories définies
 à l'avance et nécessitent un travail d'annotation important.
 
 \textbf{Chatbots à grand modèle de langage.}
-Un LLM (Large Language Model — grand modèle de langage) est un modèle
-entraîné sur des milliards de textes, capable de générer des réponses
-à presque n'importe quelle question sans entraînement spécifique.
-Ces modèles sont très expressifs mais peuvent produire des réponses incorrectes
-ou inventées, phénomène appelé \textit{hallucination}.
+Les LLMs génèrent des réponses en langage naturel sans entraînement spécifique, mais peuvent produire des informations incorrectes — phénomène appelé \textit{hallucination}.
 
 \textbf{Génération ancrée dans la documentation (RAG).}
 L'architecture RAG (Retrieval-Augmented Generation — génération augmentée
@@ -169,6 +168,9 @@ La version AWQ, une version compressée du modèle, est utilisée
 pour réduire les ressources mémoire sans perte significative de qualité.
 Le serveur d'inférence \textbf{vLLM} \cite{vllm2023} permet de traiter
 plusieurs requêtes simultanément.
+Ce serveur est déjà déployé et opérationnel sur l'infrastructure de kaisens.fr,
+ce qui élimine tout coût d'infrastructure supplémentaire et permet une intégration
+immédiate sans mise en place d'un environnement GPU dédié.
 
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Soutien émotionnel par intelligence artificielle}
@@ -304,6 +306,74 @@ Elle est implémentée en quatre stratégies comparées en parallèle,
 détaillées dans le chapitre suivant.
 
 % ─────────────────────────────────────────────────────────────────────────────
+\section{Orchestration des pipelines conversationnels}
+
+Les modules conversationnels du projet (Noa, Support Assistant, soutien émotionnel)
+nécessitent une couche d'orchestration capable de chaîner plusieurs opérations :
+classification d'intention, recherche documentaire, appel au modèle de langage
+et gestion de la mémoire de session.
+Plusieurs frameworks ont été étudiés pour remplir ce rôle.
+
+\subsection{Frameworks disponibles}
+
+\textbf{Implémentation personnalisée.}
+Il est possible de gérer manuellement l'enchaînement des appels API
+(ChromaDB, vLLM, Redis) sans framework dédié.
+Cette approche offre un contrôle total mais impose un effort de développement
+important pour chaque nouvelle fonctionnalité, sans bénéficier des abstractions
+et optimisations déjà disponibles dans les outils spécialisés.
+
+\textbf{LlamaIndex.}
+LlamaIndex est un framework centré sur l'indexation et la recherche documentaire.
+Il propose des connecteurs vers de nombreuses sources de données
+et simplifie la construction de pipelines RAG.
+Cependant, son périmètre est plus étroit que celui de LangChain :
+il couvre moins bien la gestion de la mémoire conversationnelle,
+les agents à boucle d'outils et l'orchestration de flux multi-étapes.
+
+\textbf{LangChain.}
+LangChain \cite{langchain} est un framework open source conçu spécifiquement
+pour les applications fondées sur des modèles de langage.
+Il fournit des abstractions pour les chaînes de traitement (\textit{chains}),
+les agents (\textit{tool-use}), la mémoire conversationnelle, les connecteurs
+vers les bases vectorielles et les modèles de langage.
+Il supporte nativement ChromaDB, Redis et les API compatibles OpenAI,
+ce qui correspond exactement à la pile technologique retenue pour ce projet.
+
+\subsection{Tableau comparatif}
+
+Le Tableau~\ref{tab:comparatif_orchestration} compare les trois approches
+selon les besoins des modules conversationnels du projet.
+
+\vspace{6pt}
+\begin{table}[H]
+\centering
+\caption{Comparaison des frameworks d'orchestration}
+\label{tab:comparatif_orchestration}
+\begin{tabular}{|l|c|c|c|}
+\hline
+\textbf{Critère} & \textbf{Implémentation} & \textbf{LlamaIndex} & \textbf{LangChain} \\
+                 & \textbf{personnalisée}  &                     &                    \\
+\hline
+Gestion mémoire conversationnelle & Non & Partielle & Oui \\
+Support agents (tool-use)         & Non & Partiel   & Oui \\
+Connecteur ChromaDB natif         & Non & Oui       & Oui \\
+Connecteur Redis natif            & Non & Non       & Oui \\
+Effort de développement           & Élevé & Moyen   & Faible \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{Choix retenu}
+
+LangChain a été retenu comme framework d'orchestration pour les trois modules conversationnels.
+Il offre des connecteurs natifs vers ChromaDB et Redis, une gestion intégrée
+de la mémoire de session et des abstractions pour les agents à boucle d'appels d'outils,
+ce qui réduit significativement le volume de code à maintenir.
+Sa compatibilité avec les API de style OpenAI permet de l'interfacer directement
+avec le serveur vLLM de kaisens.fr sans adaptation supplémentaire.
+
+% ─────────────────────────────────────────────────────────────────────────────
 \section{Synthèse des choix technologiques}
 
 Le Tableau~\ref{tab:synthese_choix} récapitule l'ensemble des choix technologiques retenus
@@ -388,14 +458,15 @@ Déploiement     & Docker Compose \cite{docker} & —          & Conteneurisatio
 
 Ce chapitre a établi, pour chaque domaine technique couvert par le projet,
 un panorama des approches existantes et une justification des choix retenus.
-Cinq axes ont été étudiés : les assistants conversationnels,
+Six axes ont été étudiés : les assistants conversationnels,
 la recherche documentaire intelligente, les modèles de génération de langage,
 le soutien émotionnel par intelligence artificielle,
-et la détection automatique du harcèlement.
-L'architecture RAG, le modèle Mistral-7B, ChromaDB, le LLM conversationnel
-avec profil utilisateur persistant, et l'ancrage juridique
-forment un ensemble cohérent, adapté aux contraintes du projet :
+la détection automatique du harcèlement,
+et l'orchestration des pipelines conversationnels.
+L'architecture RAG, le modèle Mistral-7B déjà hébergé sur kaisens.fr,
+ChromaDB, LangChain, le LLM conversationnel avec profil utilisateur persistant,
+et l'ancrage juridique forment un ensemble cohérent, adapté aux contraintes du projet :
 confidentialité des données, qualité en français,
-absence de corpus étiqueté, et déploiement autonome.
+absence de corpus étiqueté, déploiement autonome et maîtrise des coûts d'infrastructure.
 
 Le chapitre suivant présente la conception du système à partir de ces choix.

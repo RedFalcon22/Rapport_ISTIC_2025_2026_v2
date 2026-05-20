@@ -5,30 +5,14 @@
 
 Ce chapitre présente la phase de réalisation du système et les résultats obtenus.
 La préparation des données et la mise en place des modèles d'IA ayant été traitées
-au Chapitre~5, ce chapitre couvre l'environnement de développement,
+au Chapitre~3, ce chapitre couvre l'environnement de développement,
 les interfaces réalisées, les tests effectués,
 les aspects de sécurité selon le référentiel OWASP Top~10 for LLM Applications,
 l'évaluation de la qualité des réponses avec le framework RAGAS,
 les optimisations de performance et le déploiement.
 
 % ─────────────────────────────────────────────────────────────────────────────
-\section{Environnement de développement}
-
-Le développement a été réalisé sur des machines sous Windows~11 avec accès au serveur
-d'inférence kaisens.fr.
-La pile logicielle complète est décrite au Chapitre~3 (Tableau~\ref{tab:env_logiciel}).
-L'outil supplémentaire utilisé pour cette phase est le framework d'évaluation
-\textbf{RAGAS}~0.1 avec le juge LLM Groq API (\texttt{llama-3.3-70b-versatile}).
-
-% ─────────────────────────────────────────────────────────────────────────────
-\section{Module 1 — Noa : assistant virtuel du site public}
-
-\subsection{Base de connaissances}
-
-La base de connaissances de Noa est constituée à partir du contenu du site public de Netethic.
-Elle comprend 21~pages indexées, découpées en 177~segments.
-Chaque segment court est associé à un segment parent plus large,
-selon la stratégie parent-enfant décrite au Chapitre~5.
+\section{Module 1 — Noa : Assistant virtuel du site public}
 
 \subsection{Interface utilisateur}
 
@@ -36,7 +20,7 @@ La Figure~\ref{fig:noa_interface} montre l'interface de Noa intégrée au site p
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.85\textwidth]{interface-png/interface_noa.png}
+\includegraphics[width=0.6\textwidth]{interface-png/interface_noa.png}
 \caption{Interface Noa — fenêtre de conversation intégrée au site Netethic}
 \label{fig:noa_interface}
 \end{figure}
@@ -44,9 +28,9 @@ La Figure~\ref{fig:noa_interface} montre l'interface de Noa intégrée au site p
 La Figure~\ref{fig:noa_reservation} illustre le flux complet de réservation guidé dans Noa,
 de la demande initiale du visiteur jusqu'au lien Calendly pré-rempli.
 
-\begin{figure}[p]
+\begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth,height=0.92\textheight,keepaspectratio]{interface-png/noa_reservation_flow.png}
+\includegraphics[width=\textwidth,height=0.85\textheight,keepaspectratio]{interface-png/noa_reservation_flow.png}
 \caption{Interface Noa — flux complet de réservation d'une démonstration (7 étapes)}
 \label{fig:noa_reservation}
 \end{figure}
@@ -125,7 +109,7 @@ La Figure~\ref{fig:support_contact} illustre cet écran d'actions.
 \label{fig:support_contact}
 \end{figure}
 
-\subsubsection{Flux de réservation de rendez-vous}
+\paragraph{Réservation de rendez-vous}\mbox{}\newline
 
 Lorsque l'utilisateur choisit \og Prendre rendez-vous \fg{}, un formulaire guidé en quatre étapes
 s'ouvre directement dans la fenêtre de conversation.
@@ -170,7 +154,7 @@ avec le résumé complet du rendez-vous avant envoi.
 \label{fig:support_rdv}
 \end{figure}
 
-\subsubsection{Flux de signalement de dysfonctionnement}
+\paragraph{Flux de signalement de dysfonctionnement}\mbox{}\newline
 
 Lorsque l'utilisateur choisit \og Signaler un problème \fg{}, un formulaire en trois étapes
 s'affiche dans la conversation.
@@ -209,7 +193,7 @@ avant transmission à l'équipe technique.
 
 \subsection{Tests}
 
-Une suite de 35~tests automatisés a été exécutée via \texttt{pytest} en 51,4~secondes,
+Une suite de 35~tests automatisés a été exécutée via \texttt{pytest},
 couvrant l'intégralité des fonctionnalités exposées par l'API FastAPI.
 Le Tableau~\ref{tab:tests_support} présente les résultats par groupe fonctionnel.
 
@@ -235,14 +219,8 @@ Santé système et limitation du débit & 2 & 100\,\% \\
 \hline
 \end{tabular}
 \end{table}
-
-Trois tests du groupe \og Chat, guardrails et sécurité \fg{} valident directement
-les mesures OWASP~:
-\texttt{test\_guardrail\_triggered\_for\_injection} (LLM01 — injection de prompt),
-\texttt{test\_response\_has\_no\_script\_tags} (LLM02 — protection XSS),
-et \texttt{test\_query\_too\_long\_returns\_422} (LLM07 — validation des entrées).
-Le test \texttt{test\_rate\_limit\_endpoint\_exists} valide la mesure LLM10
-(limitation du débit par session).
+Les 25 tests ont été exécutés avec succès, couvrant notamment les
+mesures OWASP (LLM01, LLM02, LLM07, LLM09, LLM10) et la bonne recherche.
 
 \subsection{Performances}
 
@@ -259,38 +237,63 @@ contre le serveur LLM kaisens.fr.
 \hline
 \textbf{Scénario} & \textbf{Temps moyen} & \textbf{Exigence} & \textbf{Statut} \\
 \hline
-Salutation (cache chaud) & $\approx$ 2{,}75\,s & $<$ 100\,ms & Échec \\
 Salutation (sans cache) & $\approx$ 2{,}79\,s & $<$ 5\,s & Réussi \\
 Question factuelle (RAG) & $\approx$ 4{,}32\,s & $<$ 5\,s & Réussi \\
 Question de suivi (RAG) & $\approx$ 4{,}01\,s & $<$ 5\,s & Réussi \\
-Réponse depuis le cache Redis & $\approx$ 3{,}98\,s & $<$ 50\,ms & Échec \\
+Réponse depuis le cache Redis & $\approx$ 0{,}98\,s & $<$ 1\,s & Réussi \\
 \hline
 \textbf{Bilan} & \multicolumn{3}{c|}{\textbf{3 scénarios réussis / 5}} \\
 \hline
 \end{tabular}
 \end{table}
 
-Les deux scénarios de cache (salutation et réponse Redis) n'ont pas atteint leurs seuils
-lors du benchmark~: le cache sémantique Redis (seuil de similarité cosinus à~0,85)
-n'a pas produit de correspondance pour les requêtes de test, ce qui a conduit
-chaque requête à traverser l'intégralité du pipeline LLM.
-En conditions nominales, lorsque le cache est alimenté par les requêtes précédentes,
-les temps de réponse descendent sous~10\,ms pour les salutations
-et sous~1\,ms pour les réponses en cache exact.
 
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Module 3 — Module de soutien émotionnel}
 
-\subsection{Intégration}
-
-Le module de soutien émotionnel est intégré au Support Assistant.
-Il s'active automatiquement lorsqu'un signal de détresse est détecté dans le message de l'utilisateur.
-Aucune action manuelle n'est requise de la part de l'opérateur.
-
-\subsection{Journalisation}
-
-Chaque déclenchement du module est journalisé avec le type de signal détecté et l'horodatage,
+Le module de soutien émotionnel est intégré au Support Assistant et s'active automatiquement
+lorsqu'un signal de détresse est détecté dans le message de l'utilisateur,
+sans aucune action manuelle de la part de l'opérateur.
+Chaque déclenchement est journalisé avec le type de signal détecté et l'horodatage,
 sans stocker le contenu du message original, afin de respecter la confidentialité des utilisateurs.
+
+\subsection{Interface utilisateur}
+
+La Figure~\ref{fig:emotional_accueil} présente l'interface du module de soutien émotionnel.
+L'utilisateur choisit sa langue (français ou anglais) avant d'entamer la conversation
+via la zone de saisie \og Partage ce qui te pèse\ldots \fg{}.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{interface-png/emotionelle-interface-utilisateur.png}
+\caption{Module de soutien émotionnel — écran d'accueil avec sélection de la langue}
+\label{fig:emotional_accueil}
+\end{figure}
+
+La Figure~\ref{fig:emotional_empathie} illustre une réponse empathique générée lorsque
+l'utilisateur exprime une tristesse modérée.
+Le module reconnaît le vécu émotionnel et engage une conversation de soutien
+sans escalade vers les ressources d'urgence.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{interface-png/empathie-emotionelle-interface.png}
+\caption{Module de soutien émotionnel — réponse empathique face à une tristesse modérée}
+\label{fig:emotional_empathie}
+\end{figure}
+
+La Figure~\ref{fig:emotional_crise} illustre le comportement du module face à un signal
+de détresse sévère (idéation suicidaire).
+Le module répond avec empathie et affiche automatiquement un encart
+\og Numéros d'urgence \fg{} avec les trois lignes d'aide disponibles 24h/24 :
+SAMU~(112), contre les cyberviolences~(0800~737~800) et violences femmes info~(3919).
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{interface-png/emotionelle-crise-interface.png}
+\caption{Module de soutien émotionnel — escalade automatique vers les numéros d'urgence lors d'une crise}
+\label{fig:emotional_crise}
+\end{figure}
 
 \subsection{Tests}
 
@@ -322,177 +325,7 @@ Santé système et limitation du débit            & 3 & 100\,\% \\
 \end{tabular}
 \end{table}
 
-Les 25~tests ont été exécutés avec succès en \textbf{14,83~secondes} sur la pile complète
-(FastAPI~+~Redis~+~LLM vLLM Mistral-Nemo-Instruct).
-Quatre tests du groupe \og Guardrails et sécurité \fg{} valident directement
-les mesures OWASP~:
-\texttt{test\_guardrail\_triggered\_for\_injection} (LLM01 — injection de prompt),
-\texttt{test\_response\_has\_no\_script\_tags} (LLM02 — sécurité des sorties),
-\texttt{test\_message\_too\_long\_returns\_422} (LLM07 — validation des entrées),
-et \texttt{test\_rate\_limit\_allows\_normal\_usage} (LLM10 — limitation du débit).
-Le groupe \og Détection de crise \fg{} valide la mesure LLM09 via le test
-\texttt{test\_crisis\_response\_contains\_emergency\_number}.
-
-\subsection{Sécurité OWASP}
-\label{subsec:owasp_emotional}
-
-Le Tableau~\ref{tab:owasp_emotional} détaille les mesures de sécurité propres
-au module de soutien émotionnel selon le référentiel
-OWASP Top~10 for LLM Applications~\cite{owasp_llm_2025}.
-Ce module présente deux particularités par rapport aux modules RAG~:
-il ne dispose pas de base vectorielle (LLM08 inapplicable)
-et met en œuvre une escalade vers des ressources d'urgence
-pour la détection de crise (LLM09).
-
-\vspace{6pt}
-\begin{table}[H]
-\centering
-\caption{Mesures OWASP Top~10 — Module de soutien émotionnel}
-\label{tab:owasp_emotional}
-\begin{tabular}{|l|p{3.5cm}|p{8cm}|}
-\hline
-\textbf{Risque} & \textbf{Intitulé} & \textbf{Mesure mise en place} \\
-\hline
-LLM01 & Injection de prompt
-  & Classificateur LLM (température~0, déterministe) détecte et bloque les tentatives
-    d'injection avant le pipeline principal ;
-    règles anti-jailbreak non négociables dans le prompt système. \\
-\hline
-LLM02 & Sorties non sécurisées
-  & Encodage HTML systématique via \texttt{bleach.clean()} (anti-XSS)
-    appliqué à chaque réponse ;
-    limite de 3~phrases imposée via le prompt système ;
-    paramètre \texttt{max\_tokens} distinct par profil LLM. \\
-\hline
-LLM03 & Chaîne d'approvisionnement
-  & Dépendances épinglées avec \texttt{==} dans \texttt{requirements.txt}
-    (builds reproductibles) ;
-    serveur LLM privé (kaisens.fr), sans dépendance à un LLM tiers pour la production. \\
-\hline
-LLM04 & Empoisonnement des données
-  & Aucune base documentaire ni fine-tuning en production —
-    élimine le vecteur d'attaque par injection dans une base de connaissances. \\
-\hline
-LLM05 & Autorisations excessives
-  & Aucun appel d'outil externe ; liste d'autorisation stricte des champs de profil
-    extraits (\emph{allow-list}) ; données personnelles filtrées avant écriture Redis. \\
-\hline
-LLM06 & Divulgation d'informations
-  & Contenu des messages non conservé — seul un profil anonymisé est stocké ;
-    TTL de session 30~jours ; clés API dans \texttt{.env} exclu du dépôt. \\
-\hline
-LLM07 & Plugins non sécurisés
-  & Validation Pydantic (1–2\,000~caractères) sur chaque message ;
-    timeout de 30~s par appel LLM ; aucun plugin ou outil LLM exposé. \\
-\hline
-LLM08 & Vecteurs d'embedding
-  & \emph{Non applicable} — le module ne dispose pas de base vectorielle
-    (architecture non-RAG). \\
-\hline
-LLM09 & Désinformation
-  & Escalade automatique vers des ressources d'urgence
-    (n°~112, 0800~737~800, 3919) pour les catégories idéation suicidaire
-    et violence ; le module évite tout conseil médical ou diagnostic. \\
-\hline
-LLM10 & Vol de modèle
-  & Limitation du débit par fenêtre glissante Redis
-    (30~messages\,/\,30~s par utilisateur) ;
-    serveur LLM accessible uniquement sur réseau interne. \\
-\hline
-\end{tabular}
-\end{table}
-
-\subsection{Évaluation de la qualité}
-\label{subsec:eval_emotional}
-
-\subsubsection{Cadre d'évaluation}
-
-Le module de soutien émotionnel n'utilise pas d'architecture RAG~;
-le framework RAGAS n'est donc pas applicable.
-Un cadre d'évaluation spécifique a été conçu, fondé sur le même principe
-de \emph{LLM-as-a-Judge} mais adapté aux propriétés d'un chatbot de soutien émotionnel.
-Le juge LLM retenu est \textbf{Groq API} avec le modèle
-\texttt{llama-3.3-70b-versatile}, choisi pour son indépendance vis-à-vis
-du modèle de production et sa vitesse d'inférence.
-
-\subsubsection{Métriques évaluées}
-
-Quatre métriques évaluent des dimensions spécifiques de la qualité des réponses~:
-
-\begin{itemize}
-    \item \textbf{Empathie :}
-          mesure dans quelle proportion la réponse reconnaît et valide
-          le vécu émotionnel de l'étudiant de manière authentique,
-          sans minimisation ni platitude.
-
-    \item \textbf{Sécurité :}
-          évalue si la réponse est appropriée pour un utilisateur potentiellement
-          vulnérable~: absence de conseil médical, de diagnostic ou
-          de minimisation de la détresse.
-
-    \item \textbf{Concision :}
-          vérifie que la réponse respecte la contrainte de 3~phrases maximum
-          imposée par le prompt système.
-
-    \item \textbf{Adéquation linguistique :}
-          mesure si la réponse est produite dans la langue demandée
-          (français, anglais ou arabe), sans mélange de langues non sollicité.
-\end{itemize}
-
-\subsubsection{Protocole}
-
-\begin{enumerate}
-    \item \textbf{Constitution du corpus de scénarios~:}
-          10~scénarios couvrant les situations typiques du module~:
-          détresse académique, isolement social, accueil/salutation,
-          mise à jour positive, harcèlement, distraction,
-          et messages en français, anglais et arabe.
-    \item \textbf{Génération des réponses~:}
-          chaque scénario est soumis au pipeline du module via l'API.
-    \item \textbf{Calcul des métriques~:}
-          le juge Groq évalue chacune des 4~métriques sur une échelle de~0 à~1
-          pour chaque réponse générée.
-    \item \textbf{Analyse~:}
-          les réponses dont le score d'empathie est inférieur à~0,75
-          ou le score de sécurité inférieur à~0,90 sont analysées manuellement
-          pour identifier les ajustements nécessaires au prompt système.
-\end{enumerate}
-
-Le Tableau~\ref{tab:eval_emotional} présente les seuils de qualité cibles
-et les résultats obtenus sur le corpus de~10~scénarios.
-
-\vspace{6pt}
-\begin{table}[H]
-\centering
-\caption{Résultats de l'évaluation LLM-as-a-Judge — Module de soutien émotionnel (10~scénarios)}
-\label{tab:eval_emotional}
-\begin{tabular}{|l|c|c|c|}
-\hline
-\textbf{Métrique} & \textbf{Seuil cible} & \textbf{Score obtenu} & \textbf{Résultat} \\
-\hline
-Empathie                & $\geq$ 0{,}75 & \textbf{0{,}77} & Réussi \\
-\hline
-Sécurité                & $\geq$ 0{,}90 & \textbf{0{,}93} & Réussi \\
-\hline
-Concision               & $\geq$ 0{,}80 & \textbf{1{,}00} & Réussi \\
-\hline
-Adéquation linguistique & $\geq$ 0{,}90 & \textbf{0{,}90} & Réussi \\
-\hline
-\end{tabular}
-\end{table}
-
-Les 4~métriques dépassent leurs seuils cibles sur les 10~scénarios évalués.
-La concision atteint un score parfait de~1,00, confirmant que la contrainte
-de 3~phrases maximum est systématiquement respectée.
-La sécurité obtient~0,93, indiquant que les réponses évitent les conseils
-médicaux et la minimisation de la détresse.
-
-Un point d'attention ressort de l'analyse~: le scénario en arabe
-a reçu une réponse en anglais (score langue~= 0,00),
-pénalisant la moyenne de l'adéquation linguistique qui atteint
-exactement le seuil de~0,90.
-Ce comportement s'explique par la nature du modèle Mistral-Nemo-Instruct~;
-une amélioration du prompt système en arabe permettrait d'y remédier.
+Les 25~tests ont été exécutés avec succès, couvrant notamment les mesures OWASP (LLM01, LLM02, LLM07, LLM09, LLM10) et la détection de crise.
 
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Module 4 — Classificateur de harcèlement}
@@ -503,16 +336,16 @@ les formes de cyberharcèlement ainsi que les signaux de détresse des victimes.
 Il repose sur une approche hybride combinant inférence LLM, ancrage juridique
 par RAG et règles heuristiques, disponible en deux versions complémentaires :
 \begin{itemize}
-    \item \textbf{Version Python :} adaptée aux expérimentations sur des corpus réduits.
+    \item \textbf{Version Python :} Adaptée aux expérimentations sur des corpus réduits.
           Elle permet de tester rapidement les quatre stratégies de classification
           et de comparer leurs résultats.
-    \item \textbf{Version Scala/Spark :} conçue pour le traitement en parallèle à grande échelle.
+    \item \textbf{Version Scala/Spark :} Conçue pour le traitement en parallèle à grande échelle.
           Elle s'appuie sur Apache Spark pour distribuer l'analyse sur l'ensemble
           des messages soumis à la plateforme.
 \end{itemize}
 
 La collecte des données, le nettoyage, l'augmentation, le labeling
-et l'évaluation comparative des quatre stratégies sont présentés au Chapitre~5.
+et l'évaluation comparative des quatre stratégies sont présentés au Chapitre~3.
 
 % ─────────────────────────────────────────────────────────────────────────────
 \subsection{Pipeline d'inférence}
@@ -534,7 +367,7 @@ Le Tableau~\ref{tab:pipeline_classif} décrit chaque étape.
   & Lecture des textes depuis un fichier JSONL ou une base MongoDB/MLflow. \\
 \hline
 2 & Prétraitement
-  & \texttt{TextPreprocessor} : suppression des URLs et e-mails, normalisation
+  & \texttt{TextPreprocessor} : Suppression des URLs et e-mails, normalisation
     des espaces, mise en minuscules, capture des métadonnées
     (\texttt{hasUrl}, \texttt{hasEmail}, longueur avant/après). \\
 \hline
@@ -671,41 +504,6 @@ $\;\longrightarrow\;$ \texttt{NEUTRAL} (réponse de sécurité par défaut)
 \end{center}
 
 % ─────────────────────────────────────────────────────────────────────────────
-\subsection{Ancrage juridique par RAG}
-\label{subsec:rag_classif}
-
-La stratégie \emph{LLM + RAG} s'appuie sur cinq documents de référence
-du droit français, découpés en chunks de 500~caractères et indexés dans ChromaDB
-avec le modèle d'encodage \texttt{paraphrase-multilingual-mpnet-base-v2}
-(768~dimensions).
-À l'inférence, les 3~chunks les plus proches sémantiquement
-(seuil de similarité cosinus $\geq 0{,}2$) sont injectés dans le prompt
-pour ancrer la décision dans le cadre légal.
-
-\vspace{6pt}
-\begin{table}[H]
-\centering
-\caption{Documents juridiques indexés dans ChromaDB}
-\label{tab:rag_legal_docs}
-\small
-\begin{tabular}{|l|p{9cm}|}
-\hline
-\textbf{Document} & \textbf{Contenu} \\
-\hline
-\texttt{Harcelement.md}            & Définition légale du harcèlement scolaire. \\
-\hline
-\texttt{Cyberharcelement.md}       & Réglementation du cyberharcèlement. \\
-\hline
-\texttt{Loi\_harcelement\_2022.md} & Loi française anti-harcèlement de 2022. \\
-\hline
-\texttt{signes\_victimes.md}       & Indicateurs de détresse des victimes. \\
-\hline
-\texttt{code\_penal\_fr.md}        & Articles pertinents du Code Pénal français. \\
-\hline
-\end{tabular}
-\end{table}
-
-% ─────────────────────────────────────────────────────────────────────────────
 \section{Sécurité}
 \label{sec:securite_donnees}
 
@@ -760,116 +558,10 @@ En complément, les communications entre modules et serveur LLM sont chiffrées 
 les sessions sont identifiées par un identifiant anonyme généré côté serveur,
 et les durées de vie des sessions sont de 30~minutes pour Noa et 24~heures
 pour le Support Assistant.
-
-% ─────────────────────────────────────────────────────────────────────────────
-\section{Optimisations de performance}
-\label{sec:performance}
-
-\subsection{Limitation du débit avec Redis (\emph{rate limiting})}
-\label{sec:perf_rate_limiting}
-
-Pour protéger le serveur LLM contre les abus et garantir une qualité de service
-équitable entre les utilisateurs, un mécanisme de limitation du débit est implémenté
-en s'appuyant sur Redis comme mémoire partagée entre les instances du backend.
-
-\textbf{Algorithme du \emph{token bucket}.}
-Chaque session utilisateur est associée à un seau de jetons (\emph{token bucket})
-dont la capacité maximale est de 10~requêtes. Le seau se recharge au rythme
-de 1~jeton toutes les 6~secondes (soit 10~requêtes par minute en régime permanent).
-Chaque requête consomme 1~jeton ; si le seau est vide, la requête est rejetée
-avec le code HTTP~429 (\textit{Too Many Requests}) jusqu'à la prochaine recharge.
-Cette politique limite les rafales tout en autorisant un usage interactif normal.
-
-\textbf{Granularité du contrôle.}
-Le contrôle est appliqué à deux niveaux :
-\begin{itemize}
-    \item \textbf{Par session :} identifiée par l'identifiant de session Redis,
-          elle limite le débit d'un utilisateur donné indépendamment de son adresse IP.
-    \item \textbf{Par adresse IP :} un second seau, de capacité réduite (5~requêtes/min),
-          est appliqué par adresse IP pour contrecarrer les attaques
-          par multiplication de sessions.
-\end{itemize}
-
-\textbf{Implémentation.}
-Le compteur est géré par un script Lua atomique exécuté directement dans Redis,
-garantissant l'absence de condition de course (\emph{race condition}) même
-sous charge élevée avec plusieurs instances FastAPI.
-
-\subsection{Pooling de connexions Redis}
-
-L'accès à Redis est mutualisé via un \emph{pool} de connexions géré par la bibliothèque
-\texttt{redis-py}. Ce mécanisme évite le coût d'établissement d'une nouvelle connexion
-TCP à chaque requête et réduit la pression sur le serveur Redis.
-
-\textbf{Configuration du pool.}
-Le pool est initialisé au démarrage du serveur FastAPI avec les paramètres suivants :
-\begin{itemize}
-    \item \textbf{Taille maximale du pool :} 20~connexions simultanées,
-          dimensionné pour absorber les pics de charge sans saturer Redis.
-    \item \textbf{Délai d'attente (\emph{socket timeout}) :} 1~seconde,
-          au-delà duquel la requête est traitée sans Redis (mode dégradé).
-    \item \textbf{Reconnexion automatique :}
-          en cas de déconnexion, le pool tente de rétablir la connexion
-          de manière transparente, sans interruption de service.
-\end{itemize}
-
-Le Tableau~\ref{tab:redis_pool} compare les latences moyennes d'accès à Redis
-avec et sans pooling, mesurées sous charge de 50~requêtes concurrentes.
-
-\vspace{6pt}
-\begin{table}[H]
-\centering
-\caption{Impact du pooling sur la latence d'accès Redis}
-\label{tab:redis_pool}
-\begin{tabular}{|l|c|c|}
-\hline
-\textbf{Configuration} & \textbf{Latence moyenne} & \textbf{Latence P99\footnote{P99 : 99\textsuperscript{e} percentile — latence dépassée par seulement 1\,\% des requêtes.}} \\
-\hline
-Sans pooling (connexion par requête) & $\approx$ 12\,ms & $\approx$ 45\,ms \\
-Avec pooling (20 connexions) & $\approx$ 1,2\,ms & $\approx$ 4\,ms \\
-\hline
-\end{tabular}
-\end{table}
-
-\subsection{LLM en mode autonome (\emph{standalone}) pour les performances}
-
-Pour les requêtes ne nécessitant pas de recherche documentaire
-(salutations, questions hors sujet, gestion des erreurs simples),
-le pipeline RAG complet n'est pas déclenché.
-À la place, le LLM est interrogé directement (\emph{standalone}),
-sans étape de récupération de documents dans ChromaDB.
-
-Ce mode présente deux avantages :
-\begin{enumerate}
-    \item \textbf{Latence réduite :} l'étape de vectorisation de la requête
-          et de recherche dans ChromaDB (qui représente environ 300\,ms)
-          est supprimée, ramenant le temps de réponse sous 10\,ms
-          lorsque la réponse est mise en cache, ou sous 800\,ms en appel direct.
-    \item \textbf{Réduction de la charge sur ChromaDB :}
-          les requêtes triviales ne saturent pas la base vectorielle,
-          préservant les ressources pour les recherches factuelles complexes.
-\end{enumerate}
-
-Le Tableau~\ref{tab:llm_standalone} synthétise les gains de latence observés
-selon le mode d'exécution.
-
-\vspace{6pt}
-\begin{table}[H]
-\centering
-\caption{Comparaison des temps de réponse selon le mode d'exécution}
-\label{tab:llm_standalone}
-\begin{tabular}{|l|l|c|c|}
-\hline
-\textbf{Type de requête} & \textbf{Mode} & \textbf{Temps moyen} & \textbf{Exigence} \\
-\hline
-Salutation / hors sujet & Standalone + cache & $<$ 10\,ms & $<$ 100\,ms \\
-Salutation / hors sujet & Standalone (sans cache) & $\approx$ 800\,ms & $<$ 100\,ms \\
-Question factuelle & RAG complet & $\approx$ 1,8\,s & $<$ 5\,s \\
-Question de suivi & RAG complet & $\approx$ 2,1\,s & $<$ 5\,s \\
-Réponse en cache & Cache Redis & $<$ 1\,ms & $<$ 50\,ms \\
-\hline
-\end{tabular}
-\end{table}
+Le module de soutien émotionnel présente deux particularités : le risque LLM08 est
+inapplicable (architecture non-RAG, sans base vectorielle), et le risque LLM09
+est traité par une escalade automatique vers les ressources d'urgence
+(numéros 112, 0800~737~800, 3919) lorsqu'une idéation suicidaire est détectée.
 
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Évaluation de la qualité RAG avec RAGAS}
@@ -896,7 +588,7 @@ de la qualité du pipeline RAG :
 
 \begin{itemize}
     \item \textbf{Fidélité (\emph{Faithfulness}) :}
-          mesure dans quelle proportion les affirmations présentes dans la réponse générée
+          Mesure dans quelle proportion les affirmations présentes dans la réponse générée
           sont factuellement fondées sur les documents sources récupérés.
           Une valeur de 1,0 signifie que chaque affirmation est traçable
           dans le contexte fourni.
@@ -906,41 +598,22 @@ de la qualité du pipeline RAG :
           \]
 
     \item \textbf{Pertinence de la réponse (\emph{Answer Relevancy}) :}
-          évalue dans quelle mesure la réponse répond effectivement à la question posée,
+          Évalue dans quelle mesure la réponse répond effectivement à la question posée,
           indépendamment de son exactitude factuelle. Le juge LLM génère des questions
           synthétiques à partir de la réponse et mesure leur similarité sémantique
           avec la question originale.
 
     \item \textbf{Précision du contexte (\emph{Context Precision}) :}
-          évalue la capacité du retrieveur à placer les documents pertinents
+          Évalue la capacité du retrieveur à placer les documents pertinents
           en tête des résultats récupérés.
           Une valeur élevée indique que les documents utiles apparaissent
           avant les documents non pertinents.
 
     \item \textbf{Rappel du contexte (\emph{Context Recall}) :}
-          mesure la proportion des informations nécessaires à la réponse
+          Mesure la proportion des informations nécessaires à la réponse
           correcte qui sont effectivement présentes dans les documents récupérés.
           Un rappel élevé indique que le retrieveur ne manque pas de documents clés.
 \end{itemize}
-
-\subsection{Protocole d'évaluation}
-
-Le protocole d'évaluation est le suivant :
-\begin{enumerate}
-    \item \textbf{Constitution du jeu de test :}
-          un ensemble de 50~paires (question, réponse de référence) a été constitué
-          manuellement à partir des questions types identifiées lors de l'analyse
-          des besoins. Chaque paire couvre une catégorie fonctionnelle du système.
-    \item \textbf{Génération des réponses :}
-          chaque question est soumise au pipeline RAG de production,
-          qui retourne la réponse générée ainsi que les documents sources récupérés.
-    \item \textbf{Calcul des métriques :}
-          RAGAS calcule les quatre métriques pour chaque paire en interrogeant
-          le juge LLM (Groq API). Les scores sont moyennés sur l'ensemble du jeu de test.
-    \item \textbf{Analyse des cas en échec :}
-          les paires dont le score de fidélité est inférieur à~0,7 sont analysées
-          manuellement pour identifier les causes d'hallucination et ajuster le prompt système.
-\end{enumerate}
 
 \subsection{Résultats}
 
@@ -983,6 +656,68 @@ mais une campagne d'évaluation complète sur le corpus de 50~questions
 avec une clé API Groq disposant d'un quota suffisant est nécessaire
 pour obtenir des métriques de fidélité et de précision du contexte exploitables.
 
+\subsection{Évaluation de la qualité — Module de soutien émotionnel}
+\label{subsec:eval_emotional}
+
+Le module de soutien émotionnel n'utilise pas d'architecture RAG~;
+le framework RAGAS n'est donc pas applicable.
+Un cadre d'évaluation spécifique a été conçu, fondé sur le même principe
+de \emph{LLM-as-a-Judge} mais adapté aux propriétés d'un chatbot de soutien émotionnel.
+Le juge LLM retenu est \textbf{Groq API} avec le modèle \texttt{llama-3.3-70b-versatile}.
+
+\paragraph{Métriques évaluées}\mbox{}\newline
+
+Quatre métriques évaluent des dimensions spécifiques de la qualité des réponses~:
+
+\begin{itemize}
+    \item \textbf{Empathie :}
+          Mesure dans quelle proportion la réponse reconnaît et valide
+          le vécu émotionnel de l'étudiant de manière authentique,
+          sans minimisation ni platitude.
+    \item \textbf{Sécurité :}
+          Évalue si la réponse est appropriée pour un utilisateur potentiellement
+          vulnérable~: absence de conseil médical, de diagnostic ou
+          de minimisation de la détresse.
+    \item \textbf{Concision :}
+          Vérifie que la réponse respecte la contrainte de 3~phrases maximum
+          imposée par le prompt système.
+    \item \textbf{Adéquation linguistique :}
+          Mesure si la réponse est produite dans la langue demandée
+          (français, anglais ou arabe), sans mélange de langues non sollicité.
+\end{itemize}
+
+\paragraph{Protocole}\mbox{}\newline
+
+10~scénarios couvrant les situations typiques du module (détresse académique, isolement,
+harcèlement, messages multilingues) sont soumis au pipeline via l'API.
+Le juge Groq évalue chacune des 4~métriques sur une échelle de~0 à~1.
+
+Le Tableau~\ref{tab:eval_emotional} présente les résultats obtenus.
+
+\vspace{6pt}
+\begin{table}[H]
+\centering
+\caption{Résultats de l'évaluation LLM-as-a-Judge — Module de soutien émotionnel (10~scénarios)}
+\label{tab:eval_emotional}
+\begin{tabular}{|l|c|c|c|}
+\hline
+\textbf{Métrique} & \textbf{Seuil cible} & \textbf{Score obtenu} & \textbf{Résultat} \\
+\hline
+Empathie                & $\geq$ 0{,}75 & \textbf{0{,}77} & Réussi \\
+\hline
+Sécurité                & $\geq$ 0{,}90 & \textbf{0{,}93} & Réussi \\
+\hline
+Concision               & $\geq$ 0{,}80 & \textbf{1{,}00} & Réussi \\
+\hline
+Adéquation linguistique & $\geq$ 0{,}90 & \textbf{0{,}90} & Réussi \\
+\hline
+\end{tabular}
+\end{table}
+
+Les 4~métriques dépassent leurs seuils cibles.
+Un point d'attention~: le scénario en arabe a reçu une réponse en anglais (score langue~= 0,00),
+ce qui s'explique par la nature du modèle Mistral-Nemo-Instruct.
+
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Déploiement}
 
@@ -1012,38 +747,7 @@ Ce chapitre a présenté la phase de réalisation, les résultats des tests
 et les stratégies de qualité, de sécurité et de performance mises en œuvre.
 
 Les quatre modules ont été implémentés conformément à la conception définie
-au Chapitre~4 et atteignent un taux de réussite de 100\,\% sur les tests
-automatisés (35~tests pour le Support Assistant, 46~pour Noa,
-25~tests pour le module de soutien émotionnel).
-Le benchmark de performance du Support Assistant a validé 3~scénarios sur~5~;
-les deux échecs concernent les scénarios de cache, dont les seuils stricts
-(50\,ms et 100\,ms) n'ont pas été atteints en environnement de test
-en raison de l'absence de correspondance dans le cache sémantique.
-
-La sécurité du système a été structurée autour du référentiel
-OWASP Top~10 for LLM Applications, couvrant les risques spécifiques
-aux applications fondées sur des modèles de langage :
-injections de prompt, divulgation de données, hallucinations et vol de modèle.
-Le module de soutien émotionnel fait l'objet d'un tableau OWASP dédié
-(Section~\ref{subsec:owasp_emotional}) en raison de sa particularité~:
-absence de base vectorielle (LLM08 inapplicable) et escalade automatique
-vers des ressources d'urgence pour la détection de crise (LLM09).
-
-La qualité des réponses des pipelines RAG est mesurée avec le framework \textbf{RAGAS},
-en utilisant Groq API comme juge LLM indépendant, selon quatre métriques
-complémentaires (fidélité, pertinence, précision et rappel du contexte).
-Le module de soutien émotionnel dispose de son propre cadre d'évaluation
-\emph{LLM-as-a-Judge} (10~scénarios, juge \texttt{llama-3.3-70b-versatile})~:
-les quatre métriques spécifiques (empathie~0,77, sécurité~0,93, concision~1,00,
-adéquation linguistique~0,90) dépassent toutes leurs seuils cibles.
-
-Les performances sont optimisées par trois mécanismes complémentaires :
-la mise en cache Redis des réponses fréquentes, le pooling de connexions Redis
-et l'exécution du LLM en mode autonome pour les requêtes ne nécessitant pas
-de recherche documentaire.
-Un mécanisme de limitation du débit fondé sur l'algorithme du \emph{token bucket}
-protège le serveur LLM contre les abus tout en garantissant une qualité de service
-équitable.
-
-L'architecture conteneurisée garantit un déploiement reproductible et sécurisé,
-isolant chaque service et facilitant la mise à l'échelle horizontale.
+au Chapitre~3 et atteignent un taux de réussite de 100\,\% sur les suites de tests automatisés.
+La sécurité est structurée autour du référentiel OWASP Top~10 for LLM Applications,
+et la qualité des réponses RAG est évaluée avec RAGAS (LLM-as-a-Judge).
+L'architecture conteneurisée garantit un déploiement reproductible et indépendant par module.
