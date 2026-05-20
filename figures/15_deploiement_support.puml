@@ -1,0 +1,83 @@
+﻿@startuml deploiement_support
+!theme plain
+skinparam defaultFontName Arial
+skinparam defaultFontSize 11
+skinparam shadowing false
+
+skinparam node {
+  BackgroundColor #EBF4FB
+  BorderColor     #1565C0
+  BorderThickness 1.5
+  FontColor       #0D47A1
+  FontSize        11
+}
+skinparam artifact {
+  BackgroundColor #FFFDE7
+  BorderColor     #F9A825
+  FontColor       #7B5E00
+  FontSize        10
+}
+skinparam component {
+  BackgroundColor #F5F5F5
+  BorderColor     #78909C
+  FontColor       #212121
+  FontSize        10
+}
+skinparam cloud {
+  BackgroundColor #ECEFF1
+  BorderColor     #546E7A
+  FontColor       #263238
+}
+skinparam arrow {
+  Color     #37474F
+  Thickness 1.2
+  FontSize  10
+  FontColor #37474F
+}
+
+
+' ─── CLIENT ────────────────────────────────────────────────
+node "Poste Agent NetEthic\n<<device>>" as CLI {
+  artifact "Navigateur  :8501" as BR
+}
+
+' ─── STACK SUPPORT ─────────────────────────────────────────
+node "Serveur Linux  [Stack Support]" <<device>> as HOST {
+  node "Docker Compose  netethic-network  [bridge]" <<execution environment>> as NET {
+
+    node "netethic-api  :8000" <<container>> as API {
+      component "FastAPI  uvicorn\n--workers 2" as SVC_API
+      component "LangChain RAG 10 etapes\nIntent · Rewrite · Cache\nLIVE/PDF · k=5 · Gen." as SVC_LC
+      component "ChromaDB  embedded\ncol: netethic_support" as SVC_CHR
+      artifact "vol  chroma_db\n/app/chroma_db_netethic" as VOL_CHR
+    }
+
+    node "netethic-ui  :8501" <<container>> as UI {
+      component "Streamlit\nfrontend/app.py\nSelecteur categorie" as SVC_UI
+      artifact "frontend/app.py" as ART_UI
+    }
+
+    node "netethic-redis  (interne)" <<container>> as RED {
+      component "Redis 7 Alpine\nmaxmem 512 MB  LRU" as SVC_RED
+      artifact "vol  redis_data\nsessions · cache cosinus\nrate-limit" as VOL_RED
+    }
+  }
+}
+
+' ─── LLM EXTERNE ───────────────────────────────────────────
+cloud "kaisens.fr  (Production)" as EXT {
+  node "GPU Server  [NVIDIA A100]" <<device>> as GPU {
+    node "vLLM Runtime" <<execution environment>> {
+      component "Mistral-7B-Instruct v0.3\nOpenAI-compat." as LLM_PROD
+    }
+  }
+}
+
+' ─── CONNEXIONS ────────────────────────────────────────────
+CLI  --  HOST  : HTTPS  :8501
+HOST --  EXT   : HTTPS  :443\nPOST /v1/chat/completions
+
+UI   --> API   : REST /chat\n/appointments  /bug-reports
+API  --> RED   : sessions / cache cosinus\nrate-limit
+
+@enduml

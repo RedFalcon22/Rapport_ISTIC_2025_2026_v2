@@ -1,0 +1,99 @@
+﻿@startuml composants_support
+!theme plain
+skinparam defaultFontName Arial
+skinparam defaultFontSize 9
+skinparam componentStyle rectangle
+skinparam shadowing false
+
+skinparam package {
+  BackgroundColor White
+  BorderColor     #607D8B
+  BorderThickness 1.5
+  FontStyle       bold
+  FontSize        10
+  FontColor       #263238
+}
+skinparam component {
+  BackgroundColor #C8E6C9
+  BorderColor     #2E7D32
+  BorderThickness 1
+  FontColor       #1B5E20
+  FontSize        8
+}
+skinparam interface {
+  BackgroundColor White
+  BorderColor     #546E7A
+  FontSize        8
+  FontColor       #37474F
+}
+skinparam database {
+  BackgroundColor #FFF8E1
+  BorderColor     #F57F17
+  FontColor       #E65100
+  FontSize        8
+}
+skinparam cloud {
+  BackgroundColor #ECEFF1
+  BorderColor     #78909C
+  FontColor       #37474F
+}
+skinparam arrow {
+  Color     #546E7A
+  Thickness 1.5
+  FontSize  8
+  FontColor #546E7A
+}
+
+
+' ── Interfaces fournies ──────────────────────────────────────
+interface "ISupportChat\nPOST /chat" as I_chat
+interface "IAppointments\nPOST /appointments" as I_appt
+interface "IBugReports\nPOST /bug-reports" as I_bugs
+
+' ════════════════════════════════════════════════
+package "Module 2 — Support Assistant  (Streamlit + FastAPI)" #E8F5E9 {
+
+  package "Couche Presentation" #C8E6C9 {
+    component "Frontend Streamlit  :8501\n[frontend/app.py]\nSelecteur categorie  Repli GUI" as FE
+  }
+
+  package "Couche Metier  [FastAPI  :8000]" #DCEDC8 {
+    component "API  [api.py]\nXSS bleach  Rate Limiter\nslowapi 5/min" as API
+    component "Guardrail\n[check_query_appropriateness]\nHTML · injection · securite" as GRD
+    component "Spell + Polite Detector\n[single LLM call]\n__QUESTION__ / __NOISE__" as SPELL
+    component "Pipeline RAG  10 etapes\n[chatbot.py]\nLIVE/PDF  Intent  Rewrite\nCache cosinus  k=5" as RAG
+    component "Agent FSM\n[RDV  Signalement]\nCollecte → Validation → Confirm" as FSM
+    component "Session Manager\n[session_manager.py]\nRedis  24h TTL" as SM
+  }
+
+  package "Couche Donnees" #F1F8E9 {
+    database "ChromaDB  embedded\ncol: netethic_support\n[vector_store.py]" as CHR
+    database "Redis  :6379\nsessions · cache cosinus\nrate-limit" as RED
+  }
+}
+API -up- I_chat
+API -up- I_appt
+API -up- I_bugs
+
+FE    -down-> API  : HTTP/REST
+API   -down-> GRD  : garde-fou pass 1
+GRD   -down-> SPELL : correction + politesse
+SPELL -down-> RAG   : pipeline RAG
+RAG   -right-> FSM  : no_results → repli
+API   -down-> SM    : session r/w
+SM    -down-> RED   : persistance
+RAG   -down-> CHR   : recherche vectorielle
+
+' ── Interfaces requises ──────────────────────────────────────
+interface "ILLMInference\nvLLM kaisens.fr" as I_llm
+interface "ILiveData\nJSON tableau bord" as I_live
+
+RAG ..> I_llm : inference LLM
+RAG ..> I_live : donnees temps reel
+
+cloud "kaisens.fr" #ECEFF1 {
+  component "vLLM  Mistral-7B-Instruct v0.3\nGPU A100" as LLM_K
+}
+I_llm -down- LLM_K
+
+@enduml

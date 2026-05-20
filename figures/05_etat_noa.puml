@@ -1,57 +1,73 @@
-@startuml etat_noa
+﻿@startuml etat_noa
 !theme plain
 skinparam stateBorderColor #2C6EA0
 skinparam stateBackgroundColor #EBF4FB
 skinparam stateArrowColor #2C6EA0
 skinparam defaultFontName Arial
-skinparam defaultFontSize 11
+skinparam defaultFontSize 13
 
-title Diagramme d'état-transition — Module Noa
 
 [*] --> Inactif : démarrage du service
 
-Inactif --> ClassificationIntention : message reçu
+' ─────────────────────────────────────────────────────────
+' Étape 1 — Interception du flux de réservation
+' ─────────────────────────────────────────────────────────
+Inactif --> InterceptionReservation : message reçu
 
-state ClassificationIntention {
-  [*] --> Analyse
-  Analyse --> [*]
+InterceptionReservation --> GestionReservation : flux de réservation actif\n(BookingAgent en cours)
+InterceptionReservation --> VerificationGuardrail : aucun flux actif
+
+' ─────────────────────────────────────────────────────────
+' Flux de réservation (automate FSM, 6 étapes)
+' ─────────────────────────────────────────────────────────
+state "GestionReservation\n(automate FSM)" as GestionReservation {
+  [*]           --> CollecteDate       : démarrage réservation
+  CollecteDate     --> CollecteHoraire    : date sélectionnée (puces Calendly)
+  CollecteHoraire  --> CollecteNom        : horaire sélectionné
+  CollecteNom      --> CollecteEmail      : nom complet fourni
+  CollecteEmail    --> CollecteTelephone  : e-mail validé
+  CollecteTelephone --> [*]              : téléphone fourni → lien Calendly généré
 }
 
-ClassificationIntention --> TraitementBavardage   : intent = chitchat
-ClassificationIntention --> RefusDemande          : intent = forbidden
-ClassificationIntention --> CollecteReservation   : intent = reservation
-ClassificationIntention --> VerificationCache     : intent = factual / follow-up
+GestionReservation --> Inactif : confirmation envoyée\n+ lien Calendly profond
 
-TraitementBavardage --> Inactif : réponse prédéfinie envoyée
-RefusDemande        --> Inactif : message de refus envoyé
+' ─────────────────────────────────────────────────────────
+' Étape 2 — Vérification du garde-fou
+' ─────────────────────────────────────────────────────────
+VerificationGuardrail --> MessageBloque    : jailbreak / contenu adulte / hors-sujet
+VerificationGuardrail --> VerificationCache : message autorisé
 
-' ─── Flux factuel ────────────────────────────────────────
-VerificationCache --> Inactif            : cache hit\nréponse < 1 ms
-VerificationCache --> RechercheDocs      : cache miss
+MessageBloque --> Inactif : refus poli envoyé
 
-RechercheDocs     --> GenerationReponse  : chunks récupérés (k=5)
-GenerationReponse --> MiseAJourCache     : réponse LLM générée
-MiseAJourCache    --> MiseAJourSession   : cache mis à jour
-MiseAJourSession  --> Inactif            : session sauvegardée dans Redis
+' ─────────────────────────────────────────────────────────
+' Étape 3 — Cache FAQ (LRU in-memory)
+' ─────────────────────────────────────────────────────────
+VerificationCache --> Inactif     : cache hit\nréponse < 1 ms
+VerificationCache --> BoucleAgent : cache miss
 
-' ─── Flux réservation (agent FSM) ────────────────────────
-CollecteReservation --> AttenteEmail     : début collecte
-
-state "AttenteEmail" as AttenteEmail {
-  [*] --> DemandeEmail
-  DemandeEmail --> ValidationEmail
-  ValidationEmail --> [*]
+' ─────────────────────────────────────────────────────────
+' Étape 4 — Boucle agent tool-use
+' ─────────────────────────────────────────────────────────
+state "BoucleAgent\n(max 5 itérations)" as BoucleAgent {
+  [*]          --> ChoixOutil
+  ChoixOutil   --> RechercheDocs    : search_knowledge_base
+  ChoixOutil   --> ScrapingPage     : fetch_website_page
+  ChoixOutil   --> InfoContact      : get_contact_info
+  ChoixOutil   --> DemarrageReserv  : start_booking_demo
+  RechercheDocs --> ChoixOutil : chunks retournés
+  ScrapingPage  --> ChoixOutil : contenu page
+  InfoContact   --> ChoixOutil : coordonnées
+  DemarrageReserv --> [*] : FSM activé
+  ChoixOutil   --> [*] : réponse finale générée
 }
 
-AttenteEmail  --> AttenteTelephone : email validé
+BoucleAgent --> MiseAJourCache   : réponse générée
+DemarrageReserv --> GestionReservation : FSM activé depuis l'agent
 
-state "AttenteTelephone" as AttenteTelephone {
-  [*] --> DemandeTelephone
-  DemandeTelephone --> ValidationTelephone
-  ValidationTelephone --> [*]
-}
-
-AttenteTelephone --> ConfirmationReservation : téléphone validé
-ConfirmationReservation --> Inactif          : réservation enregistrée
+' ─────────────────────────────────────────────────────────
+' Étape 5 — Cache write + session
+' ─────────────────────────────────────────────────────────
+MiseAJourCache   --> MiseAJourSession : entrée LRU écrite (TTL 24 h)
+MiseAJourSession --> Inactif          : session Redis mise à jour
 
 @enduml

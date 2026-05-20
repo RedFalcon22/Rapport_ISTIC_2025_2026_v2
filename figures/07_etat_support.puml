@@ -1,4 +1,4 @@
-@startuml etat_support_repli
+﻿@startuml etat_support_repli
 !theme plain
 skinparam stateBorderColor #2C6EA0
 skinparam stateBackgroundColor #E8F5E9
@@ -6,7 +6,6 @@ skinparam stateArrowColor #2C6EA0
 skinparam defaultFontName Arial
 skinparam defaultFontSize 11
 
-title Diagramme d'état-transition — Support Assistant (2/2) : flux de repli
 
 [*] --> AttenteQuestion : (suite du diagramme 1/2)
 

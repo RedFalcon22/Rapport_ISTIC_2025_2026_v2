@@ -8,9 +8,6 @@ skinparam defaultFontName Arial
 skinparam defaultFontSize 11
 skinparam linetype ortho
 
-title Diagramme de classes — Architecture de l'application
-
-' ─── Classes principales ──────────────────────────────────
 
 class ChatSession {
   + sessionId : String
@@ -72,27 +69,22 @@ class EmotionalSignal {
   + detectedAt : DateTime
 }
 
-' ─── Relations ────────────────────────────────────────────
-
 ChatSession    "1"  *--  "0..*"  Message              : contient >
 Message        "1"  -->  "1"     IntentClassification  : classifie >
-Message        "1"  -->  "0..1"  Response              : génère >
-Response       "1"  -->  "0..*"  DocumentChunk         : référence >
-ChatSession    "1"  -->  "0..1"  ReservationRequest    : crée >
+Message        "1"  -->  "0..1"  Response              : genere >
+Response       "1"  -->  "0..*"  DocumentChunk         : reference >
+ChatSession    "1"  -->  "0..1"  ReservationRequest    : cree >
 Message        "1"  -->  "0..1"  EmotionalSignal       : contient >
 
-' ─── Note explicative ─────────────────────────────────────
-
 note bottom of HarassmentClassification
-  Utilisée par le Module 4.
-  Indépendante du pipeline
+  Module 4 uniquement.
+  Independant du pipeline
   conversationnel.
 end note
 
 note bottom of EmotionalSignal
-  Détectée par le Module 3,
-  intégré dans le Module 2.
-  Déclenche un flux empathique.
+  Detectee par le Module 3.
+  Declenche un flux empathique.
 end note
 
 @enduml

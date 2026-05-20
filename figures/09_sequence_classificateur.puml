@@ -1,4 +1,4 @@
-@startuml sequence_classificateur
+﻿@startuml sequence_classificateur
 !theme plain
 skinparam sequenceArrowColor #2C6EA0
 skinparam sequenceLifeLineBorderColor #2C6EA0
@@ -9,7 +9,6 @@ skinparam sequenceGroupBorderColor #888888
 skinparam defaultFontName Arial
 skinparam defaultFontSize 11
 
-title Diagramme de séquences — Classificateur de harcèlement
 
 participant "Plateforme\nNetethic" as Plat
 participant "API\nClassificateur" as API

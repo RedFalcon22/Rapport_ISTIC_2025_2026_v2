@@ -1,4 +1,4 @@
-@startuml sequence_noa
+﻿@startuml sequence_noa
 !theme plain
 skinparam sequenceArrowColor #2C6EA0
 skinparam sequenceLifeLineBorderColor #2C6EA0
@@ -7,49 +7,119 @@ skinparam sequenceParticipantBackgroundColor #EBF4FB
 skinparam sequenceActorBorderColor #1A3550
 skinparam sequenceGroupBorderColor #888888
 skinparam defaultFontName Arial
-skinparam defaultFontSize 11
+skinparam defaultFontSize 13
 
-title Diagramme de séquences — Module Noa (question factuelle)
 
-actor       "Visiteur"          as V
-participant "Frontend React"    as FE
-participant "FastAPI\n(Noa)"    as API
-participant "LangChain\nPipeline" as LC
-participant "Redis\n(cache)"    as Redis
-participant "ChromaDB"          as Chroma
-participant "Serveur LLM\n(kaisens.fr)" as LLM
+actor       "Visiteur"                      as V
+participant "Frontend\nReact"               as FE
+participant "FastAPI\n(Noa)"                as API
+participant "BookingAgent\n(automate FSM)"  as FSM
+participant "Cache\nLRU"                    as Cache
+participant "Agent LLM\n(tool-use loop)"    as Agent
+participant "ChromaDB\n(collection noa)"    as Chroma
+participant "netethic.fr\n(scraping)"       as Web
+participant "Serveur LLM\n(kaisens.fr)"     as LLM
+participant "Redis\n(sessions)"             as Redis
 
-V  -> FE   : saisit une question
-FE -> API  : POST /chat\n{message, sessionId, lang}
+V  -> FE  : saisit un message
+activate FE
+FE -> API : POST /api/chat/\n{message, session_id, lang}
+activate API
 
-API -> LC  : classifyIntent(message)
-LC --> API : intent = "factual"
+== Étape 1 — Interception du flux de réservation ==
 
-API -> Redis : getFromCache(normalizedQuestion)
-Redis --> API : [cache miss]
+API -> FSM : checkActiveFlow(session_id)
+activate FSM
+FSM --> API : {active: false}
+deactivate FSM
 
-group Recherche documentaire (RAG)
-  API -> Chroma : searchSimilar(embedding, k=5,\ncollection="noa")
-  Chroma --> API : [DocumentChunk × 5]
-end
-
-group Génération de réponse
-  API -> LLM : POST /v1/chat/completions\n{question + context + historique}
-  LLM --> API : responseText
-end
-
-API -> Redis : cacheResponse(normalizedQuestion, responseText)
-API -> Redis : updateSession(sessionId, message, response)
-Redis --> API : OK
-
-API --> FE : {response, sessionId, lang}
-FE  --> V  : affiche la réponse
-
-note right of API
-  En cas de cache hit :
-  la réponse est retournée
-  directement en < 1 ms,
-  sans appel au LLM.
+note right of FSM
+  Si flux actif : l'étape FSM courante
+  (date / horaire / nom / email / tel)
+  est traitée et les choix sont renvoyés
+  au Frontend directement.
 end note
+
+== Étape 2 — Vérification du garde-fou ==
+
+API -> API : guardrailCheck(message)\n— patterns : jailbreak, contenu adulte, hors-sujet
+
+alt [Guardrail déclenché]
+  API --> FE : {response: réponse de refus poli,\nguardrail_triggered: true}
+
+else [Message autorisé]
+
+  == Étape 3 — Vérification du cache FAQ ==
+
+  API -> Cache : lookup(normalizedQuery)
+  activate Cache
+  Cache --> API : résultat
+  deactivate Cache
+
+  alt [Cache HIT — 200 entrées LRU, TTL 24 h]
+    API --> FE : {reply, session_id, cached: true}
+
+  else [Cache MISS]
+
+    == Étape 4 — Boucle Agent tool-use (max 5 itérations) ==
+
+    API -> LLM : invoke(system_prompt + historique + message + tools_schema)
+    activate LLM
+
+    group Itérations de l'agent [max 5 itérations]
+
+      opt Outil : search_knowledge_base
+        LLM -> Chroma : searchSimilar(embedding, k=3,\ncollection="noa", seuil=0.25)
+        activate Chroma
+        Chroma --> LLM : [DocumentChunk × 3]\n(hiérarchie parent-enfant)
+        deactivate Chroma
+      end
+
+      opt Outil : fetch_website_page
+        LLM -> Web : scrape(url_netethic.fr)
+        activate Web
+        Web --> LLM : contenu textuel (max 3 000 caractères)
+        deactivate Web
+        note right of Web : Limité au domaine\nnetethic.fr uniquement.
+      end
+
+      opt Outil : get_contact_info
+        LLM -> LLM : lire KB statique\n{email, téléphone, Calendly, horaires}
+      end
+
+      opt Outil : start_booking_demo
+        LLM -> FSM : startBooking(session_id)
+        activate FSM
+        FSM --> LLM : {choices, state="COLLECT_DATE"}
+        deactivate FSM
+      end
+
+      LLM -> LLM : décider : appeler un autre outil\nou générer la réponse finale
+
+    end
+
+    LLM --> API : {reply, choices?}
+    deactivate LLM
+
+    == Étape 5 — Écriture cache et mise à jour session ==
+
+    API -> Cache : cacheResponse(query, reply, TTL 24 h)
+    activate Cache
+    Cache --> API : OK
+    deactivate Cache
+
+    API -> Redis : updateSession(session_id, message, reply)
+    activate Redis
+    Redis --> API : OK
+    deactivate Redis
+
+    API --> FE : {reply, choices?, session_id, agent_ok: true}
+
+  end
+
+end
+
+deactivate API
+deactivate FE
 
 @enduml

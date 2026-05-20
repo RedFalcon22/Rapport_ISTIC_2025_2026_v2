@@ -1,4 +1,14 @@
-@startuml sequence_support_repli
+﻿@startuml sequence_support_repli
+!theme plain
+skinparam sequenceArrowColor #2C6EA0
+skinparam sequenceLifeLineBorderColor #2C6EA0
+skinparam sequenceParticipantBorderColor #2C6EA0
+skinparam sequenceParticipantBackgroundColor #EBF4FB
+skinparam sequenceActorBorderColor #1A3550
+skinparam sequenceGroupBorderColor #888888
+skinparam defaultFontName Arial
+skinparam defaultFontSize 11
+
 
 actor "Utilisateur interne" as U
 participant "Streamlit\nFrontend" as FE
@@ -34,27 +44,23 @@ deactivate LLM
 API --> FE : 5. {description: motif_auto}
 deactivate API
 
-FE --> FE : 6. Afficher formulaire RDV pré-rempli\n(date, heure, canal, motif)
+U -> FE : 6. Vérifier et valider le formulaire RDV
 
-U -> FE : 7. Vérifier et valider le formulaire
-
-FE -> API : 8. POST /appointments\n{session_id, date, heure, canal}
+FE -> API : 7. POST /appointments\n{session_id, date, heure, canal}
 activate API
 
-API -> Redis : 9. get_session(session_id)\n[lire nom, email, téléphone]
+API -> Redis : 8. get_session(session_id)\n[lire nom, email, téléphone]
 activate Redis
 Redis --> API : {username, email, phone}
 deactivate Redis
 
-API -> NetEthic : 10. POST makeAppointment\n{username, email, phone,\nmotif, date, heure, canal}
+API -> NetEthic : 9. POST makeAppointment\n{username, email, phone,\nmotif, date, heure, canal}
 activate NetEthic
 NetEthic --> API : {success: true}
 deactivate NetEthic
 
-API --> FE : 11. {success: true}
+API --> FE : 10. {success: true}
 deactivate API
-
-FE --> FE : 12. Afficher "Rendez-vous enregistré avec succès"
 deactivate FE
 
 == Option B — Signalement de bug ==
@@ -78,27 +84,23 @@ deactivate LLM
 API --> FE : 5. {description: description_bug}
 deactivate API
 
-FE --> FE : 6. Afficher formulaire bug pré-rempli\n(description du problème)
+U -> FE : 6. Vérifier et valider le formulaire bug
 
-U -> FE : 7. Vérifier et valider le formulaire
-
-FE -> API : 8. POST /bug-reports\n{session_id, description}
+FE -> API : 7. POST /bug-reports\n{session_id, description}
 activate API
 
-API -> Redis : 9. get_session(session_id)\n[lire nom, email, téléphone]
+API -> Redis : 8. get_session(session_id)\n[lire nom, email, téléphone]
 activate Redis
 Redis --> API : {username, email, phone}
 deactivate Redis
 
-API -> NetEthic : 10. POST signalBug\n{username, email, phone,\ndescription}
+API -> NetEthic : 9. POST signalBug\n{username, email, phone,\ndescription}
 activate NetEthic
 NetEthic --> API : {success: true}
 deactivate NetEthic
 
-API --> FE : 11. {success: true}
+API --> FE : 10. {success: true}
 deactivate API
-
-FE --> FE : 12. Afficher "Bug signalé avec succès"
 deactivate FE
 
 @enduml

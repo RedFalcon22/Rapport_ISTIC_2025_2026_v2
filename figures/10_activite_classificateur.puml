@@ -1,4 +1,4 @@
-@startuml activite_classificateur
+﻿@startuml activite_classificateur
 !theme plain
 skinparam activityBorderColor #2C6EA0
 skinparam activityBackgroundColor #FCE4EC
@@ -8,7 +8,6 @@ skinparam diamondBackgroundColor #FCE4EC
 skinparam defaultFontName Arial
 skinparam defaultFontSize 11
 
-title Diagramme d'activité — Classificateur (chaîne de repli)
 
 start
 
@@ -33,7 +32,7 @@ else (Non)
     if (Heuristiques trouvent une correspondance ?) then (Oui)
       :labels ← résultat heuristiques;
     else (Non)
-      #LightGray:labels ← étiquette neutre\n"non_classifié";
+      :labels <- etiquette neutre\n"non_classifie";
     endif
 
   endif

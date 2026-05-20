@@ -1,4 +1,14 @@
-@startuml sequence_support_rag
+﻿@startuml sequence_support_rag
+!theme plain
+skinparam sequenceArrowColor #2C6EA0
+skinparam sequenceLifeLineBorderColor #2C6EA0
+skinparam sequenceParticipantBorderColor #2C6EA0
+skinparam sequenceParticipantBackgroundColor #EBF4FB
+skinparam sequenceActorBorderColor #1A3550
+skinparam sequenceGroupBorderColor #888888
+skinparam defaultFontName Arial
+skinparam defaultFontSize 11
+
 
 actor "Utilisateur interne" as U
 participant "Streamlit\nFrontend" as FE
@@ -13,10 +23,12 @@ note over U, LLM_G
   et la question a passé le garde-fou (étapes 1 à 10).
 end note
 
+activate FE
+activate API
+
 == Étapes 3-4 — Classification d'intention + réécriture ==
 
 API -> LLM : 11. _classify_intent(query)
-activate API
 activate LLM
 LLM --> API : "LIVE" ou "PDF"
 deactivate LLM
@@ -28,45 +40,46 @@ deactivate LLM
 
 == Étape 5 — Cache sémantique (PDF uniquement) ==
 
-alt Intention = PDF
-    API -> Redis : 13. get(query)\n[similarité cosinus ≥ 0,85]
+alt [Intention = PDF]
+  API -> Redis : 13. get(query)\n[similarité cosinus ≥ 0,85]
+  activate Redis
+
+  alt [Cache HIT]
+    Redis --> API : réponse_en_cache
+    deactivate Redis
+    API -> Redis : save_session()
     activate Redis
+    Redis --> API : OK
+    deactivate Redis
+    API --> FE : {response: réponse_en_cache,\nfrom_cache: true, no_results: false}
+    deactivate API
+    deactivate FE
 
-    alt Cache HIT
-        Redis --> API : réponse_en_cache
-        deactivate Redis
-        API -> Redis : save_session()
-        activate Redis
-        Redis --> API : OK
-        deactivate Redis
-        API --> FE : {response: réponse_en_cache,\nfrom_cache: true, no_results: false}
-        activate FE
-        FE --> FE : Afficher la réponse
-        deactivate FE
-    else Cache MISS
-        Redis --> API : null
-        deactivate Redis
+  else [Cache MISS]
+    Redis --> API : null
+    deactivate Redis
 
-        == Étape 7 — Recherche vectorielle filtrée par catégorie ==
+    == Étape 7 — Recherche vectorielle filtrée par catégorie ==
 
-        API -> Chroma : 14. search(rewritten_query,\nselected_category, k=5)
-        activate Chroma
-        Chroma --> API : [chunks avec scores de pertinence]
-        deactivate Chroma
+    API -> Chroma : 14. search(rewritten_query,\nselected_category, k=5)
+    activate Chroma
+    Chroma --> API : [chunks avec scores de pertinence]
+    deactivate Chroma
 
-        alt Aucun chunk au-dessus du seuil (0,35)
-            API -> Redis : save_session() [réponse de repli]
-            activate Redis
-            Redis --> API : OK
-            deactivate Redis
-            API --> FE : {response: message_repli,\nno_results: true}
-            activate FE
-            FE --> FE : Afficher boutons de repli\n(RDV / Bug / Portail)
-            deactivate FE
-        end
+    alt [Aucun chunk au-dessus du seuil (0,35)]
+      API -> Redis : save_session() [réponse de repli]
+      activate Redis
+      Redis --> API : OK
+      deactivate Redis
+      API --> FE : {response: message_repli,\nno_results: true}
+      deactivate API
+      deactivate FE
     end
-else Intention = LIVE
-    API --> API : 13b. _resolve_live_data()\n(depuis session.live_data)
+
+  end
+
+else [Intention = LIVE]
+  API --> API : 13b. _resolve_live_data()\n(depuis session.live_data)
 end
 
 == Étape 8 — Génération de réponse ==
@@ -80,11 +93,11 @@ deactivate LLM_G
 
 API --> API : 16. XSS sanitize (bleach.clean)\n+ détection repli LLM
 
-alt Intention originale = PDF et pas de repli
-    API -> Redis : 17. set(query, search_query, résultat)
-    activate Redis
-    Redis --> API : OK
-    deactivate Redis
+alt [Intention originale = PDF et pas de repli]
+  API -> Redis : 17. set(query, search_query, résultat)
+  activate Redis
+  Redis --> API : OK
+  deactivate Redis
 end
 
 API -> Redis : 18. save_session()\n[historique + chunks + catégorie]
@@ -94,8 +107,6 @@ deactivate Redis
 
 API --> FE : 19. {session_id, response,\nguardrail_triggered: false, no_results: false}
 deactivate API
-activate FE
-FE --> FE : 20. Afficher la réponse
 deactivate FE
 
 @enduml

@@ -1,4 +1,4 @@
-@startuml sequence_emotionnel
+﻿@startuml sequence_emotionnel
 !theme plain
 skinparam sequenceArrowColor #2C6EA0
 skinparam sequenceLifeLineBorderColor #2C6EA0
@@ -9,7 +9,6 @@ skinparam sequenceGroupBorderColor #888888
 skinparam defaultFontName Arial
 skinparam defaultFontSize 11
 
-title Diagramme de séquences — Module de soutien émotionnel
 
 actor       "Étudiant"              as U
 participant "Streamlit\nFrontend"   as FE
@@ -86,8 +85,6 @@ end
 
 API --> FE : {response, guardrail_triggered, language}
 deactivate API
-
-FE --> U : affiche la réponse à l'utilisateur
 deactivate FE
 
 @enduml

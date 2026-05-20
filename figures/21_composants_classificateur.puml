@@ -1,0 +1,100 @@
+﻿@startuml composants_classificateur
+!theme plain
+skinparam defaultFontName Arial
+skinparam defaultFontSize 9
+skinparam componentStyle rectangle
+skinparam shadowing false
+
+skinparam package {
+  BackgroundColor White
+  BorderColor     #607D8B
+  BorderThickness 1.5
+  FontStyle       bold
+  FontSize        10
+  FontColor       #263238
+}
+skinparam component {
+  BackgroundColor #F8BBD9
+  BorderColor     #880E4F
+  BorderThickness 1
+  FontColor       #4A148C
+  FontSize        8
+}
+skinparam interface {
+  BackgroundColor White
+  BorderColor     #546E7A
+  FontSize        8
+  FontColor       #37474F
+}
+skinparam database {
+  BackgroundColor #FFF8E1
+  BorderColor     #F57F17
+  FontColor       #E65100
+  FontSize        8
+}
+skinparam cloud {
+  BackgroundColor #ECEFF1
+  BorderColor     #78909C
+  FontColor       #37474F
+}
+skinparam arrow {
+  Color     #546E7A
+  Thickness 1.5
+  FontSize  8
+  FontColor #546E7A
+}
+
+
+' ── Interface fournie ────────────────────────────────────────
+interface "IClassify\nJSONL output\nlabels · confidence · urgent" as I_cls
+
+' ════════════════════════════════════════════════
+package "Module 4 — Classificateur  (Scala 2.12 / Spark 3.5)" #FCE4EC {
+
+  package "Couche Entree" #FADADD {
+    component "TextPreprocessor\n[preprocessing/]\nURL · Email  Normalisation\nMajuscules  Espaces" as PREP
+  }
+
+  package "4 Strategies  [parallele  UnifiedMethodTester]" #FFF0F5 {
+    component "S1  LLM seul\n[llm/OllamaClient]\nzero-shot multilabel\ntemp=0.0  16 labels" as S1
+    component "S2  LLM + Juridique\n[rag/ChromaDBRAGRetriever]\ncontexte legal injecte\nCode Penal  Loi 2022" as S2
+    component "S3  Heuristique\n[llm/FallbackStrategy]\nmots-cles francais\n~0.1 ms  sans LLM" as S3
+    component "S4  Hybride\n[ClassificationPipeline]\nLLM + fallback auto S3" as S4
+  }
+
+  package "Couche Vectorielle" #F8BBD9 {
+    component "embed-server  :5001\n[Dockerfile.embed]\nsentence-transformers\nparaphrase-multilingual-MiniLM" as EMB
+    database "ChromaDB  :8000\n[chromadb/chroma:latest]\ncol: legal_fr\nCode Penal + Loi 2022" as CHR
+  }
+
+  package "Couche Resultats" #FADADD {
+    component "BatchInferenceService\nJSONL append\ndata/labeled/method_results/" as OUT
+  }
+}
+PREP -up- I_cls
+
+PREP  -down-> S1  : texte normalise
+PREP  -down-> S2  : texte normalise
+PREP  -down-> S3  : texte normalise
+PREP  -down-> S4  : texte normalise
+S4    -right-> S3  : <<fallback>>
+S2    -down-> EMB  : embedding requete
+S2    -down-> CHR  : recherche corpus legal
+S1    -down-> OUT  : resultats
+S2    -down-> OUT  : resultats
+S3    -down-> OUT  : resultats
+S4    -down-> OUT  : resultats
+
+' ── Interfaces requises ──────────────────────────────────────
+interface "ILLMInference\nvLLM kaisens.fr\nLLM_ENDPOINT" as I_llm
+
+S1 ..> I_llm : zero-shot
+S2 ..> I_llm : RAG + inference
+S4 ..> I_llm : hybride
+
+cloud "kaisens.fr" #ECEFF1 {
+  component "vLLM  Mistral-7B-Instruct-v0.3-AWQ\nGPU A100" as LLM_K
+}
+I_llm -down- LLM_K
+
+@enduml

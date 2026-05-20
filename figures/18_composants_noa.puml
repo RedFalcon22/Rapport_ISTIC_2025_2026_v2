@@ -1,0 +1,97 @@
+﻿@startuml composants_noa
+!theme plain
+skinparam defaultFontName Arial
+skinparam defaultFontSize 9
+skinparam componentStyle rectangle
+skinparam shadowing false
+
+skinparam package {
+  BackgroundColor White
+  BorderColor     #607D8B
+  BorderThickness 1.5
+  FontStyle       bold
+  FontSize        10
+  FontColor       #263238
+}
+skinparam component {
+  BackgroundColor #D6EAF8
+  BorderColor     #1565C0
+  BorderThickness 1
+  FontColor       #0D47A1
+  FontSize        8
+}
+skinparam interface {
+  BackgroundColor White
+  BorderColor     #546E7A
+  FontSize        8
+  FontColor       #37474F
+}
+skinparam database {
+  BackgroundColor #FFF8E1
+  BorderColor     #F57F17
+  FontColor       #E65100
+  FontSize        8
+}
+skinparam cloud {
+  BackgroundColor #ECEFF1
+  BorderColor     #78909C
+  FontColor       #37474F
+}
+skinparam arrow {
+  Color     #546E7A
+  Thickness 1.5
+  FontSize  8
+  FontColor #546E7A
+}
+
+
+' ── Interfaces fournies ──────────────────────────────────────
+interface "IChat\nPOST /api/chat" as I_chat
+interface "IHealth\nGET /health" as I_health
+
+' ════════════════════════════════════════════════
+package "Module 1 — Noa  (React + FastAPI)" #EBF4FB {
+
+  package "Couche Presentation" #D6EAF8 {
+    component "Frontend React 18\n[Vite + Nginx  :3000]\nProxy /api → backend" as FE
+  }
+
+  package "Couche Metier  [FastAPI  :8000]" #E3F2FD {
+    component "API Handler\n[main.py]\nGestion sessions  CORS" as API
+    component "Intent Router\n[intent_router.py]\nGuardrail patterns" as GRD
+    component "FAQ Cache\n[cache.py]\nLRU  in-memory" as CACHE
+    component "Agent Loop\n[agent.py  /  agent_gemini.py]\nClaude tool-use\nfetch_page · search_kb" as AGT
+    component "Booking FSM\n[booking_agent.py]\nEmail → Tel → Confirm" as FSM
+    component "Session Manager\n[session_manager.py]\nRedis  MAX_HISTORY=20" as SM
+  }
+
+  package "Couche Donnees" #BBDEFB {
+    database "ChromaDB  embedded\ncol: netethic_kb\n[rag.py  build_index.py]" as CHR
+    database "Redis  :6379\nhistorique  sessions" as RED
+  }
+}
+API -up- I_chat
+API -up- I_health
+
+FE      -down-> API  : HTTP/REST
+API     -down-> GRD  : validation
+GRD     -down-> CACHE : cache lookup
+CACHE   -down-> AGT   : miss → agent
+AGT     -right-> FSM  : booking intent
+AGT     -down-> CHR   : search_knowledge_base
+API     -down-> SM    : session r/w
+SM      -down-> RED   : persist
+
+' ── Interfaces requises ──────────────────────────────────────
+interface "ILLMInference\nvLLM kaisens.fr\nLLM_ENDPOINT" as I_llm
+interface "IWebScraper\nfetch netethic.fr" as I_web
+
+AGT ..> I_llm : inference
+AGT ..> I_web : fetch_website_page
+
+cloud "kaisens.fr" #ECEFF1 {
+  component "vLLM  Mistral-7B-Instruct-v0.3\nGPU A100" as LLM_C
+}
+I_llm -down- LLM_C
+
+@enduml

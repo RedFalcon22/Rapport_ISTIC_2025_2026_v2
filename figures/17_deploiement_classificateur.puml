@@ -1,0 +1,90 @@
+﻿@startuml deploiement_classificateur
+!theme plain
+skinparam defaultFontName Arial
+skinparam defaultFontSize 9
+skinparam shadowing false
+
+skinparam node {
+  BackgroundColor #EBF4FB
+  BorderColor     #1565C0
+  BorderThickness 1.5
+  FontColor       #0D47A1
+  FontSize        9
+}
+skinparam artifact {
+  BackgroundColor #FFFDE7
+  BorderColor     #F9A825
+  FontColor       #7B5E00
+  FontSize        8
+}
+skinparam component {
+  BackgroundColor #F5F5F5
+  BorderColor     #78909C
+  FontColor       #212121
+  FontSize        8
+}
+skinparam cloud {
+  BackgroundColor #ECEFF1
+  BorderColor     #546E7A
+  FontColor       #263238
+}
+skinparam arrow {
+  Color     #37474F
+  Thickness 1.2
+  FontSize  8
+  FontColor #37474F
+}
+
+
+' ─── CLIENT ────────────────────────────────────────────────
+node "Plateforme NetEthic\n<<system>>" as CLI {
+  artifact "Corpus JSONL\n(textes a classifier)" as BR
+}
+
+' ─── STACK CLASSIFICATEUR ──────────────────────────────────
+node "Serveur Linux  [Stack Classificateur]" <<device>> as HOST {
+  node "Docker Compose  app-network  [bridge]" <<execution environment>> as NET {
+
+    node "embed-server  :5001" <<container>> as EMB {
+      component "Python  FastAPI\nsentence-transformers\nparaphrase-multilingual-MiniLM" as SVC_EMB
+    }
+
+    node "chromadb-server  :8000" <<container>> as CHR {
+      component "ChromaDB  chromadb/chroma:latest\nPersistent vector store\ncol: legal_fr" as SVC_CHR
+      artifact "vol  chromadb_data\n/chroma/chroma" as VOL_CHR
+    }
+
+    node "llama-classifier  (batch)" <<container>> as APP {
+      component "Scala 2.12  /  Spark 3.5\nUnifiedMethodTester\n(sbt runMain)" as SVC_SBT
+      component "S1  LLM seul\nOllamaClient → vLLM" as S1
+      component "S2  LLM + Juridique\nChromaDBRAGRetriever" as S2
+      component "S3  Heuristique\nFallbackStrategy" as S3
+      component "S4  Hybride\nLLM + fallback S3" as S4
+      component "TextPreprocessor\nURL · Email · Normalisation" as PREP
+      artifact "vol  sbt_cache\nvol  ivy_cache" as VOL_SBT
+    }
+  }
+}
+
+' ─── LLM EXTERNE ───────────────────────────────────────────
+cloud "kaisens.fr  (Production)" as EXT {
+  node "GPU Server  [NVIDIA A100]" <<device>> as GPU {
+    node "vLLM Runtime" <<execution environment>> as VR {
+      component "Mistral-7B-Instruct-v0.3-AWQ\nOpenAI-compat.\nLLM_ENDPOINT" as LLM_PROD
+    }
+  }
+}
+
+' ─── CONNEXIONS ────────────────────────────────────────────
+CLI   -->  APP  : JSONL input
+HOST  --   EXT  : HTTPS  :443\nPOST /v1/chat/completions
+
+APP   -->  EMB  : HTTP  :5001\nPOST /embed
+APP   -->  CHR  : HTTP  :8000\nchromadb API
+S4    -->  S3   : <<fallback>>
+
+S1   ..>  EXT  : inference LLM
+S2   ..>  EXT  : inference LLM
+S4   ..>  EXT  : inference LLM
+
+@enduml

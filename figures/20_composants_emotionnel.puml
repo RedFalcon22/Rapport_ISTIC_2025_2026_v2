@@ -1,0 +1,101 @@
+﻿@startuml composants_emotionnel
+!theme plain
+skinparam defaultFontName Arial
+skinparam defaultFontSize 9
+skinparam componentStyle rectangle
+skinparam shadowing false
+
+skinparam package {
+  BackgroundColor White
+  BorderColor     #607D8B
+  BorderThickness 1.5
+  FontStyle       bold
+  FontSize        10
+  FontColor       #263238
+}
+skinparam component {
+  BackgroundColor #FFF176
+  BorderColor     #F9A825
+  BorderThickness 1
+  FontColor       #7B5E00
+  FontSize        8
+}
+skinparam interface {
+  BackgroundColor White
+  BorderColor     #546E7A
+  FontSize        8
+  FontColor       #37474F
+}
+skinparam database {
+  BackgroundColor #FFF8E1
+  BorderColor     #F57F17
+  FontColor       #E65100
+  FontSize        8
+}
+skinparam cloud {
+  BackgroundColor #ECEFF1
+  BorderColor     #78909C
+  FontColor       #37474F
+}
+skinparam arrow {
+  Color     #546E7A
+  Thickness 1.5
+  FontSize  8
+  FontColor #546E7A
+}
+
+
+' ── Interfaces fournies ──────────────────────────────────────
+interface "IEmotionalChat\nPOST /chat" as I_chat
+interface "ISession\nPOST /start-session" as I_sess
+
+' ════════════════════════════════════════════════
+package "Module 3 — Soutien emotionnel  (Streamlit + FastAPI)" #FFFDE7 {
+
+  package "Couche Presentation" #FFF9C4 {
+    component "Frontend Streamlit  :8501\n[frontend/app.py]" as FE
+  }
+
+  package "Couche Metier  [FastAPI  :8000]" #FFFDE7 {
+    component "API  [api.py]\nGestion sessions  CORS" as API
+
+    package "Pipeline 9 etapes  [chatbot.py]" #FFF8DC {
+      component "Rate Limiter\n[redis_memory.py]\nSlidingWindow  30/30s" as RL
+      component "LLM Classifier\ntemp=0.0  deterministe\nsafe / injection\nsuicidal / violence" as CLS
+      component "Buffer Manager\n[ring buffer  10 msgs]\ndeclencheur extraction" as BUF
+      component "Profile Extractor\nLLM  temp=0.0\nnombre · stress · coping\nsituation · patterns" as EXT
+      component "Memory Manager\n[redis_memory.py]\nchargement profil Redis" as MEM
+      component "Empathic Generator\nLLM  temp=0.7\n<= 3 phrases  112 / 0800" as GEN
+    }
+  }
+
+  package "Couche Donnees  [Redis TTL 30j]" #FFF3E0 {
+    database "netethic:history:<uid>\nnetethic:profile:<uid>\nnetethic:buffer:<uid>\nnetethic:ratelimit:<uid>\nnetethic:classify_cache:<hash>" as RED
+  }
+}
+API -up- I_chat
+API -up- I_sess
+
+FE   -down-> API : HTTP/REST
+API  -down-> RL  : etape 1 · rate limit
+RL   -down-> CLS : etape 2 · garde-fou
+CLS  -down-> BUF : etape 3 · buffer
+BUF  -down-> EXT : etape 4 · extraction
+EXT  -down-> MEM : etape 5-6 · profil
+MEM  -down-> GEN : etape 7-9 · generation
+MEM  -down-> RED : r/w profil · historique
+GEN  -left-> RED : sauvegarde historique
+
+' ── Interfaces requises ──────────────────────────────────────
+interface "ILLMInference\nvLLM kaisens.fr\n3 profils LLM" as I_llm
+
+CLS ..> I_llm : classifier  temp=0.0
+EXT ..> I_llm : extraction  temp=0.0
+GEN ..> I_llm : generation  temp=0.7
+
+cloud "kaisens.fr" #ECEFF1 {
+  component "vLLM  Mistral-7B-Instruct v0.3\nGPU A100" as LLM_K
+}
+I_llm -down- LLM_K
+
+@enduml

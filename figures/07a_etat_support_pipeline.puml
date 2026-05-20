@@ -1,4 +1,4 @@
-@startuml etat_support_pipeline
+﻿@startuml etat_support_pipeline
 !theme plain
 skinparam stateBorderColor #2C6EA0
 skinparam stateBackgroundColor #E8F5E9
@@ -6,7 +6,6 @@ skinparam stateArrowColor #2C6EA0
 skinparam defaultFontName Arial
 skinparam defaultFontSize 11
 
-title Diagramme d'état-transition — Support Assistant (1/2) : pipeline principal
 
 [*] --> Inactif : démarrage du service
 

@@ -1,43 +1,46 @@
 @startuml activite_emotionnel
 !theme plain
+scale 0.8
 skinparam activityBorderColor #2C6EA0
-skinparam activityBackgroundColor #FFF3E0
+skinparam activityBackgroundColor #EBF4FB
 skinparam activityArrowColor #2C6EA0
 skinparam diamondBorderColor #E65100
 skinparam diamondBackgroundColor #FFF3E0
 skinparam defaultFontName Arial
 skinparam defaultFontSize 11
 
-title Diagramme d'activité — Module de soutien émotionnel
-
 start
 
-:Réception du message\n(depuis Support Assistant);
+:Etape 1 -- Valider le message\n(normaliser, tronquer 2000 chars, verifier langue);
 
-:Analyse du message\npar le LLM\n(prompt de détection de détresse);
+:Etape 2 -- Controle du debit (Redis)\n(fenetreglissante : 30 messages / 30 s);
 
-if (Signal de détresse détecté ?) then (Oui)
-
-  :Identification du type de signal\n— Idéation dépressive\n— Idéation suicidaire\n— Solitude / Anxiété\n— Colère / Comportement addictif;
-
-  if (Idéation suicidaire ?) then (Oui)
-
-    #Pink:Déclenchement de l'alerte urgente;
-    :Génération immédiate d'une\nréponse de crise bienveillante;
-
-  else (Non)
-
-    :Génération d'une réponse empathique\nadaptée au type de signal détecté\n(appel au LLM);
-
-  endif
-
-  :Orientation de l'utilisateur\nvers le module Accompagnement\nde la plateforme Netethic;
-
-  :Journalisation de l'événement\n{type, niveau de confiance, horodatage}\n(sans conservation du contenu);
-
-else (Non)
-  :Aucun traitement émotionnel\n— retour au pipeline standard;
+if (Limite depassee ?) then (Oui)
+  :Retourner reponse de blocage\n(guardrail_triggered: true);
+  stop
 endif
+
+:Etape 3 -- Analyser le contenu\n(LLM classificateur, temperature 0, cache 120 s)\nCategories : prompt_injection | curse_words |\ninappropriate | suicidal | violence | safe;
+
+if (Categorie ?) then (injection / inapproprie)
+  :Retourner refus bienveillant\n(guardrail_triggered: true);
+  stop
+else if (suicidal / violence) then
+  :Generer reponse de crise\n(LLM principal, langue de l'etudiant);
+  :Ajouter numeros d'urgence\n(112 / 0800 737 800 / 3919);
+  stop
+else (safe)
+endif
+
+:Etapes 4-6 -- Tampon + extraction + persistance\n(buffer FIFO 10 msgs, TTL 1 h)\nExtraction profil tous les 2 messages\n(prenom, stresseurs, situation, reussites)\nPersistance username si 1ere visite;
+
+:Etape 7 -- Enrichir le prompt\n(charger profil Redis + historique\ntemperature 0.7, max 200 tokens);
+
+:Etape 8 -- Invoquer le LLM principal\n(LangChain RunnableWithMessageHistory);
+
+:Etape 9 -- Post-traitement + sauvegarde\n(<=3 phrases, nettoyage XSS\nhistorique Redis, TTL 30 jours);
+
+:Retourner reponse\n{response, guardrail_triggered: false, language};
 
 stop
 

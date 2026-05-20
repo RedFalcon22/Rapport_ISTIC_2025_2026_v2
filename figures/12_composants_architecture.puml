@@ -1,0 +1,173 @@
+﻿@startuml composants_architecture_globale
+!theme plain
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+skinparam componentStyle rectangle
+skinparam shadowing false
+
+skinparam package {
+  BackgroundColor White
+  BorderColor     #607D8B
+  BorderThickness 1.5
+  FontStyle       bold
+  FontSize        12
+  FontColor       #263238
+}
+skinparam component {
+  BackgroundColor #FAFAFA
+  BorderColor     #78909C
+  BorderThickness 1
+  FontColor       #212121
+  FontSize        11
+}
+skinparam interface {
+  BackgroundColor White
+  BorderColor     #546E7A
+  FontSize        10
+  FontColor       #37474F
+}
+skinparam database {
+  BackgroundColor #FFF8E1
+  BorderColor     #F57F17
+  FontColor       #E65100
+  FontSize        11
+}
+skinparam cloud {
+  BackgroundColor #ECEFF1
+  BorderColor     #78909C
+  FontColor       #37474F
+}
+skinparam arrow {
+  Color     #546E7A
+  Thickness 1.5
+  FontSize  10
+  FontColor #546E7A
+}
+
+
+' ── Interfaces provided ─────────────────────────────────────────
+interface "IChat\n/chat" as I_noa_chat
+interface "IReservation\n/reservation" as I_noa_res
+interface "ISupportChat\n/chat" as I_sup_chat
+interface "IWorkflow\n/rdv  /report" as I_sup_wf
+interface "IClassify\n/classify" as I_classify
+interface "ILLMInference\n/v1/chat/completions" as I_llm
+interface "IVectorSearch\nnoa | support | legal" as I_vec
+interface "ISessionStore\nget | set | expire" as I_sess
+
+' ════════════════════════════════════════════════
+' MODULE 1 — NOA
+' ════════════════════════════════════════════════
+package "Module 1 — Noa  (chatbot public)" #EBF4FB {
+  component "Frontend Noa\n[React 18 + Vite  :3000]" as FE_Noa #D6EAF8
+  component "Backend Noa\n[FastAPI  :8000]" as BE_Noa #D6EAF8
+  component "Pipeline RAG\n[LangChain]\nIntention · Embedding\nk=5 · Cache Redis" as LC_Noa #D6EAF8
+  component "Agent Reservation\n[FSM  4 etats]\nIDLE→Email→Tel→Confirm." as FSM_Noa #AED6F1
+
+  FE_Noa -down-> BE_Noa : HTTP/REST
+  BE_Noa -down-> LC_Noa : orchestration
+  BE_Noa -right-> FSM_Noa : reservation
+}
+BE_Noa -up- I_noa_chat
+BE_Noa -up- I_noa_res
+
+' ════════════════════════════════════════════════
+' MODULE 2 — SUPPORT ASSISTANT
+' ════════════════════════════════════════════════
+package "Module 2 — Support Assistant  (usage interne)" #E8F5E9 {
+  component "Frontend Support\n[Streamlit  :8501]\nSelecteur categorie" as FE_Sup #C8E6C9
+  component "Backend Support\n[FastAPI  :8001]\nGuardrail XSS  Rate Limiter" as BE_Sup #C8E6C9
+  component "Pipeline RAG Avance\n[LangChain]\nLIVE/PDF · Recriture query\nCache cosinus ≥ 0,85" as LC_Sup #C8E6C9
+  component "Agent FSM\n[RDV & Signalement]\nCollecte→Validation→Confirm." as FSM_Sup #A9DFBF
+
+  package "Module 3 — Soutien emotionnel  (integre)" #FFFDE7 {
+    component "Garde-fou Emotionnel\n[LLM Classificateur]\nsafe / injection\nsuicidal / violence" as GF_Emo #FFF176
+    component "Generateur Empathique\n[LLM Principal]\nProfil Redis  ≤ 3 phrases\n112 / 0800 / 3919" as Gen_Emo #FFF176
+  }
+
+  FE_Sup -down-> BE_Sup   : HTTP/REST
+  BE_Sup -down-> LC_Sup   : orchestration
+  BE_Sup -right-> FSM_Sup : flux guides
+  BE_Sup -down-> GF_Emo   : analyse message
+  GF_Emo -down-> Gen_Emo  : detresse detectee
+}
+BE_Sup -up- I_sup_chat
+BE_Sup -up- I_sup_wf
+
+' ════════════════════════════════════════════════
+' MODULE 4 — CLASSIFICATEUR
+' ════════════════════════════════════════════════
+package "Module 4 — Classificateur de harcelement" #FCE4EC {
+  component "API Classificateur\n[FastAPI]\nPOST /classify\nEvaluation  Urgence  Log" as API_Cls #F8BBD9
+  component "Preprocesseur\n[Python]\nURL  Espaces  Casse" as Prep #F8BBD9
+
+  package "4 Strategies  [parallele]" #FFF0F5 {
+    component "S1 LLM seul\nzero-shot" as S1 #FADADD
+    component "S2 LLM+Juridique\nRAG legal" as S2 #FADADD
+    component "S3 Heuristique\nmots-cles" as S3 #FADADD
+    component "S4 Hybride\nLLM + fallback" as S4 #FADADD
+  }
+
+  component "Pipeline Spark\n[Scala 2.12 / Spark 3.5]\nParallelisation  Benchmarks" as Spark #F1948A
+
+  API_Cls -down-> Prep  : pretraitement
+  Prep -down-> S1
+  Prep -down-> S2
+  Prep -down-> S3
+  Prep -down-> S4
+  S4 --> S3 : <<fallback>>
+  API_Cls -right-> Spark : pipeline parallele
+}
+API_Cls -up- I_classify
+
+' ════════════════════════════════════════════════
+' INFRASTRUCTURE PARTAGEE
+' ════════════════════════════════════════════════
+package "Infrastructure partagee  (Docker Compose)" #F3E5F5 {
+  database "Redis  :6379\nSessions  Cache\nRate Limit  Profils" as Redis #EDE7F6
+  database "ChromaDB  :8002\nnoa | support | legal" as Chroma #EDE7F6
+  component "Docker Compose\nnetethic-noa  :8000\nnetethic-support  :8001\nstreamlit  :8501" as Docker #D7BDE2
+
+  Redis -[hidden]right- Chroma
+  Chroma -[hidden]right- Docker
+}
+Redis -up- I_sess
+Chroma -up- I_vec
+
+' ════════════════════════════════════════════════
+' LLM EXTERNE
+' ════════════════════════════════════════════════
+cloud "kaisens.fr  (serveur externe)" #ECEFF1 {
+  component "vLLM  Mistral-7B-Instruct v0.3\nGPU A100  OpenAI-compat.\nPOST /v1/chat/completions" as LLM_Srv #CFD8DC
+}
+LLM_Srv -up- I_llm
+
+' ════════════════════════════════════════════════
+' DEPENDANCES  MODULE 1 -> INFRA
+' ════════════════════════════════════════════════
+LC_Noa ..> I_sess : sessions / cache
+LC_Noa ..> I_vec  : recherche (noa)
+LC_Noa ..> I_llm  : inference LLM
+
+' ════════════════════════════════════════════════
+' DEPENDANCES  MODULE 2+3 -> INFRA
+' ════════════════════════════════════════════════
+LC_Sup  ..> I_sess : sessions / cache
+LC_Sup  ..> I_vec  : RAG filtre (support)
+LC_Sup  ..> I_llm  : inference LLM
+Gen_Emo ..> I_sess : profil utilisateur
+Gen_Emo ..> I_llm  : generation empathique
+
+' ════════════════════════════════════════════════
+' DEPENDANCES  MODULE 4 -> INFRA
+' ════════════════════════════════════════════════
+S1 ..> I_llm : zero-shot
+S2 ..> I_vec : corpus legal
+S2 ..> I_llm : inference + legal
+S4 ..> I_llm : hybride
+
+' ── Layout hints ─────────────────────────────────────────────────
+FE_Noa -[hidden]right- FE_Sup
+FE_Sup -[hidden]right- API_Cls
+
+@enduml

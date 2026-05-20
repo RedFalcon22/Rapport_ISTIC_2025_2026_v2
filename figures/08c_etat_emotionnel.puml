@@ -1,4 +1,4 @@
-@startuml etat_emotionnel
+﻿@startuml etat_emotionnel
 !theme plain
 skinparam stateBorderColor #2C6EA0
 skinparam stateBackgroundColor #EBF4FB
@@ -6,7 +6,6 @@ skinparam stateArrowColor #2C6EA0
 skinparam defaultFontName Arial
 skinparam defaultFontSize 11
 
-title Diagramme d'état-transition — Module de soutien émotionnel
 
 [*] --> Inactif : démarrage du service
 
