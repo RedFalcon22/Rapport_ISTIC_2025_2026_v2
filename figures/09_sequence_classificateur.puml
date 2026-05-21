@@ -1,4 +1,4 @@
-﻿@startuml sequence_classificateur
+@startuml sequence_classificateur
 !theme plain
 skinparam sequenceArrowColor #2C6EA0
 skinparam sequenceLifeLineBorderColor #2C6EA0
@@ -7,7 +7,7 @@ skinparam sequenceParticipantBackgroundColor #FCE4EC
 skinparam sequenceActorBorderColor #1A3550
 skinparam sequenceGroupBorderColor #888888
 skinparam defaultFontName Arial
-skinparam defaultFontSize 11
+skinparam defaultFontSize 12
 
 
 participant "Plateforme\nNetethic" as Plat
@@ -22,13 +22,19 @@ participant "Serveur LLM\n(kaisens.fr)" as LLM
 
 Plat -> API  : POST /classify\n{text, experimentId}
 
-group Prétraitement
-  API  -> Prep : preprocess(text)
-  note right of Prep : — Suppression des URLs\n— Normalisation des espaces\n— Mise en minuscules
-  Prep --> API  : cleanText
-end
+== Prétraitement ==
 
-group Classification parallèle (4 stratégies)
+API  -> Prep : preprocess(text)
+note right of Prep
+  — Suppression des URLs
+  — Normalisation des espaces
+  — Mise en minuscules
+end note
+Prep --> API  : cleanText
+
+== Classification parallèle (4 stratégies) ==
+
+group Exécution simultanée
 
   API  -> SLLM    : classify(cleanText)
   SLLM -> LLM     : inference(prompt_zero_shot + cleanText)
@@ -58,11 +64,11 @@ group Classification parallèle (4 stratégies)
 
 end
 
-group Sélection et journalisation
-  API -> API : evaluateBestStrategy(results)
-  API -> API : checkUrgencyFlag(labels)
-  API -> API : logClassification(textId, strategy, confidence,\nlatency, urgencyFlag, timestamp)
-end
+== Sélection et journalisation ==
+
+API -> API : evaluateBestStrategy(results)
+API -> API : checkUrgencyFlag(labels)
+API -> API : logClassification(textId, strategy, confidence,\nlatency, urgencyFlag, timestamp)
 
 API --> Plat : {labels, confidence, strategy,\nurgencyFlag, latency, textId}
 

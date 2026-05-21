@@ -1,4 +1,4 @@
-﻿@startuml sequence_support_init
+@startuml sequence_support_init
 !theme plain
 skinparam sequenceArrowColor #2C6EA0
 skinparam sequenceLifeLineBorderColor #2C6EA0
@@ -7,64 +7,73 @@ skinparam sequenceParticipantBackgroundColor #EBF4FB
 skinparam sequenceActorBorderColor #1A3550
 skinparam sequenceGroupBorderColor #888888
 skinparam defaultFontName Arial
-skinparam defaultFontSize 11
+skinparam defaultFontSize 12
 
 
 actor "Utilisateur interne" as U
 participant "Streamlit\nFrontend" as FE
 participant "FastAPI" as API
-participant "LLM\n(Guardrail/Polite)" as LLM
+participant "LangChain\n(Chain)" as LC
+participant "Serveur LLM\n(kaisens.fr)" as LLM
 participant "Redis\n(Session)" as Redis
 
 == Création de session ==
 
-U -> FE : 1. Ouvrir l'assistant\n(identité + données tableau de bord)
+U -> FE : Ouvrir l'assistant()
 activate FE
 
-FE -> API : 2. POST /start-session\n{user_id, school_id, username,\nemail, phone, live_data}
+FE -> API : POST /start-session\n{user_id, school_id, username,\nemail, phone, live_data}
 activate API
 
-API -> Redis : 3. create_session() + save_session()
+API -> Redis : create_session() + save_session()
 activate Redis
 Redis --> API : session_id
 deactivate Redis
 
-API --> FE : 4. {session_id}
+API --> FE : {session_id}
 deactivate API
 
 == Soumission de la question ==
 
 opt Filtrage par catégorie (facultatif)
-  U -> FE : 5. Sélectionner une catégorie\n(1 parmi 11 modules)
+  U -> FE : Sélectionner une catégorie\n(1 parmi 11 modules)
 end
 
-U -> FE : 6. Saisir et soumettre la question
+U -> FE : Saisir et soumettre la question()
 
-FE -> API : 7. POST /chat\n{session_id, query,\nselected_category (optionnel)}
+FE -> API : POST /chat\n{session_id, query,\nselected_category (optionnel)}
 activate API
 
-== Étape 0-a — Garde-fou brut ==
+== Étape 1 — Garde-fou ==
 
-API -> LLM : 8. check_query_appropriateness(query)
+API -> LC : check_guardrail(query)
+activate LC
+LC -> LLM : generate(prompt_guardrail + query)
 activate LLM
-LLM --> API : {classification: "SAFE"|"UNSAFE", message}
+LLM --> LC : {classification: "SAFE"|"UNSAFE", message}
 deactivate LLM
+LC --> API : {classification, message}
+deactivate LC
 
-alt [Requête UNSAFE — injection / XSS / haine]
+alt Requête UNSAFE — injection / XSS / haine
   API --> FE : {response: message_rejet,\nguardrail_triggered: true}
   deactivate API
   deactivate FE
 
-else [Requête SAFE]
+else Requête SAFE
 
-  == Étape 0 — Correction orthographique + détection sociale ==
+  == Étape 2 — Correction orthographique + détection sociale ==
 
-  API -> LLM : 9. _check_polite(query)
+  API -> LC : check_polite(query)
+  activate LC
+  LC -> LLM : generate(prompt_polite + query)
   activate LLM
-  LLM --> API : {case: "A" ou "B", message, corrected}
+  LLM --> LC : {case: "A" ou "B", message, corrected}
   deactivate LLM
+  LC --> API : {case, message, corrected}
+  deactivate LC
 
-  alt [Cas A — Salutation / merci / au revoir]
+  alt Cas A — Salutation / merci / au revoir
     API -> Redis : save_session() [ajout à l'historique]
     activate Redis
     Redis --> API : OK
@@ -73,12 +82,12 @@ else [Requête SAFE]
     deactivate API
     deactivate FE
 
-  else [Cas B — Vraie question (query ← corrected)]
-    API -> Redis : 10. get_session(session_id)
+  else Cas B — Vraie question (query ← corrected)
+    API -> Redis : get_session(session_id)
     activate Redis
     Redis --> API : session (historique, last_chunks, last_category)
     deactivate Redis
-    note right of API : Suite dans le\ndiagramme suivant\n(étapes 11 → 20)
+    note right of API : Suite dans le\ndiagramme suivant
     deactivate API
     deactivate FE
   end

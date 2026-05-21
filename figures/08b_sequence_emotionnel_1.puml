@@ -1,4 +1,4 @@
-@startuml sequence_emotionnel
+@startuml sequence_emotionnel_1
 !theme plain
 skinparam sequenceArrowColor #2C6EA0
 skinparam sequenceLifeLineBorderColor #2C6EA0
@@ -63,36 +63,10 @@ else Idéation suicidaire ou violence
   deactivate LLM
   LC --> API : texte d'accompagnement
   deactivate LC
-  API -> API : ajouter\n numéros d'urgence\n(num)
+  API -> API : ajouter numéros d'urgence (num)
 
 else Message sûr
-
-  == Étapes 4-6 — Contexte mémorisé ==
-
-  API -> Redis : charger profil()
-  activate Redis
-  Redis --> API : {prénom, stresseurs, situation scolaire, réussites...}
-  deactivate Redis
-  API -> API : enrichir prompt\n(lang + profil)
-
-  == Étapes 7-8 — Génération de la réponse ==
-
-  API -> LC : chain.invoke(prompt, historique, message)
-  activate LC
-  LC -> LLM : generate(prompt_empathie + historique)
-  activate LLM
-  LLM --> LC : réponse brute
-  deactivate LLM
-  LC --> API : réponse brute
-  deactivate LC
-
-  == Étape 9 — Post-traitement et sauvegarde ==
-
-  API -> API : limiter longeur\n+ nettoyer balises HTML()
-  API -> Redis : sauvegarder historique()
-  activate Redis
-  Redis --> API : confirmation
-  deactivate Redis
+  note over API : Suite dans le diagramme suivant\n(étapes 4 → 9)
 
 end
 

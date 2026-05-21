@@ -4,7 +4,7 @@
 
 Le chapitre précédent a établi les choix technologiques retenus pour chaque module :
 l'architecture RAG avec ChromaDB et Mistral-7B pour les modules conversationnels,
-le LLM conversationnel avec profil persistant pour le soutien émotionnel,
+le LLM conversationnel avec profil persistant pour l'assistant émotionnel,
 et l'ancrage juridique combiné aux règles heuristiques pour le classificateur.
 Ce chapitre couvre deux phases étroitement liées : la conception du système et la mise en place des modèles d'intelligence artificielle.
 La première partie présente l'architecture commune aux quatre modules et la conception spécifique de chacun d'eux, illustrée par des diagrammes UML (Unified Modeling Language — langage de modélisation unifié).
@@ -17,14 +17,6 @@ La seconde partie décrit la préparation des données et la construction des ba
 
 Les quatre modules du système partagent des composants technologiques communs.
 Cette conception modulaire facilite la maintenance et l'évolution du système.
-La Figure~\ref{fig:composants_global} illustre l'architecture globale.
-
-\begin{figure}[H]
-\centering
-\hspace*{-0.1\textwidth}\includegraphics[width=1.2\textwidth]{diagramme/12_composants_architecture.png}
-\caption{Diagramme de composants — Architecture globale du système}
-\label{fig:composants_global}
-\end{figure}
 
 \subsection{Composants partagés}
 
@@ -37,13 +29,13 @@ Les composants suivants sont utilisés par plusieurs modules :
           exposé via une interface compatible OpenAI (\texttt{POST /v1/chat/completions}).
     \item \textbf{Base documentaire vectorielle (ChromaDB) :} Stocke les extraits de documents
           indexés pour la recherche par similarité sémantique.
-          Chaque module possède sa propre collection : le module Noa et le Support Assistant
+          Chaque module possède sa propre collection : le module Noa assistant et l'assistant technique
           embarquent ChromaDB directement dans leur conteneur API,
           tandis que le Classificateur l'instancie comme service Docker dédié.
     \item \textbf{Gestionnaire de mémoire (Redis) :} Assure la persistance des sessions
           conversationnelles, le cache sémantique cosinus et la limitation de débit \cite{redis}.
     \item \textbf{Orchestrateur LangChain :} Coordonne les étapes de traitement
-          pour les modules conversationnels (Noa, Support, Soutien émotionnel) :
+          pour les modules conversationnels (Noa assistant, assistant technique, assistant émotionnel) :
           classification d'intention, recherche documentaire, appel LLM
           et gestion de session \cite{langchain}.
     \item \textbf{Conteneurisation Docker :} Chaque module est déployé dans sa propre stack
@@ -57,7 +49,6 @@ Chaque module est déployé de manière indépendante dans sa propre stack Docke
 Cette isolation garantit qu'un module peut être mis à jour, redémarré ou remplacé
 sans affecter les autres.
 La Figure~\ref{fig:deploiement} présente la vue d'ensemble du déploiement avec les quatre stacks et le LLM partagé.
-Les diagrammes de déploiement détaillés de chaque module sont fournis dans les sections correspondantes.
 
 \begin{figure}[H]
 \centering
@@ -66,12 +57,52 @@ Les diagrammes de déploiement détaillés de chaque module sont fournis dans le
 \label{fig:deploiement}
 \end{figure}
 
+\subsection{Diagramme de déploiement — modules conversationnels}
+
+Les trois modules conversationnels (Noa assistant, assistant technique et assistant émotionnel)
+partagent une infrastructure Docker Compose similaire : un conteneur backend FastAPI,
+un conteneur frontend, un conteneur Redis pour la gestion des sessions et de la mémoire,
+et un accès commun au serveur LLM Mistral-7B sur kaisens.fr.
+La Figure~\ref{fig:deploiement_modules_ia} présente ce déploiement unifié.
+
+\begin{figure}[H]
+\centering
+\hspace*{-0.1\textwidth}\includegraphics[width=1.2\textwidth]{diagramme/22_deploiement_modules_ia.png}
+\caption{Diagramme de déploiement — modules conversationnels (Noa assistant, assistant technique, assistant émotionnel)}
+\label{fig:deploiement_modules_ia}
+\end{figure}
+
+Malgré cette architecture commune, chaque module présente des spécificités de déploiement :
+
+\begin{itemize}
+  \item \textbf{Noa assistant :} utilise React 18 + Vite servi par Nginx sur le port 3000,
+        à la différence des deux autres modules qui utilisent Streamlit (port 8501).
+        Le backend embarque un Agent Loop basé sur Claude/Gemini (tool-use),
+        un automate de réservation (Booking FSM), un routeur d'intention et un cache FAQ LRU.
+        ChromaDB est embarqué dans le conteneur API avec la collection \texttt{netethic\_kb}.
+
+  \item \textbf{assistant technique :} utilise LangChain avec un pipeline RAG de 10 étapes
+        (classification d'intention, réécriture, cache cosinus, recherche LIVE/PDF, génération).
+        ChromaDB est embarqué avec la collection \texttt{netethic\_support}.
+        Redis stocke les sessions, le cache cosinus et les compteurs de rate-limit.
+
+  \item \textbf{assistant émotionnel :} n'utilise \textbf{pas} ChromaDB — il ne s'appuie pas
+        sur une base de connaissances RAG. La mémoire contextuelle est entièrement gérée par Redis
+        (TTL 30 jours, profil utilisateur persistant, historique, buffer, cache de classification).
+        Le backend embarque deux appels LLM distincts à température nulle :
+        un classifieur de sécurité (safe / injection / suicidal / violence)
+        et un extracteur de profil utilisateur.
+\end{itemize}
+
+Le classificateur de harcèlement repose sur une architecture distincte (Scala/Spark, ChromaDB en service dédié)
+décrite dans sa section de conception (voir Section~\ref{sec:module4_deploiement}).
+
 % ─────────────────────────────────────────────────────────────────────────────
-\section{Module 1 — Noa : Assistant virtuel du site public}
+\section{Module 1 — Noa assistant : Assistant virtuel du site public}
 
 \subsection{Conception générale}
 
-Noa est l'assistant virtuel accessible sur le site public de Netethic.
+Noa assistant est l'assistant virtuel accessible sur le site public de Netethic.
 Son architecture repose sur un pipeline à cinq étapes :
 classification de l'intention, vérification du cache, recherche documentaire,
 génération de la réponse et mise à jour du cache.
@@ -96,58 +127,47 @@ e-mail et de son numéro de téléphone pour planifier une démonstration.
 
 \subsection{Diagramme de composants}
 
-La Figure~\ref{fig:composants_noa} illustre l'organisation interne du module Noa en trois couches (présentation, métier et données) ainsi que les interactions entre ses composants principaux.
+La Figure~\ref{fig:composants_Noa assistant} illustre l'organisation interne du module Noa assistant en trois couches (présentation, métier et données) ainsi que les interactions entre ses composants principaux.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=\textwidth]{diagramme/18_composants_noa.png}
-\caption{Diagramme de composants — Module Noa}
-\label{fig:composants_noa}
-\end{figure}
-
-\subsection{Diagramme de déploiement}
-
-La Figure~\ref{fig:deploiement_noa} présente la stack Docker Compose du module Noa avec ses conteneurs et leurs interconnexions.
-
-\begin{figure}[H]
-\centering
-\hspace*{-0.1\textwidth}\includegraphics[width=1.2\textwidth]{diagramme/14_deploiement_noa.png}
-\caption{Diagramme de déploiement — Module Noa (stack Docker Compose)}
-\label{fig:deploiement_noa}
+\caption{Diagramme de composants — Module Noa assistant}
+\label{fig:composants_Noa assistant}
 \end{figure}
 
 \subsection{Diagramme de séquences}
 
-La Figure~\ref{fig:seq_noa} illustre le déroulement d'une interaction typique avec Noa
+La Figure~\ref{fig:seq_Noa assistant} illustre le déroulement d'une interaction typique avec Noa assistant
 pour une question factuelle.
 
 \begin{figure}[H]
 \centering
 \hspace*{-0.1\textwidth}\includegraphics[width=1.2\textwidth]{diagramme/04_sequence_noa.png}
-\caption{Diagramme de séquences — Module Noa (question factuelle)}
-\label{fig:seq_noa}
+\caption{Diagramme de séquences — Module Noa assistant (question factuelle)}
+\label{fig:seq_Noa assistant}
 \end{figure}
 
 \subsection{Diagramme d'état-transition}
 
-La Figure~\ref{fig:etat_noa} représente les états possibles de l'assistant Noa
+La Figure~\ref{fig:etat_Noa assistant} représente les états possibles de Noa assistant
 au cours d'une session de conversation.
 
 \begin{figure}[H]
 \centering
 \hspace*{-0.1\textwidth}\includegraphics[width=1.2\textwidth]{diagramme/05_etat_noa.png}
-\caption{Diagramme d'état-transition — Module Noa}
-\label{fig:etat_noa}
+\caption{Diagramme d'état-transition — Module Noa assistant}
+\label{fig:etat_Noa assistant}
 \end{figure}
 
 % ─────────────────────────────────────────────────────────────────────────────
-\section{Module 2 — NetEthic Support Assistant}
+\section{Module 2 — assistant technique}
 
 \subsection{Conception générale}
 
-Le \textit{NetEthic Support Assistant} est l'assistant de support technique
+L'\textit{assistant technique} est l'assistant de support technique
 destiné aux utilisateurs internes de la plateforme.
-Son pipeline repose sur les mêmes composants partagés que Noa
+Son pipeline repose sur les mêmes composants partagés que Noa assistant
 (serveur LLM, ChromaDB, Redis, LangChain),
 mais introduit deux mécanismes architecturaux distincts.
 
@@ -170,35 +190,24 @@ L'interface est développée en Streamlit pour un déploiement rapide côté int
 
 \subsection{Diagramme de composants}
 
-La Figure~\ref{fig:composants_support} illustre l'architecture interne du Support Assistant et les interactions entre ses composants.
+La Figure~\ref{fig:composants_support} illustre l'architecture interne de l'assistant technique et les interactions entre ses composants.
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth]{diagramme/19_composants_support.png}
-\caption{Diagramme de composants — Module Support Assistant}
+\hspace*{-0.1\textwidth}\includegraphics[width=1.2\textwidth]{diagramme/19_composants_support.png}
+\caption{Diagramme de composants — Modul'assistant technique}
 \label{fig:composants_support}
-\end{figure}
-
-\subsection{Diagramme de déploiement}
-
-La Figure~\ref{fig:deploiement_support} présente la stack Docker Compose du Support Assistant avec ses conteneurs et leurs interconnexions.
-
-\begin{figure}[H]
-\centering
-\hspace*{-0.1\textwidth}\includegraphics[width=1.2\textwidth]{diagramme/15_deploiement_support.png}
-\caption{Diagramme de déploiement — Module Support Assistant (stack Docker Compose)}
-\label{fig:deploiement_support}
 \end{figure}
 
 \subsection{Diagrammes de séquences}
 
-Le traitement d'une question par le Support Assistant est décrit en deux parties.
+Le traitement d'une question par l'assistant technique est décrit en deux parties.
 La Figure~\ref{fig:seq_support_init} couvre la phase d'initialisation et de validation (étapes 1 à 10).
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.95\textwidth]{diagramme/06a_sequence_support_init.png}
-\caption{Diagramme de séquences — Support Assistant (1/2) : session et validation}
+\hspace*{-0.1\textwidth}\includegraphics[width=1.15\textwidth]{diagramme/06a_sequence_support_init.png}
+\caption{Diagramme de séquences — assistant technique (1/3) : session et validation}
 \label{fig:seq_support_init}
 \end{figure}
 
@@ -206,28 +215,43 @@ La Figure~\ref{fig:seq_support} détaille le pipeline RAG (étapes 11 à 20).
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.95\textwidth]{diagramme/06_sequence_support.png}
-\caption{Diagramme de séquences — Support Assistant (2/2) : pipeline RAG}
+\hspace*{-0.1\textwidth}\includegraphics[width=1.15\textwidth]{diagramme/06_sequence_support.png}
+\caption{Diagramme de séquences — assistant technique (2/3) : pipeline RAG}
 \label{fig:seq_support}
 \end{figure}
 
-\subsection{Diagrammes d'état-transition}
-
-La Figure~\ref{fig:etat_support_pipeline} représente le cycle de vie du Support Assistant, du démarrage jusqu'à la génération de la réponse, incluant les flux de repli.
+La Figure~\ref{fig:seq_support_repli} illustre les flux de repli déclenchés
+lorsqu'aucun document pertinent n'est trouvé dans ChromaDB (\texttt{no\_results=true}).
+L'utilisateur dispose alors de deux options : prendre un rendez-vous ou signaler un bug.
+Dans les deux cas, LangChain génère automatiquement une description à partir
+de l'historique de conversation avant de soumettre la requête à l'API NetEthic.
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.95\textwidth]{diagramme/07a_etat_support_pipeline.png}
-\caption{Diagramme d'état-transition — Support Assistant : pipeline et flux de repli}
-\label{fig:etat_support_pipeline}
+\hspace*{-0.1\textwidth}\includegraphics[width=1.15\textwidth]{diagramme/06b_sequence_support_repli.png}
+\caption{Diagramme de séquences — assistant technique (3/3) : flux de repli}
+\label{fig:seq_support_repli}
+\end{figure}
+
+\subsection{Diagramme d'activité}
+
+La Figure~\ref{fig:activite_support} représente le flux de traitement complet
+d'un message par l'assistant technique, depuis la validation initiale
+jusqu'à la génération de la réponse, en incluant les chemins de repli.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.6\textwidth]{diagramme/07b_activite_support.png}
+\caption{Diagramme d'activité — assistant technique}
+\label{fig:activite_support}
 \end{figure}
 
 % ─────────────────────────────────────────────────────────────────────────────
-\section{Module 3 — Module de soutien émotionnel}
+\section{Module 3 — assistant émotionnel}
 
 \subsection{Conception générale}
 
-Le module de soutien émotionnel est un assistant conversationnel dédié aux étudiants,
+L'assistant émotionnel est un assistant conversationnel dédié aux étudiants,
 accessible via une interface Streamlit.
 Il traite chaque message à travers un pipeline structuré reposant sur quatre mécanismes
 complémentaires.
@@ -256,60 +280,52 @@ et au contexte de l'étudiant, limitée à trois phrases.
 
 \subsection{Diagramme de composants}
 
-La Figure~\ref{fig:composants_emotionnel} illustre l'architecture en couches du module de soutien émotionnel et les interactions entre ses composants.
+La Figure~\ref{fig:composants_emotionnel} illustre l'architecture en couches de l'assistant émotionnel et les interactions entre ses composants.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=\textwidth]{diagramme/20_composants_emotionnel.png}
-\caption{Diagramme de composants — Module de soutien émotionnel}
+\caption{Diagramme de composants — assistant émotionnel}
 \label{fig:composants_emotionnel}
 \end{figure}
 
-\subsection{Diagramme de déploiement}
 
-La Figure~\ref{fig:deploiement_emotionnel} présente la stack Docker Compose du module de soutien émotionnel avec ses conteneurs et leurs interconnexions.
+\subsection{Diagramme de séquences}
+
+La Figure~\ref{fig:seq_emotionnel_1} couvre les étapes 1 à 3 : validation de la session,
+contrôle du débit et analyse par le garde-fou, avec ses quatre branches
+(limite dépassée, contenu inapproprié, idéation suicidaire/violence, message sûr).
 
 \begin{figure}[H]
 \centering
-\hspace*{-0.1\textwidth}\includegraphics[width=1.2\textwidth]{diagramme/16_deploiement_emotionnel.png}
-\caption{Diagramme de déploiement — Module de soutien émotionnel (stack Docker Compose)}
-\label{fig:deploiement_emotionnel}
+\hspace*{-0.1\textwidth}\includegraphics[width=1.15\textwidth]{diagramme/08b_sequence_emotionnel_1.png}
+\caption{Diagramme de séquences — assistant émotionnel (1/2) : validation et garde-fou}
+\label{fig:seq_emotionnel_1}
 \end{figure}
 
+La Figure~\ref{fig:seq_emotionnel_2} détaille le chemin nominal (message sûr),
+des étapes 4 à 9 : chargement du profil étudiant, enrichissement du prompt,
+génération empathique par le LLM via LangChain, puis post-traitement et sauvegarde.
+
+\begin{figure}[H]
+\centering
+\hspace*{-0.1\textwidth}\includegraphics[width=1.15\textwidth]{diagramme/08b_sequence_emotionnel_2.png}
+\caption{Diagramme de séquences — assistant émotionnel (2/2) : génération et sauvegarde}
+\label{fig:seq_emotionnel_2}
+\end{figure}
 \subsection{Diagramme d'activité}
 
 La Figure~\ref{fig:activite_emo} représente le flux de traitement complet
-d'un message par le module de soutien émotionnel,
+d'un message par l'assistant émotionnel,
 depuis la réception jusqu'à la journalisation de l'événement.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.6\textwidth]{diagramme/08_activite_emotionnel.png}
-\caption{Diagramme d'activité — Module de soutien émotionnel}
+\caption{Diagramme d'activité — assistant émotionnel}
 \label{fig:activite_emo}
 \end{figure}
 
-\subsection{Diagramme de séquences}
-
-La Figure~\ref{fig:seq_emotionnel} détaille les interactions entre les composants lors du traitement d'un message par l'assistant émotionnel.
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.95\textwidth]{diagramme/08b_sequence_emotionnel.png}
-\caption{Diagramme de séquences — Module de soutien émotionnel}
-\label{fig:seq_emotionnel}
-\end{figure}
-
-\subsection{Diagramme d'état-transition}
-
-La Figure~\ref{fig:etat_emotionnel} représente les états possibles du module au cours d'une session, incluant les chemins de blocage, de crise et nominal.
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.95\textwidth]{diagramme/08c_etat_emotionnel.png}
-\caption{Diagramme d'état-transition — Module de soutien émotionnel}
-\label{fig:etat_emotionnel}
-\end{figure}
 
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Module 4 — Classificateur de harcèlement}
@@ -349,7 +365,10 @@ La Figure~\ref{fig:composants_classificateur} illustre l'architecture interne du
 \end{figure}
 
 \subsection{Diagramme de déploiement}
+\label{sec:module4_deploiement}
 
+Le classificateur repose sur une architecture distincte de celle des modules conversationnels :
+il n'utilise pas de frontend interactif et fonctionne en mode batch.
 La Figure~\ref{fig:deploiement_classificateur} présente la stack Docker Compose du classificateur avec ses services et leurs interactions.
 
 \begin{figure}[H]
@@ -383,41 +402,47 @@ incluant les mécanismes de repli en cas d'échec.
 \end{figure}
 
 % ─────────────────────────────────────────────────────────────────────────────
-\section{Diagramme de classes (Application)}
+\section{Diagramme de classes global}
 
-Le diagramme de classes de la Figure~\ref{fig:classes_app} représente la structure statique
-de l'application, c'est-à-dire les entités principales du système, leurs attributs et
-les relations qui les unissent.
+La Figure~\ref{fig:classes_global} représente la structure statique globale de la plateforme NetEthic,
+organisée autour des entités suivantes.
 
-Les classes centrales sont les suivantes :
+\textbf{User.}
+Classe centrale qui initie les interactions avec le système.
+Un même utilisateur peut ouvrir plusieurs sessions de type \texttt{Messages}
+(modules Noa et émotionnel) ou \texttt{TechnicalSession} (module support technique).
 
-\begin{itemize}
-    \item \textbf{ChatSession :} Représente une session conversationnelle.
-          Attributs : \texttt{sessionId}, \texttt{userId}, \texttt{moduleType}, \texttt{createdAt}, \texttt{expiresAt}.
-          Une session agrège plusieurs instances de \texttt{Message}.
-    \item \textbf{Message :} Représente un message échangé au cours d'une session.
-          Attributs : \texttt{messageId}, \texttt{content}, \texttt{role} (utilisateur/assistant), \texttt{timestamp}.
-          Chaque message est associé à une \texttt{IntentClassification} et peut référencer un \texttt{Response}.
-    \item \textbf{IntentClassification :} Encapsule le résultat de la classification d'intention.
-          Attributs : \texttt{intent} (factual, chitchat, follow-up, forbidden), \texttt{confidence}.
-    \item \textbf{DocumentChunk :} Représente un extrait de document indexé dans la base vectorielle.
-          Attributs : \texttt{chunkId}, \texttt{content}, \texttt{embedding}, \texttt{category}, \texttt{sourceDocument}.
-    \item \textbf{Response :} Encapsule la réponse générée par le LLM.
-          Attributs : \texttt{responseId}, \texttt{content}, \texttt{sourceChunks}, \texttt{latency}, \texttt{cached}.
-    \item \textbf{ReservationRequest :} Modélise une demande de réservation collectée par Noa ou le Support Assistant.
-          Attributs : \texttt{requestId}, \texttt{email}, \texttt{phone}, \texttt{requestedDate}, \texttt{channel}, \texttt{subject}.
-    \item \textbf{HarassmentClassification :} Encapsule le résultat de l'analyse d'un texte par le classificateur.
-          Attributs : \texttt{textId}, \texttt{labels}, \texttt{strategy}, \texttt{confidence}, \texttt{urgencyFlag}, \texttt{timestamp}.
-    \item \textbf{EmotionalSignal :} Représente un signal de détresse détecté dans un message.
-          Attributs : \texttt{signalType} (dépression, idéation suicidaire, solitude, anxiété, colère, addiction),
-          \texttt{severity}, \texttt{detectedAt}.
-\end{itemize}
+\textbf{Session (abstraite).}
+Classe mère partagée par \texttt{Messages} et \texttt{TechnicalSession},
+portant les attributs communs à toute session : \texttt{sessionId}, \texttt{createdAt},
+\texttt{language} et \texttt{guardrailTriggered}.
+
+\textbf{Messages.}
+Spécialisation de \texttt{Session} couvrant les échanges conversationnels
+(modules Noa et émotionnel). Chaque instance est reliée à une \texttt{Conversation}
+qui agrège l'historique des échanges et enrichit un \texttt{ProfilEmotionnel}
+persistant (\texttt{prenom}, \texttt{stresseurs}, \texttt{situationScolaire}, \texttt{reussites}).
+
+\textbf{TechnicalSession.}
+Spécialisation de \texttt{Session} propre au module support technique.
+Elle charge un objet \texttt{LiveData} contenant les statistiques du tableau de bord scolaire
+(\texttt{stats}, \texttt{lastUpdated}).
+
+\textbf{ChromaDB.}
+Base vectorielle partagée par les modules Noa, Support et Classificateur.
+La hiérarchie par composition \texttt{ChromaDB} $\to$ \texttt{Collection}
+$\to$ \texttt{Docs} $\to$ \texttt{Chunks} organise les documents indexés et leurs fragments
+avec leur vecteur d'embedding et leur score de similarité.
+
+\textbf{Parametre.}
+Classe indépendante de configuration système, composée des attributs \texttt{id},
+\texttt{key} et \texttt{value}.
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.95\textwidth]{diagramme/11_classes_application.png}
-\caption{Diagramme de classes --- Architecture de l'application}
-\label{fig:classes_app}
+\hspace*{-0.1\textwidth}\includegraphics[width=1.2\textwidth]{diagramme/11b_classes_global.png}
+\caption{Diagramme de classes global --- Architecture de l'application NetEthic}
+\label{fig:classes_global}
 \end{figure}
 
 % ─────────────────────────────────────────────────────────────────────────────
@@ -426,18 +451,18 @@ Les classes centrales sont les suivantes :
 
 \section{Préparation des bases de connaissances RAG}
 
-Les modules Noa et Support Assistant reposent sur une architecture
+Les modules Noa assistant et assistant technique reposent sur une architecture
 \textit{Retrieval-Augmented Generation} (RAG) dont la qualité des réponses
 dépend directement de la qualité et de la structure des documents indexés.
 La phase de préparation consiste à transformer les sources documentaires brutes
 en fichiers Markdown structurés et enrichis, exploitables par la base
 vectorielle ChromaDB.
 
-\subsection{Module Noa — sources documentaires publiques}
+\subsection{Module Noa assistant — sources documentaires publiques}
 
 \paragraph{Extraction et conversion}\mbox{}\newline
 
-La base de connaissances de Noa est constituée à partir du contenu du site public
+La base de connaissances de Noa assistant est constituée à partir du contenu du site public
 de Netethic.
 Les vingt-et-une pages du site ont été extraites et converties au format Markdown.
 Cette conversion produit des fichiers textuels structurés,
@@ -469,14 +494,14 @@ une réponse contextuellement riche.
 Cette stratégie permet d'allier précision de la recherche et richesse
 du contexte fourni au modèle de génération.
 
-Le Tableau~\ref{tab:kb_noa} présente les statistiques de la base de connaissances
-constituée pour Noa.
+Le Tableau~\ref{tab:kb_Noa assistant} présente les statistiques de la base de connaissances
+constituée pour Noa assistant.
 
 \vspace{6pt}
 \begin{table}[H]
 \centering
-\caption{Statistiques de la base de connaissances — Module Noa}
-\label{tab:kb_noa}
+\caption{Statistiques de la base de connaissances — Module Noa assistant}
+\label{tab:kb_Noa assistant}
 \begin{tabular}{|l|c|}
 \hline
 \textbf{Paramètre} & \textbf{Valeur} \\
@@ -494,11 +519,11 @@ Base vectorielle            & ChromaDB \\
 \end{tabular}
 \end{table}
 
-\subsection{Module Support Assistant — documentation interne}
+\subsection{Modul'assistant technique — documentation interne}
 
 \paragraph{Sources documentaires}\mbox{}\newline
 
-La base de connaissances du Support Assistant est constituée à partir
+La base de connaissances de l'assistant technique est constituée à partir
 de la documentation technique interne fournie par Smart-Conseil.
 Elle couvre les onze catégories fonctionnelles de la plateforme Netethic~:
 gestion des utilisateurs, paramétrage, tableaux de bord, rapports, notifications,
@@ -509,11 +534,11 @@ et facturation.
 
 Les documents fournis au format PDF ont été convertis au format Markdown.
 Chaque fichier Markdown a ensuite été structuré par catégorie fonctionnelle,
-en suivant le même processus d'enrichissement que pour la base de Noa~:
+en suivant le même processus d'enrichissement que pour la base de Noa assistant~:
 clarification des sous-titres, complétion des informations manquantes
 et suppression des éléments non informatifs.
 
-La collection ChromaDB du Support Assistant est organisée en onze sous-collections,
+La collection ChromaDB de l'assistant technique est organisée en onze sous-collections,
 une par catégorie fonctionnelle.
 Cette organisation permet un filtrage précis lors de la recherche vectorielle~:
 lorsqu'une catégorie est sélectionnée par l'utilisateur, la recherche
@@ -735,8 +760,8 @@ ambigus comme relevant du harcèlement.
 
 Ce chapitre a couvert la conception du système et la mise en place des modèles d'IA.
 La partie conception a présenté l'architecture commune et les diagrammes UML de chaque module.
-La mise en place a établi les bases de connaissances RAG (177~segments pour Noa,
-11~collections pour le Support Assistant) et validé la stratégie hybride
+La mise en place a établi les bases de connaissances RAG (177~segments pour Noa assistant,
+11~collections pour l'assistant technique) et validé la stratégie hybride
 pour le classificateur avec un F1-score de 0,619 sur 1\,500~textes de test.
 Le chapitre suivant présente la réalisation concrète du système, les interfaces développées,
 les résultats des tests automatisés et les évaluations de qualité.

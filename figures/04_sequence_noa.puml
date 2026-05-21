@@ -1,4 +1,4 @@
-﻿@startuml sequence_noa
+@startuml sequence_noa
 !theme plain
 skinparam sequenceArrowColor #2C6EA0
 skinparam sequenceLifeLineBorderColor #2C6EA0
@@ -7,19 +7,19 @@ skinparam sequenceParticipantBackgroundColor #EBF4FB
 skinparam sequenceActorBorderColor #1A3550
 skinparam sequenceGroupBorderColor #888888
 skinparam defaultFontName Arial
-skinparam defaultFontSize 13
+skinparam defaultFontSize 12
 
 
-actor       "Visiteur"                      as V
-participant "Frontend\nReact"               as FE
-participant "FastAPI\n(Noa)"                as API
-participant "BookingAgent\n(automate FSM)"  as FSM
-participant "Cache\nLRU"                    as Cache
-participant "Agent LLM\n(tool-use loop)"    as Agent
-participant "ChromaDB\n(collection noa)"    as Chroma
-participant "netethic.fr\n(scraping)"       as Web
-participant "Serveur LLM\n(kaisens.fr)"     as LLM
-participant "Redis\n(sessions)"             as Redis
+actor       "Visiteur"                          as V
+participant "Frontend\nReact"                   as FE
+participant "FastAPI\n(Noa)"                    as API
+participant "BookingAgent\n(automate FSM)"      as FSM
+participant "Cache\nLRU"                        as Cache
+participant "LangChain\n(AgentExecutor)"        as LC
+participant "ChromaDB\n(collection noa)"        as Chroma
+participant "netethic.fr\n(scraping)"           as Web
+participant "Serveur LLM\n(kaisens.fr)"         as LLM
+participant "Redis\n(sessions)"                 as Redis
 
 V  -> FE  : saisit un message
 activate FE
@@ -44,10 +44,10 @@ end note
 
 API -> API : guardrailCheck(message)\n— patterns : jailbreak, contenu adulte, hors-sujet
 
-alt [Guardrail déclenché]
+alt Guardrail déclenché
   API --> FE : {response: réponse de refus poli,\nguardrail_triggered: true}
 
-else [Message autorisé]
+else Message autorisé
 
   == Étape 3 — Vérification du cache FAQ ==
 
@@ -56,50 +56,55 @@ else [Message autorisé]
   Cache --> API : résultat
   deactivate Cache
 
-  alt [Cache HIT — 200 entrées LRU, TTL 24 h]
+  alt Cache HIT — 200 entrées LRU, TTL 24 h
     API --> FE : {reply, session_id, cached: true}
 
-  else [Cache MISS]
+  else Cache MISS
 
-    == Étape 4 — Boucle Agent tool-use (max 5 itérations) ==
+    == Étape 4 — Boucle LangChain Agent (max 5 itérations) ==
 
-    API -> LLM : invoke(system_prompt + historique + message + tools_schema)
-    activate LLM
+    API -> LC : invoke(system_prompt, historique, message, tools_schema)
+    activate LC
 
     group Itérations de l'agent [max 5 itérations]
 
+      LC -> LLM : generate(prompt + outils disponibles)
+      activate LLM
+      LLM --> LC : {text ou tool_call}
+      deactivate LLM
+
       opt Outil : search_knowledge_base
-        LLM -> Chroma : searchSimilar(embedding, k=3,\ncollection="noa", seuil=0.25)
+        LC -> Chroma : searchSimilar(embedding, k=3,\ncollection="noa", seuil=0.25)
         activate Chroma
-        Chroma --> LLM : [DocumentChunk × 3]\n(hiérarchie parent-enfant)
+        Chroma --> LC : [DocumentChunk × 3]\n(hiérarchie parent-enfant)
         deactivate Chroma
       end
 
       opt Outil : fetch_website_page
-        LLM -> Web : scrape(url_netethic.fr)
+        LC -> Web : scrape(url_netethic.fr)
         activate Web
-        Web --> LLM : contenu textuel (max 3 000 caractères)
+        Web --> LC : contenu textuel (max 3 000 caractères)
         deactivate Web
         note right of Web : Limité au domaine\nnetethic.fr uniquement.
       end
 
       opt Outil : get_contact_info
-        LLM -> LLM : lire KB statique\n{email, téléphone, Calendly, horaires}
+        LC -> LC : lire KB statique\n{email, téléphone, Calendly, horaires}
       end
 
       opt Outil : start_booking_demo
-        LLM -> FSM : startBooking(session_id)
+        LC -> FSM : startBooking(session_id)
         activate FSM
-        FSM --> LLM : {choices, state="COLLECT_DATE"}
+        FSM --> LC : {choices, state="COLLECT_DATE"}
         deactivate FSM
       end
 
-      LLM -> LLM : décider : appeler un autre outil\nou générer la réponse finale
+      LC -> LC : décider : appeler un autre outil\nou générer la réponse finale
 
     end
 
-    LLM --> API : {reply, choices?}
-    deactivate LLM
+    LC --> API : {reply, choices?}
+    deactivate LC
 
     == Étape 5 — Écriture cache et mise à jour session ==
 
