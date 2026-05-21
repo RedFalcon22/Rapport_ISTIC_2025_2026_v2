@@ -70,14 +70,14 @@ Le Tableau~\ref{tab:perf_noa} présente les temps de réponse mesurés pour chaq
 \centering
 \caption{Temps de réponse moyens — Assistant Noa}
 \label{tab:perf_noa}
-\begin{tabular}{|l|c|c|}
+\begin{tabular}{|l|c|}
 \hline
-\textbf{Type de requête} & \textbf{Temps moyen} & \textbf{Exigence} \\
+\textbf{Type de requête} & \textbf{Temps moyen} \\
 \hline
-Réponse depuis le cache & $<$ 1\,ms & $<$ 50\,ms \\
-Salutation / hors sujet & $<$ 10\,ms & $<$ 100\,ms \\
-Question factuelle (RAG) & $\approx$ 1,8\,s & $<$ 5\,s \\
-Question de suivi & $\approx$ 2,1\,s & $<$ 5\,s \\
+Réponse depuis le cache & $<$ 1\,ms \\
+Salutation / hors sujet & $<$ 10\,ms \\
+Question factuelle (RAG) & $\approx$ 1,8\,s \\
+Question de suivi & $\approx$ 2,1\,s \\
 \hline
 \end{tabular}
 \end{table}
@@ -234,14 +234,14 @@ contre le serveur LLM kaisens.fr.
 \centering
 \caption{Benchmark de performance — assistant technique (mesures réelles)}
 \label{tab:perf_support}
-\begin{tabular}{|l|c|c|c|}
+\begin{tabular}{|l|c|c|}
 \hline
-\textbf{Scénario} & \textbf{Temps moyen} & \textbf{Exigence} & \textbf{Statut} \\
+\textbf{Scénario} & \textbf{Temps moyen} & \textbf{Statut} \\
 \hline
-Salutation (sans cache) & $\approx$ 2{,}79\,s & $<$ 5\,s & Réussi \\
-Question factuelle (RAG) & $\approx$ 4{,}32\,s & $<$ 5\,s & Réussi \\
-Question de suivi (RAG) & $\approx$ 4{,}01\,s & $<$ 5\,s & Réussi \\
-Réponse depuis le cache Redis & $\approx$ 0{,}98\,s & $<$ 1\,s & Réussi \\
+Salutation (sans cache) & $\approx$ 2{,}79\,s & Réussi \\
+Question factuelle (RAG) & $\approx$ 4{,}32\,s & Réussi \\
+Question de suivi (RAG) & $\approx$ 4{,}01\,s & Réussi \\
+Réponse depuis le cache Redis & $\approx$ 0{,}98\,s & Réussi \\
 \hline
 \end{tabular}
 \end{table}
