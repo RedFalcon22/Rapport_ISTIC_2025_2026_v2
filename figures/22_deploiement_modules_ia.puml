@@ -1,0 +1,102 @@
+@startuml deploiement_modules_ia
+!theme plain
+skinparam defaultFontName Arial
+skinparam defaultFontSize 13
+skinparam shadowing false
+
+skinparam node {
+  BackgroundColor #EBF4FB
+  BorderColor     #1565C0
+  BorderThickness 1.5
+  FontColor       #0D47A1
+  FontSize        13
+}
+skinparam artifact {
+  BackgroundColor #FFFDE7
+  BorderColor     #F9A825
+  FontColor       #7B5E00
+  FontSize        12
+}
+skinparam component {
+  BackgroundColor #F5F5F5
+  BorderColor     #78909C
+  FontColor       #212121
+  FontSize        12
+}
+skinparam cloud {
+  BackgroundColor #ECEFF1
+  BorderColor     #546E7A
+  FontColor       #263238
+  FontSize        13
+}
+skinparam arrow {
+  Color     #37474F
+  Thickness 1.5
+  FontSize  11
+  FontColor #37474F
+}
+skinparam note {
+  BackgroundColor #FFF9C4
+  BorderColor     #F57F17
+  FontColor       #4E342E
+  FontSize        11
+}
+
+' ─── CLIENT ──────────────────────────────────────────────────────────────
+node "Utilisateur\n<<device>>" as CLI {
+  artifact "Navigateur" as BR
+}
+
+' ─── SERVEUR PRINCIPAL ───────────────────────────────────────────────────
+node "Serveur Linux  [Modules Conversationnels]" <<device>> as HOST {
+  node "Docker Compose" <<execution environment>> as DC {
+
+    node "Stack  assistant" as STK {
+
+      node "Conteneur Frontend" <<container>> as FE {
+        component "Interface utilisateur\n(React / Streamlit)" as C_FE
+      }
+
+      node "Conteneur Backend" <<container>> as API {
+        component "FastAPI  uvicorn" as C_API
+        component "LangChain  Pipeline RAG" as C_LC
+        component "ChromaDB  embedded\n(base de connaissances)" as C_CHR
+        artifact "Volume  chroma_data" as V_CHR
+      }
+
+      node "Conteneur Redis" <<container>> as RED {
+        component "Redis\n(sessions  memoire  cache)" as C_RED
+        artifact "Volume  redis_data" as V_RED
+      }
+    }
+  }
+}
+
+' ─── LLM EXTERNE ─────────────────────────────────────────────────────────
+cloud "kaisens.fr  (Production)\n[partage par les 3 modules]" as EXT {
+  node "vLLM Runtime" <<execution environment>> as VLLM {
+    component "Mistral-7B-Instruct v0.3\nOpenAI-compatible API" as LLM
+  }
+}
+
+' ─── NOTES ────────────────────────────────────────────────────────────────
+note right of FE
+  Noa assistant : React 18 + Vite
+  assistant technique : Streamlit
+  assistant emotionnel : Streamlit
+end note
+
+note right of API
+  L'assistant emotionnel n'utilise pas ChromaDB.
+  Sa memoire est entierement geree par Redis
+  (profil persistant, historique, buffer).
+end note
+
+' ─── CONNEXIONS ───────────────────────────────────────────────────────────
+CLI   -->  FE    : HTTPS
+HOST  ..>  EXT   : HTTPS  POST /v1/chat/completions
+
+FE    -->  API   : REST
+API   -->  RED   : sessions  cache  rate-limit
+
+@enduml

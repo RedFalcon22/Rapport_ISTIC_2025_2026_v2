@@ -112,4 +112,11 @@ API --> FE : {success: true}
 deactivate API
 deactivate FE
 
+== Option C — Accès au portail de support ==
+
+U -> FE : Cliquer "Voir le portail de support"
+activate FE
+FE -> FE : Ouvrir le portail de support (lien direct)
+deactivate FE
+
 @enduml

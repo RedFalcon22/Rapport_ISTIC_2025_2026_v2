@@ -7,7 +7,7 @@ Ce chapitre décrit la phase de préparation des données et de mise en place
 des modèles d'intelligence artificielle pour chacun des quatre modules du système.
 
 Pour les modules conversationnels fondés sur une architecture RAG —
-Noa et le Support Assistant — cette phase consiste en la construction
+Noa assistant et l'assistant technique — cette phase consiste en la construction
 et l'enrichissement des bases de connaissances documentaires exploitées
 lors de la recherche par similarité sémantique.
 
@@ -15,25 +15,25 @@ Pour le classificateur de harcèlement, elle couvre le cycle complet
 d'apprentissage automatique : collecte des données, nettoyage et prétraitement,
 augmentation, labeling, entraînement et évaluation comparative des stratégies.
 
-Le module de soutien émotionnel, dont l'architecture repose exclusivement sur
+L'assistant émotionnel, dont l'architecture repose exclusivement sur
 l'ingénierie de prompt sans base documentaire ni données d'entraînement,
 n'est pas concerné par cette phase.
 
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Préparation des bases de connaissances RAG}
 
-Les modules Noa et Support Assistant reposent sur une architecture
+Les modules Noa assistant et assistant technique reposent sur une architecture
 \textit{Retrieval-Augmented Generation} (RAG) dont la qualité des réponses
 dépend directement de la qualité et de la structure des documents indexés.
 La phase de préparation consiste à transformer les sources documentaires brutes
 en fichiers Markdown structurés et enrichis, exploitables par la base
 vectorielle ChromaDB.
 
-\subsection{Module Noa — sources documentaires publiques}
+\subsection{Module Noa assistant — sources documentaires publiques}
 
 \paragraph{Extraction et conversion}\mbox{}\newline
 
-La base de connaissances de Noa est constituée à partir du contenu du site public
+La base de connaissances de Noa assistant est constituée à partir du contenu du site public
 de Netethic.
 Les vingt-et-une pages du site ont été extraites et converties au format Markdown.
 Cette conversion produit des fichiers textuels structurés,
@@ -65,14 +65,14 @@ une réponse contextuellement riche.
 Cette stratégie permet d'allier précision de la recherche et richesse
 du contexte fourni au modèle de génération.
 
-Le Tableau~\ref{tab:kb_noa} présente les statistiques de la base de connaissances
-constituée pour Noa.
+Le Tableau~\ref{tab:kb_Noa assistant} présente les statistiques de la base de connaissances
+constituée pour Noa assistant.
 
 \vspace{6pt}
 \begin{table}[H]
 \centering
-\caption{Statistiques de la base de connaissances — Module Noa}
-\label{tab:kb_noa}
+\caption{Statistiques de la base de connaissances — Module Noa assistant}
+\label{tab:kb_Noa assistant}
 \begin{tabular}{|l|c|}
 \hline
 \textbf{Paramètre} & \textbf{Valeur} \\
@@ -90,11 +90,11 @@ Base vectorielle            & ChromaDB \\
 \end{tabular}
 \end{table}
 
-\subsection{Module Support Assistant — documentation interne}
+\subsection{Modul'assistant technique — documentation interne}
 
 \paragraph{Sources documentaires}\mbox{}\newline
 
-La base de connaissances du Support Assistant est constituée à partir
+La base de connaissances de l'assistant technique est constituée à partir
 de la documentation technique interne fournie par Smart-Conseil.
 Elle couvre les onze catégories fonctionnelles de la plateforme Netethic~:
 gestion des utilisateurs, paramétrage, tableaux de bord, rapports, notifications,
@@ -105,11 +105,11 @@ et facturation.
 
 Les documents fournis au format PDF ont été convertis au format Markdown.
 Chaque fichier Markdown a ensuite été structuré par catégorie fonctionnelle,
-en suivant le même processus d'enrichissement que pour la base de Noa~:
+en suivant le même processus d'enrichissement que pour la base de Noa assistant~:
 clarification des sous-titres, complétion des informations manquantes
 et suppression des éléments non informatifs.
 
-La collection ChromaDB du Support Assistant est organisée en onze sous-collections,
+La collection ChromaDB de l'assistant technique est organisée en onze sous-collections,
 une par catégorie fonctionnelle.
 Cette organisation permet un filtrage précis lors de la recherche vectorielle~:
 lorsqu'une catégorie est sélectionnée par l'utilisateur, la recherche
@@ -329,24 +329,7 @@ ambigus comme relevant du harcèlement.
 % ─────────────────────────────────────────────────────────────────────────────
 \section*{Conclusion}
 
-Ce chapitre a présenté la phase de préparation des données et de mise en place
-des modèles d'intelligence artificielle pour les quatre modules du système.
-
-Pour les modules conversationnels, la qualité des réponses repose directement
-sur la qualité des bases de connaissances~: les vingt-et-une pages publiques
-de Netethic ont été transformées en 177~segments structurés selon une stratégie
-parent-enfant pour Noa, et les documents du Support Assistant ont été organisés
-en onze collections correspondant aux catégories fonctionnelles de la plateforme.
-Dans les deux cas, un enrichissement manuel des fichiers Markdown — clarification
-des sous-titres et complétion des informations manquantes — a permis d'améliorer
-la pertinence des résultats de recherche vectorielle.
-
-Pour le classificateur de harcèlement, le cycle d'apprentissage complet —
-collecte de 977~textes, nettoyage en cinq étapes, augmentation par paraphrase
-automatique, labeling indépendant et comparaison de quatre stratégies —
-a abouti à la sélection de la stratégie hybride avec un F1-score de 0,619,
-contre 0,352 pour le modèle seul.
-
-Le chapitre suivant présente la réalisation concrète du système~:
-interfaces utilisateur, résultats des tests automatisés, mesures de sécurité
-et optimisations de performance.
+Ce chapitre a couvert la préparation des données et la mise en place des modèles d'IA
+pour les quatre modules. Les bases de connaissances ont été construites et validées,
+et la stratégie de classification retenue a été sélectionnée sur la base
+d'une comparaison objective. Le chapitre suivant présente la réalisation concrète du système.

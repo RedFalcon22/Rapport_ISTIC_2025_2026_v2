@@ -1,11 +1,9 @@
 \chapter{Conception et Mise en place}
+\markboth{Chapitre 3}{}
 
 \section*{Introduction}
 
-Le chapitre précédent a établi les choix technologiques retenus pour chaque module :
-l'architecture RAG avec ChromaDB et Mistral-7B pour les modules conversationnels,
-le LLM conversationnel avec profil persistant pour l'assistant émotionnel,
-et l'ancrage juridique combiné aux règles heuristiques pour le classificateur.
+Le chapitre précédent a établi les choix technologiques retenus pour chaque module,
 Ce chapitre couvre deux phases étroitement liées : la conception du système et la mise en place des modèles d'intelligence artificielle.
 La première partie présente l'architecture commune aux quatre modules et la conception spécifique de chacun d'eux, illustrée par des diagrammes UML (Unified Modeling Language — langage de modélisation unifié).
 La seconde partie décrit la préparation des données et la construction des bases de connaissances pour les modules RAG, ainsi que le cycle complet d'apprentissage du classificateur de harcèlement.
@@ -13,56 +11,14 @@ La seconde partie décrit la préparation des données et la construction des ba
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Architecture commune du système}
 
-\subsection{Vue d'ensemble}
-
-Les quatre modules du système partagent des composants technologiques communs.
-Cette conception modulaire facilite la maintenance et l'évolution du système.
-
-\subsection{Composants partagés}
-
-Les composants suivants sont utilisés par plusieurs modules :
-
-\begin{itemize}
-    \item \textbf{Serveur LLM partagé (kaisens.fr) :} Point central de génération de réponses
-          en langage naturel pour les quatre modules.
-          Il s'appuie sur vLLM avec le modèle Mistral-7B-Instruct v0.3 sur GPU NVIDIA A100,
-          exposé via une interface compatible OpenAI (\texttt{POST /v1/chat/completions}).
-    \item \textbf{Base documentaire vectorielle (ChromaDB) :} Stocke les extraits de documents
-          indexés pour la recherche par similarité sémantique.
-          Chaque module possède sa propre collection : le module Noa assistant et l'assistant technique
-          embarquent ChromaDB directement dans leur conteneur API,
-          tandis que le Classificateur l'instancie comme service Docker dédié.
-    \item \textbf{Gestionnaire de mémoire (Redis) :} Assure la persistance des sessions
-          conversationnelles, le cache sémantique cosinus et la limitation de débit \cite{redis}.
-    \item \textbf{Orchestrateur LangChain :} Coordonne les étapes de traitement
-          pour les modules conversationnels (Noa assistant, assistant technique, assistant émotionnel) :
-          classification d'intention, recherche documentaire, appel LLM
-          et gestion de session \cite{langchain}.
-    \item \textbf{Conteneurisation Docker :} Chaque module est déployé dans sa propre stack
-          Docker Compose isolée, garantissant la reproductibilité, la portabilité
-          et l'indépendance entre modules \cite{docker}.
-\end{itemize}
-
-\subsection{Architecture de déploiement}
-
-Chaque module est déployé de manière indépendante dans sa propre stack Docker Compose.
-Cette isolation garantit qu'un module peut être mis à jour, redémarré ou remplacé
-sans affecter les autres.
-La Figure~\ref{fig:deploiement} présente la vue d'ensemble du déploiement avec les quatre stacks et le LLM partagé.
-
-\begin{figure}[H]
-\centering
-\hspace*{-0.1\textwidth}\includegraphics[width=1.2\textwidth]{diagramme/13_deploiement_uml.png}
-\caption{Vue d'ensemble du déploiement — 4 stacks indépendantes de la plateforme NetEthic AI}
-\label{fig:deploiement}
-\end{figure}
-
-\subsection{Diagramme de déploiement — modules conversationnels}
+\subsection{Architecture et diagramme de déploiement}
 
 Les trois modules conversationnels (Noa assistant, assistant technique et assistant émotionnel)
-partagent une infrastructure Docker Compose similaire : un conteneur backend FastAPI,
-un conteneur frontend, un conteneur Redis pour la gestion des sessions et de la mémoire,
-et un accès commun au serveur LLM Mistral-7B sur kaisens.fr.
+partagent une architecture commune basée sur Docker Compose et un serveur LLM Mistral-7B
+hébergé sur kaisens.fr. Chaque module est déployé dans sa propre stack indépendante,
+garantissant qu'il peut être mis à jour ou remplacé sans affecter les autres.
+Chaque stack comprend un conteneur backend FastAPI, un conteneur frontend, un conteneur Redis
+pour la gestion des sessions et un accès partagé au LLM.
 La Figure~\ref{fig:deploiement_modules_ia} présente ce déploiement unifié.
 
 \begin{figure}[H]
@@ -81,14 +37,13 @@ Malgré cette architecture commune, chaque module présente des spécificités d
         un automate de réservation (Booking FSM), un routeur d'intention et un cache FAQ LRU.
         ChromaDB est embarqué dans le conteneur API avec la collection \texttt{netethic\_kb}.
 
-  \item \textbf{assistant technique :} utilise LangChain avec un pipeline RAG de 10 étapes
-        (classification d'intention, réécriture, cache cosinus, recherche LIVE/PDF, génération).
+  \item \textbf{assistant technique :} utilise LangChain avec un pipeline RAG avec plusieurs étapes.
         ChromaDB est embarqué avec la collection \texttt{netethic\_support}.
         Redis stocke les sessions, le cache cosinus et les compteurs de rate-limit.
 
   \item \textbf{assistant émotionnel :} n'utilise \textbf{pas} ChromaDB — il ne s'appuie pas
         sur une base de connaissances RAG. La mémoire contextuelle est entièrement gérée par Redis
-        (TTL 30 jours, profil utilisateur persistant, historique, buffer, cache de classification).
+        (TTL, profil utilisateur persistant, historique, buffer, cache de classification).
         Le backend embarque deux appels LLM distincts à température nulle :
         un classifieur de sécurité (safe / injection / suicidal / violence)
         et un extracteur de profil utilisateur.
@@ -147,17 +102,6 @@ La Figure~\ref{fig:composants_noa} illustre l'organisation interne du module Noa
 \label{fig:composants_noa}
 \end{figure}
 
-\subsection{Diagramme de déploiement}
-
-La Figure~\ref{fig:deploiement_noa} présente la stack Docker Compose du module Noa avec ses conteneurs et leurs interconnexions.
-
-\begin{figure}[H]
-\centering
-\hspace*{-0.1\textwidth}\includegraphics[width=1.2\textwidth]{diagramme/14_deploiement_noa.png}
-\caption{Diagramme de déploiement — Assistant Noa (stack Docker Compose)}
-\label{fig:deploiement_noa}
-\end{figure}
-
 \subsection{Diagramme de séquences}
 
 La Figure~\ref{fig:seq_noa} illustre le déroulement d'une interaction typique avec Noa
@@ -196,8 +140,6 @@ conversationnels à états finis : prise de rendez-vous, signalement de dysfonct
 Les informations d'identité de l'utilisateur, déjà présentes en session, pré-remplissent
 les formulaires sans ressaisie.
 
-L'interface est développée en Streamlit pour un déploiement rapide côté interne.
-
 \subsection{Diagramme de composants}
 
 La Figure~\ref{fig:composants_support} illustre l'architecture interne de l'assistant technique et les interactions entre ses composants.
@@ -231,10 +173,12 @@ La Figure~\ref{fig:seq_support} détaille le pipeline RAG (étapes 11 à 20).
 \end{figure}
 
 La Figure~\ref{fig:seq_support_repli} illustre les flux de repli déclenchés
-lorsqu'aucun document pertinent n'est trouvé dans ChromaDB (\texttt{no\_results=true}).
-L'utilisateur dispose alors de deux options : prendre un rendez-vous ou signaler un bug.
-Dans les deux cas, LangChain génère automatiquement une description à partir
-de l'historique de conversation avant de soumettre la requête à l'API NetEthic.
+lorsqu'aucun document pertinent n'est trouvé dans la base de documents (\texttt{no\_results=true}).
+L'utilisateur dispose alors de trois options : prendre un rendez-vous (Option~A),
+signaler un bug (Option~B), ou accéder directement au portail de support en ligne (Option~C).
+Pour les options A et B, une description est générée automatiquement à partir
+de l'historique de conversation avant de soumettre la requête.
+L'option C est un lien direct vers le portail de support, sans aucun appel backend.
 
 \begin{figure}[H]
 \centering
@@ -247,7 +191,7 @@ de l'historique de conversation avant de soumettre la requête à l'API NetEthic
 
 La Figure~\ref{fig:activite_support} représente le flux de traitement complet
 d'un message par l'assistant technique, depuis la validation initiale
-jusqu'à la génération de la réponse, en incluant les chemins de repli.
+jusqu'à la génération de la réponse.
 
 \begin{figure}[H]
 \centering
@@ -261,32 +205,28 @@ jusqu'à la génération de la réponse, en incluant les chemins de repli.
 
 \subsection{Conception générale}
 
-L'assistant émotionnel est un assistant conversationnel dédié aux étudiants,
-accessible via une interface Streamlit.
-Il traite chaque message à travers un pipeline structuré reposant sur quatre mécanismes
+L'assistant émotionnel est un assistant conversationnel dédié aux étudiants, Il traite chaque message à travers un pipeline structuré reposant sur quatre mécanismes
 complémentaires.
 
 \textbf{Protection de l'échange.}
 Chaque message passe par deux vérifications avant tout traitement :
-une limitation du débit par fenêtre glissante Redis,
-puis une analyse par un classifieur LLM à température nulle.
-Les messages abusifs ou les tentatives de manipulation sont bloqués
-à cette étape sans interrompre la session.
+une limitation du débit par fenêtre glissante Redis
+et une analyse par un classifieur LLM pour détecter les contenus inappropriés ou dangereux.
+
 
 \textbf{Détection et réponse de crise.}
 Si le classifieur identifie un signal de crise (idéation suicidaire ou intention de violence),
-une réponse d'urgence est générée dans la langue de l'étudiant.
-Les numéros d'aide sont ajoutés de façon systématique — jamais laissés à la discrétion du LLM.
+une réponse d'urgence est générée pour l'étudiant avec les numéros d'aide.
 
 \textbf{Mémoire persistante.}
 Les informations partagées par l'étudiant (prénom, sources de stress, situation scolaire,
-réussites) sont extraites automatiquement et stockées dans Redis avec une durée de vie
-de trente jours. Ce profil enrichit le prompt système à chaque nouvelle session.
+réussites) sont extraites automatiquement et stockées dans Redis rt ce profil enrichit le prompt à chaque nouvelle session 
+pour améliorer le soutien émotionnel.
 
 \textbf{Génération empathique.}
 Pour les messages sûrs, l'assistant construit un prompt enrichi du profil mémorisé
 et de l'historique de conversation, puis génère une réponse adaptée à la langue
-et au contexte de l'étudiant, limitée à trois phrases.
+et au contexte de l'étudiant.
 
 \subsection{Diagramme de composants}
 
@@ -303,8 +243,7 @@ La Figure~\ref{fig:composants_emotionnel} illustre l'architecture en couches de 
 \subsection{Diagramme de séquences}
 
 La Figure~\ref{fig:seq_emotionnel_1} couvre les étapes 1 à 3 : validation de la session,
-contrôle du débit et analyse par le garde-fou, avec ses quatre branches
-(limite dépassée, contenu inapproprié, idéation suicidaire/violence, message sûr).
+contrôle du débit et analyse par le garde-fou.
 
 \begin{figure}[H]
 \centering
@@ -315,7 +254,7 @@ contrôle du débit et analyse par le garde-fou, avec ses quatre branches
 
 La Figure~\ref{fig:seq_emotionnel_2} détaille le chemin nominal (message sûr),
 des étapes 4 à 9 : chargement du profil étudiant, enrichissement du prompt,
-génération empathique par le LLM via LangChain, puis post-traitement et sauvegarde.
+génération empathique par le LLM via LangChain, post-traitement et sauvegarde.
 
 \begin{figure}[H]
 \centering
@@ -527,23 +466,21 @@ Base vectorielle            & ChromaDB \\
 \end{tabular}
 \end{table}
 
-\subsection{Modul'assistant technique — documentation interne}
+\subsection{l'assistant technique — documentation interne}
 
 \paragraph{Sources documentaires}\mbox{}\newline
 
 La base de connaissances de l'assistant technique est constituée à partir
-de la documentation technique interne fournie par Smart-Conseil.
+de la documentation interne fournie par Smart-Conseil.
 Elle couvre les onze catégories fonctionnelles de la plateforme Netethic~:
-gestion des utilisateurs, paramétrage, tableaux de bord, rapports, notifications,
-intégration, sécurité, conformité RGPD, support technique, administration
-et facturation.
+gestion des utilisateurs, Parametres, tableaux de bord, gestion des rapports, Calendrier,
+Podcast, accompagnement, Gestion des cas...
 
 \paragraph{Transformation et structuration}\mbox{}\newline
 
-Les documents fournis au format PDF ont été convertis au format Markdown.
-Chaque fichier Markdown a ensuite été structuré par catégorie fonctionnelle,
-en suivant le même processus d'enrichissement que pour la base de Noa~:
-clarification des sous-titres, complétion des informations manquantes
+Les documents fournis au format PDF ont été convertis au format Markdown
+et le même processus d'enrichissement que pour la base de Noa a été appliqué:
+Clarification des sous-titres, complétion des informations manquantes
 et suppression des éléments non informatifs.
 
 La collection ChromaDB de l'assistant technique est organisée en onze sous-collections,

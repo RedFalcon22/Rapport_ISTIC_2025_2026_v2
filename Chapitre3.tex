@@ -1,4 +1,5 @@
 \chapter{État de l'art et choix technologiques}
+\markboth{Chapitre 2}{}
 
 \section*{Introduction}
 
@@ -8,7 +9,7 @@ Ce chapitre présente une étude des approches existantes dans les domaines couv
 et justifie les choix technologiques retenus pour chacun des quatre modules.
 Il est organisé en six axes : les assistants conversationnels,
 la recherche documentaire intelligente, les modèles de génération de langage,
-le soutien émotionnel par intelligence artificielle,
+l'assistant émotionnel par intelligence artificielle,
 la détection automatique du harcèlement,
 et l'orchestration des pipelines conversationnels.
 Chaque axe se conclut par une justification du choix retenu.
@@ -70,11 +71,11 @@ Mise à jour facile & Non & Non & Non & Oui \\
 
 \subsection{Choix retenu}
 
-L'architecture RAG a été retenue pour les modules Noa et Support Assistant.
+L'architecture RAG a été retenue pour les modules Noa assistant et assistant technique.
 Elle combine la flexibilité d'un LLM avec la fiabilité d'une base documentaire maîtrisée,
 ce qui est indispensable dans un contexte où les réponses incorrectes
 peuvent avoir des conséquences sur des situations sensibles.
-Le module de soutien émotionnel, en revanche, ne dispose pas de base documentaire fixe :
+L'assistant émotionnel, en revanche, ne dispose pas de base documentaire fixe :
 il repose sur un LLM en mode conversationnel pur, dont le comportement
 est adapté à chaque échange selon le profil et l'état émotionnel de l'utilisateur.
 
@@ -173,11 +174,11 @@ ce qui élimine tout coût d'infrastructure supplémentaire et permet une intég
 immédiate sans mise en place d'un environnement GPU dédié.
 
 % ─────────────────────────────────────────────────────────────────────────────
-\section{Soutien émotionnel par intelligence artificielle}
+\section{assistant émotionnel par intelligence artificielle}
 
 \subsection{Approches existantes}
 
-Le soutien émotionnel automatisé vise à détecter les signaux de détresse
+L'assistant émotionnel automatisé vise à détecter les signaux de détresse
 dans les messages d'un utilisateur et à générer des réponses empathiques adaptées.
 Plusieurs approches ont été explorées dans la littérature et les applications commerciales.
 
@@ -210,12 +211,12 @@ de la situation propre à chaque élève.
 \subsection{Tableau comparatif}
 
 Le Tableau~\ref{tab:comparatif_emotionnel} compare ces approches
-selon les critères pertinents pour le module de soutien émotionnel.
+selon les critères pertinents pour l'assistant émotionnel.
 
 \vspace{6pt}
 \begin{table}[H]
 \centering
-\caption{Comparaison des approches pour le soutien émotionnel}
+\caption{Comparaison des approches pour l'assistant émotionnel}
 \label{tab:comparatif_emotionnel}
 \begin{tabular}{|l|c|c|c|c|}
 \hline
@@ -233,7 +234,7 @@ Détection de détresse & Manuelle & Partielle & Oui & Oui \\
 \subsection{Choix retenu}
 
 L'approche retenue est le \textbf{LLM conversationnel avec profil utilisateur persistant}.
-Contrairement aux modules Noa et Support Assistant,
+Contrairement aux modules Noa assistant et assistant technique,
 ce module n'a pas de base documentaire à consulter :
 les réponses doivent s'adapter à l'état émotionnel de l'utilisateur,
 pas à un corpus de documents.
@@ -308,7 +309,7 @@ détaillées dans le chapitre suivant.
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Orchestration des pipelines conversationnels}
 
-Les modules conversationnels du projet (Noa, Support Assistant, soutien émotionnel)
+Les modules conversationnels du projet (Noa assistant, assistant technique, assistant émotionnel)
 nécessitent une couche d'orchestration capable de chaîner plusieurs opérations :
 classification d'intention, recherche documentaire, appel au modèle de langage
 et gestion de la mémoire de session.
@@ -390,14 +391,14 @@ et leur justification principale.
 \hline
 \textbf{Brique} & \textbf{Solution retenue} & \textbf{Justification principale} \\
 \hline
-Architecture chatbot (Noa, Support) & RAG & Fiabilité, contrôle du périmètre \\
+Architecture chatbot (Noa assistant, assistant technique) & RAG & Fiabilité, contrôle du périmètre \\
 Modèle d'encodage & MiniLM-L12-v2 & Bilingue, léger, sans GPU \\
 Base documentaire & ChromaDB & Légère, locale, persistante \\
 Modèle de génération & Mistral-7B-Instruct & Français, open source, local \\
 Serveur d'inférence & vLLM & Requêtes simultanées \\
 Orchestration & LangChain & Chaînes de traitement modulaires \\
 Mémoire de session & Redis & Rapide, persistant \\
-Soutien émotionnel & LLM conversationnel & Flexibilité, empathie, pas de corpus \\
+assistant émotionnel & LLM conversationnel & Flexibilité, empathie, pas de corpus \\
 Profil utilisateur & Extraction LLM + Redis & Personnalisation multi-sessions \\
 Déploiement & Docker & Portabilité, isolation \\
 Classification texte & RAG juridique + repli & Ancrage légal, sans corpus étiqueté \\
@@ -424,7 +425,7 @@ justifiés dans ce chapitre.
 \hline
 \textbf{Couche} & \textbf{Technologie} & \textbf{Version} & \textbf{Rôle} \\
 \hline
-Backend Python  & Python               & 3.11             & Langage principal — modules Noa et Support Assistant \\
+Backend Python  & Python               & 3.11             & Langage principal — modules Noa assistant et assistant technique \\
 \hline
 Backend Python  & FastAPI \cite{fastapi} & $\geq$ 0.110   & Framework web — expose les interfaces de programmation REST \\
 \hline
@@ -444,9 +445,9 @@ Modèle LLM      & Mistral-7B-Instruct \cite{mistral2023} & —   & Modèle de g
 \hline
 Sessions / Cache & Redis \cite{redis}  & $\geq$ 5.0       & Historique conversationnel et mémoire des réponses \\
 \hline
-Interface Noa   & React + Vite         & 18 / 5           & Interface chatbot — site public \\
+Interface Noa assistant   & React + Vite         & 18 / 5           & Interface chatbot — site public \\
 \hline
-Interface Support & Streamlit          & $\geq$ 1.32.0    & Interface assistant support interne \\
+Interface assistant technique & Streamlit          & $\geq$ 1.32.0    & Interface assistant support interne \\
 \hline
 Déploiement     & Docker Compose \cite{docker} & —          & Conteneurisation et orchestration des services \\
 \hline
@@ -456,17 +457,7 @@ Déploiement     & Docker Compose \cite{docker} & —          & Conteneurisatio
 % ─────────────────────────────────────────────────────────────────────────────
 \section*{Conclusion}
 
-Ce chapitre a établi, pour chaque domaine technique couvert par le projet,
-un panorama des approches existantes et une justification des choix retenus.
-Six axes ont été étudiés : les assistants conversationnels,
-la recherche documentaire intelligente, les modèles de génération de langage,
-le soutien émotionnel par intelligence artificielle,
-la détection automatique du harcèlement,
-et l'orchestration des pipelines conversationnels.
-L'architecture RAG, le modèle Mistral-7B déjà hébergé sur kaisens.fr,
-ChromaDB, LangChain, le LLM conversationnel avec profil utilisateur persistant,
-et l'ancrage juridique forment un ensemble cohérent, adapté aux contraintes du projet :
-confidentialité des données, qualité en français,
-absence de corpus étiqueté, déploiement autonome et maîtrise des coûts d'infrastructure.
-
-Le chapitre suivant présente la conception du système à partir de ces choix.
+Ce chapitre a présenté l'état de l'art et justifié les choix technologiques
+retenus pour chaque module. L'ensemble des solutions sélectionnées forme une architecture
+cohérente, adaptée aux contraintes de confidentialité et de déploiement du projet.
+Le chapitre suivant présente la conception du système.

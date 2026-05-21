@@ -1,4 +1,5 @@
 ﻿\chapter{Réalisation et tests}
+\markboth{Chapitre 4}{}
 
 % ─────────────────────────────────────────────────────────────────────────────
 \section*{Introduction}
@@ -119,7 +120,7 @@ Le motif du rendez-vous est rempli automatiquement avec un résumé contenant le
 sans que l'utilisateur ressaisisse ses informations.
 
 \begin{figure}[H]
-\hspace*{-0.1\textwidth}%
+\hspace*{-0.15\textwidth}%
 \begin{minipage}{1.2\textwidth}
 \begin{subfigure}[t]{0.57\textwidth}
   \centering
@@ -163,15 +164,16 @@ s'affiche dans la conversation, la description du problème est générée autom
 à partir de la conversation et reste modifiable avant l'envoi.
 
 \begin{figure}[H]
-\centering
-\begin{subfigure}[t]{0.48\textwidth}
+\hspace*{-0.15\textwidth}%
+\begin{minipage}{1.2\textwidth}
+\begin{subfigure}[t]{0.57\textwidth}
   \centering
   \includegraphics[width=\textwidth]{interface-png/report-bug-interface3.png}
   \caption{Étape 1/3 — date du problème}
   \label{fig:support_bug_date}
 \end{subfigure}
 \hfill
-\begin{subfigure}[t]{0.48\textwidth}
+\begin{subfigure}[t]{0.57\textwidth}
   \centering
   \includegraphics[width=\textwidth]{interface-png/report-bug-interface.png}
   \caption{Étape 2/3 — description auto-générée}
@@ -179,7 +181,7 @@ s'affiche dans la conversation, la description du problème est générée autom
 \end{subfigure}
 
 \vspace{8pt}
-\begin{subfigure}[t]{0.65\textwidth}
+\begin{subfigure}[t]{0.57\textwidth}
   \centering
   \includegraphics[width=\textwidth]{interface-png/report-bug-interface2.png}
   \caption{Étape 3/3 — confirmation du signalement}
@@ -187,6 +189,7 @@ s'affiche dans la conversation, la description du problème est générée autom
 \end{subfigure}
 \caption{assistant technique — formulaire guidé de signalement de dysfonctionnement}
 \label{fig:support_bug}
+\end{minipage}
 \end{figure}
 
 \subsection{Tests}
@@ -595,9 +598,8 @@ et leur enjeu spécifique dans le contexte de l'assistant technique NetEthic.
 \textbf{Métrique} & \textbf{Ce qu'elle mesure} & \textbf{Enjeu NetEthic} \\
 \hline
 \emph{Faithfulness} &
-  Part des affirmations de la réponse traçables dans les chunks récupérés.
-  \newline
-  $\displaystyle\frac{\text{affirmations fondées}}{\text{total affirmations}}$ &
+  Part des affirmations de la réponse traçables dans les chunks récupérés :
+  $\dfrac{\text{affirmations fondées}}{\text{total affirmations}}$ &
   Éviter qu'un opérateur reçoive une information inventée sur un module qu'il ne connaît pas. \\
 \hline
 \emph{Answer Relevancy} &
