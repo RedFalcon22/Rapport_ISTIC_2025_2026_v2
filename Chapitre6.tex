@@ -12,7 +12,7 @@ l'évaluation de la qualité des réponses avec le framework RAGAS,
 les optimisations de performance et le déploiement.
 
 % ─────────────────────────────────────────────────────────────────────────────
-\section{Module 1 — Noa : Assistant virtuel du site public}
+\section{Module 1 — assistant Noa}
 
 \subsection{Interface utilisateur}
 
@@ -43,7 +43,7 @@ Le Tableau~\ref{tab:tests_noa} présente les résultats obtenus.
 \vspace{6pt}
 \begin{table}[H]
 \centering
-\caption{Résultats des tests automatisés — Module Noa}
+\caption{Résultats des tests automatisés — assistant Noa}
 \label{tab:tests_noa}
 \begin{tabular}{|l|c|c|}
 \hline
@@ -67,7 +67,7 @@ Le Tableau~\ref{tab:perf_noa} présente les temps de réponse mesurés pour chaq
 \vspace{6pt}
 \begin{table}[H]
 \centering
-\caption{Temps de réponse moyens — Module Noa}
+\caption{Temps de réponse moyens — assistant Noa}
 \label{tab:perf_noa}
 \begin{tabular}{|l|c|c|}
 \hline
@@ -82,22 +82,22 @@ Question de suivi & $\approx$ 2,1\,s & $<$ 5\,s \\
 \end{table}
 
 % ─────────────────────────────────────────────────────────────────────────────
-\section{Module 2 — NetEthic Support Assistant}
+\section{Module 2 — assistant technique}
 
 \subsection{Interface utilisateur}
 
-La Figure~\ref{fig:support_interface} montre l'interface principale du Support Assistant.
+La Figure~\ref{fig:support_interface} montre l'interface principale du assistant technique.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.85\textwidth]{interface-png/acceuil-support-chatbot.png}
-\caption{Interface principale du NetEthic Support Assistant}
+\caption{Interface principale du assistant technique}
 \label{fig:support_interface}
 \end{figure}
 
 \subsection{Interface contact support}
 
-Lorsque le Support Assistant ne trouve pas de réponse dans la documentation,
+Lorsque le assistant technique ne trouve pas de réponse dans la documentation,
 il propose automatiquement trois actions à l'utilisateur : planifier un rendez-vous,
 signaler un dysfonctionnement, ou accéder directement au portail de support en ligne.
 La Figure~\ref{fig:support_contact} illustre cet écran d'actions.
@@ -105,7 +105,7 @@ La Figure~\ref{fig:support_contact} illustre cet écran d'actions.
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.85\textwidth]{interface-png/contact-support-interface.png}
-\caption{Support Assistant — écran \og Contacter le support \fg{} avec les trois actions disponibles}
+\caption{assistant technique — écran \og Contacter le support \fg{} avec les trois actions disponibles}
 \label{fig:support_contact}
 \end{figure}
 
@@ -150,7 +150,7 @@ avec le résumé complet du rendez-vous avant envoi.
   \caption{Étape 4/4 — confirmation et résumé}
   \label{fig:support_rdv_confirm}
 \end{subfigure}
-\caption{Support Assistant — formulaire guidé de prise de rendez-vous (4 étapes)}
+\caption{assistant technique — formulaire guidé de prise de rendez-vous (4 étapes)}
 \label{fig:support_rdv}
 \end{figure}
 
@@ -187,7 +187,7 @@ avant transmission à l'équipe technique.
   \caption{Étape 3/3 — confirmation du signalement}
   \label{fig:support_bug_confirm}
 \end{subfigure}
-\caption{Support Assistant — formulaire guidé de signalement de dysfonctionnement}
+\caption{assistant technique — formulaire guidé de signalement de dysfonctionnement}
 \label{fig:support_bug}
 \end{figure}
 
@@ -200,7 +200,7 @@ Le Tableau~\ref{tab:tests_support} présente les résultats par groupe fonctionn
 \vspace{6pt}
 \begin{table}[H]
 \centering
-\caption{Résultats des tests automatisés — Support Assistant (35 tests, exécution du 2026-05-17)}
+\caption{Résultats des tests automatisés — assistant technique (35 tests, exécution du 2026-05-17)}
 \label{tab:tests_support}
 \begin{tabular}{|l|c|c|}
 \hline
@@ -231,7 +231,7 @@ contre le serveur LLM kaisens.fr.
 \vspace{6pt}
 \begin{table}[H]
 \centering
-\caption{Benchmark de performance — Support Assistant (mesures réelles)}
+\caption{Benchmark de performance — assistant technique (mesures réelles)}
 \label{tab:perf_support}
 \begin{tabular}{|l|c|c|c|}
 \hline
@@ -249,9 +249,9 @@ Réponse depuis le cache Redis & $\approx$ 0{,}98\,s & $<$ 1\,s & Réussi \\
 
 
 % ─────────────────────────────────────────────────────────────────────────────
-\section{Module 3 — Module de soutien émotionnel}
+\section{Module 3 — assistant émotionnel}
 
-Le module de soutien émotionnel est intégré au Support Assistant et s'active automatiquement
+Le assistant émotionnel est intégré au assistant technique et s'active automatiquement
 lorsqu'un signal de détresse est détecté dans le message de l'utilisateur,
 sans aucune action manuelle de la part de l'opérateur.
 Chaque déclenchement est journalisé avec le type de signal détecté et l'horodatage,
@@ -259,14 +259,14 @@ sans stocker le contenu du message original, afin de respecter la confidentialit
 
 \subsection{Interface utilisateur}
 
-La Figure~\ref{fig:emotional_accueil} présente l'interface du module de soutien émotionnel.
+La Figure~\ref{fig:emotional_accueil} présente l'interface du assistant émotionnel.
 L'utilisateur choisit sa langue (français ou anglais) avant d'entamer la conversation
 via la zone de saisie \og Partage ce qui te pèse\ldots \fg{}.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.85\textwidth]{interface-png/emotionelle-interface-utilisateur.png}
-\caption{Module de soutien émotionnel — écran d'accueil avec sélection de la langue}
+\caption{assistant émotionnel — écran d'accueil avec sélection de la langue}
 \label{fig:emotional_accueil}
 \end{figure}
 
@@ -278,7 +278,7 @@ sans escalade vers les ressources d'urgence.
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.85\textwidth]{interface-png/empathie-emotionelle-interface.png}
-\caption{Module de soutien émotionnel — réponse empathique face à une tristesse modérée}
+\caption{assistant émotionnel — réponse empathique face à une tristesse modérée}
 \label{fig:emotional_empathie}
 \end{figure}
 
@@ -291,14 +291,14 @@ SAMU~(112), contre les cyberviolences~(0800~737~800) et violences femmes info~(3
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.85\textwidth]{interface-png/emotionelle-crise-interface.png}
-\caption{Module de soutien émotionnel — escalade automatique vers les numéros d'urgence lors d'une crise}
+\caption{assistant émotionnel — escalade automatique vers les numéros d'urgence lors d'une crise}
 \label{fig:emotional_crise}
 \end{figure}
 
 \subsection{Tests}
 
 Une suite de 25~tests automatisés couvre l'ensemble des fonctionnalités exposées par l'API
-du module de soutien émotionnel.
+du assistant émotionnel.
 Elle est exécutée via \texttt{pytest} avec \texttt{TestClient} en mode contexte,
 ce qui garantit l'exécution du cycle de vie FastAPI avant chaque test.
 Le Tableau~\ref{tab:tests_emotional} présente les résultats par groupe fonctionnel.
@@ -306,7 +306,7 @@ Le Tableau~\ref{tab:tests_emotional} présente les résultats par groupe fonctio
 \vspace{6pt}
 \begin{table}[H]
 \centering
-\caption{Résultats des tests automatisés — Module de soutien émotionnel (25~tests)}
+\caption{Résultats des tests automatisés — assistant émotionnel (25~tests)}
 \label{tab:tests_emotional}
 \begin{tabular}{|l|c|c|}
 \hline
@@ -328,7 +328,7 @@ Santé système et limitation du débit            & 3 & 100\,\% \\
 Les 25~tests ont été exécutés avec succès, couvrant notamment les mesures OWASP (LLM01, LLM02, LLM07, LLM09, LLM10) et la détection de crise.
 
 % ─────────────────────────────────────────────────────────────────────────────
-\section{Module 4 — Classificateur de harcèlement}
+\section{Module 4 — classificateur de harcèlement}
 
 Le classificateur de harcèlement est un système de classification multi-labels
 conçu pour analyser automatiquement des textes en français et détecter
@@ -593,8 +593,8 @@ LLM10 & Vol de modèle
 En complément, les communications entre modules et serveur LLM sont chiffrées via HTTPS,
 les sessions sont identifiées par un identifiant anonyme généré côté serveur,
 et les durées de vie des sessions sont de 30~minutes pour Noa et 24~heures
-pour le Support Assistant.
-Le module de soutien émotionnel présente deux particularités : le risque LLM08 est
+pour le assistant technique.
+Le assistant émotionnel présente deux particularités : le risque LLM08 est
 inapplicable (architecture non-RAG, sans base vectorielle), et le risque LLM09
 est traité par une escalade automatique vers les ressources d'urgence
 (numéros 112, 0800~737~800, 3919) lorsqu'une idéation suicidaire est détectée.
@@ -668,7 +668,7 @@ accompagnés de la réserve nécessaire concernant leur interprétation.
 \vspace{6pt}
 \begin{table}[H]
 \centering
-\caption{Scores RAGAS — Support Assistant (évaluation partielle, 10~questions)}
+\caption{Scores RAGAS — assistant technique (évaluation partielle, 10~questions)}
 \label{tab:ragas_results}
 \begin{tabular}{|l|c|p{6cm}|}
 \hline
@@ -692,10 +692,10 @@ mais une campagne d'évaluation complète sur le corpus de 50~questions
 avec une clé API Groq disposant d'un quota suffisant est nécessaire
 pour obtenir des métriques de fidélité et de précision du contexte exploitables.
 
-\subsection{Évaluation de la qualité — Module de soutien émotionnel}
+\subsection{Évaluation de la qualité — assistant émotionnel}
 \label{subsec:eval_emotional}
 
-Le module de soutien émotionnel n'utilise pas d'architecture RAG~;
+Le assistant émotionnel n'utilise pas d'architecture RAG~;
 le framework RAGAS n'est donc pas applicable.
 Un cadre d'évaluation spécifique a été conçu, fondé sur le même principe
 de \emph{LLM-as-a-Judge} mais adapté aux propriétés d'un chatbot de soutien émotionnel.
@@ -733,7 +733,7 @@ Le Tableau~\ref{tab:eval_emotional} présente les résultats obtenus.
 \vspace{6pt}
 \begin{table}[H]
 \centering
-\caption{Résultats de l'évaluation LLM-as-a-Judge — Module de soutien émotionnel (10~scénarios)}
+\caption{Résultats de l'évaluation LLM-as-a-Judge — assistant émotionnel (10~scénarios)}
 \label{tab:eval_emotional}
 \begin{tabular}{|l|c|c|c|}
 \hline
@@ -774,7 +774,7 @@ Le déploiement s'effectue en trois étapes :
 
 Les services sont accessibles après quelques secondes d'initialisation.
 Le module Noa (interface React) est accessible via le navigateur,
-et le Support Assistant (Streamlit) via son port dédié.
+et le assistant technique (Streamlit) via son port dédié.
 
 % ─────────────────────────────────────────────────────────────────────────────
 \section*{Conclusion}

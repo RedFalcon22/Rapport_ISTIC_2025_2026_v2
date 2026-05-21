@@ -1,4 +1,4 @@
-@startuml sequence_emotionnel_1
+﻿@startuml sequence_emotionnel_1
 !theme plain
 skinparam sequenceArrowColor #2C6EA0
 skinparam sequenceLifeLineBorderColor #2C6EA0

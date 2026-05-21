@@ -70,11 +70,11 @@ Mise à jour facile & Non & Non & Non & Oui \\
 
 \subsection{Choix retenu}
 
-L'architecture RAG a été retenue pour les modules Noa et Support Assistant.
+L'architecture RAG a été retenue pour les modules Noa et assistant technique.
 Elle combine la flexibilité d'un LLM avec la fiabilité d'une base documentaire maîtrisée,
 ce qui est indispensable dans un contexte où les réponses incorrectes
 peuvent avoir des conséquences sur des situations sensibles.
-Le module de soutien émotionnel, en revanche, ne dispose pas de base documentaire fixe :
+Le assistant émotionnel, en revanche, ne dispose pas de base documentaire fixe :
 il repose sur un LLM en mode conversationnel pur, dont le comportement
 est adapté à chaque échange selon le profil et l'état émotionnel de l'utilisateur.
 
@@ -210,7 +210,7 @@ de la situation propre à chaque élève.
 \subsection{Tableau comparatif}
 
 Le Tableau~\ref{tab:comparatif_emotionnel} compare ces approches
-selon les critères pertinents pour le module de soutien émotionnel.
+selon les critères pertinents pour le assistant émotionnel.
 
 \vspace{6pt}
 \begin{table}[H]
@@ -233,7 +233,7 @@ Détection de détresse & Manuelle & Partielle & Oui & Oui \\
 \subsection{Choix retenu}
 
 L'approche retenue est le \textbf{LLM conversationnel avec profil utilisateur persistant}.
-Contrairement aux modules Noa et Support Assistant,
+Contrairement aux modules Noa et assistant technique,
 ce module n'a pas de base documentaire à consulter :
 les réponses doivent s'adapter à l'état émotionnel de l'utilisateur,
 pas à un corpus de documents.
@@ -308,7 +308,7 @@ détaillées dans le chapitre suivant.
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Orchestration des pipelines conversationnels}
 
-Les modules conversationnels du projet (Noa, Support Assistant, soutien émotionnel)
+Les modules conversationnels du projet (Noa, assistant technique, soutien émotionnel)
 nécessitent une couche d'orchestration capable de chaîner plusieurs opérations :
 classification d'intention, recherche documentaire, appel au modèle de langage
 et gestion de la mémoire de session.
@@ -424,7 +424,7 @@ justifiés dans ce chapitre.
 \hline
 \textbf{Couche} & \textbf{Technologie} & \textbf{Version} & \textbf{Rôle} \\
 \hline
-Backend Python  & Python               & 3.11             & Langage principal — modules Noa et Support Assistant \\
+Backend Python  & Python               & 3.11             & Langage principal — modules Noa et assistant technique \\
 \hline
 Backend Python  & FastAPI \cite{fastapi} & $\geq$ 0.110   & Framework web — expose les interfaces de programmation REST \\
 \hline

@@ -7,7 +7,7 @@ Ce chapitre décrit la phase de préparation des données et de mise en place
 des modèles d'intelligence artificielle pour chacun des quatre modules du système.
 
 Pour les modules conversationnels fondés sur une architecture RAG —
-Noa et le Support Assistant — cette phase consiste en la construction
+Noa et le assistant technique — cette phase consiste en la construction
 et l'enrichissement des bases de connaissances documentaires exploitées
 lors de la recherche par similarité sémantique.
 
@@ -15,21 +15,21 @@ Pour le classificateur de harcèlement, elle couvre le cycle complet
 d'apprentissage automatique : collecte des données, nettoyage et prétraitement,
 augmentation, labeling, entraînement et évaluation comparative des stratégies.
 
-Le module de soutien émotionnel, dont l'architecture repose exclusivement sur
+Le assistant émotionnel, dont l'architecture repose exclusivement sur
 l'ingénierie de prompt sans base documentaire ni données d'entraînement,
 n'est pas concerné par cette phase.
 
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Préparation des bases de connaissances RAG}
 
-Les modules Noa et Support Assistant reposent sur une architecture
+Les modules Noa et assistant technique reposent sur une architecture
 \textit{Retrieval-Augmented Generation} (RAG) dont la qualité des réponses
 dépend directement de la qualité et de la structure des documents indexés.
 La phase de préparation consiste à transformer les sources documentaires brutes
 en fichiers Markdown structurés et enrichis, exploitables par la base
 vectorielle ChromaDB.
 
-\subsection{Module Noa — sources documentaires publiques}
+\subsection{assistant Noa — sources documentaires publiques}
 
 \paragraph{Extraction et conversion}\mbox{}\newline
 
@@ -71,7 +71,7 @@ constituée pour Noa.
 \vspace{6pt}
 \begin{table}[H]
 \centering
-\caption{Statistiques de la base de connaissances — Module Noa}
+\caption{Statistiques de la base de connaissances — assistant Noa}
 \label{tab:kb_noa}
 \begin{tabular}{|l|c|}
 \hline
@@ -90,11 +90,11 @@ Base vectorielle            & ChromaDB \\
 \end{tabular}
 \end{table}
 
-\subsection{Module Support Assistant — documentation interne}
+\subsection{Module assistant technique — documentation interne}
 
 \paragraph{Sources documentaires}\mbox{}\newline
 
-La base de connaissances du Support Assistant est constituée à partir
+La base de connaissances du assistant technique est constituée à partir
 de la documentation technique interne fournie par Smart-Conseil.
 Elle couvre les onze catégories fonctionnelles de la plateforme Netethic~:
 gestion des utilisateurs, paramétrage, tableaux de bord, rapports, notifications,
@@ -109,7 +109,7 @@ en suivant le même processus d'enrichissement que pour la base de Noa~:
 clarification des sous-titres, complétion des informations manquantes
 et suppression des éléments non informatifs.
 
-La collection ChromaDB du Support Assistant est organisée en onze sous-collections,
+La collection ChromaDB du assistant technique est organisée en onze sous-collections,
 une par catégorie fonctionnelle.
 Cette organisation permet un filtrage précis lors de la recherche vectorielle~:
 lorsqu'une catégorie est sélectionnée par l'utilisateur, la recherche
@@ -335,7 +335,7 @@ des modèles d'intelligence artificielle pour les quatre modules du système.
 Pour les modules conversationnels, la qualité des réponses repose directement
 sur la qualité des bases de connaissances~: les vingt-et-une pages publiques
 de Netethic ont été transformées en 177~segments structurés selon une stratégie
-parent-enfant pour Noa, et les documents du Support Assistant ont été organisés
+parent-enfant pour Noa, et les documents du assistant technique ont été organisés
 en onze collections correspondant aux catégories fonctionnelles de la plateforme.
 Dans les deux cas, un enrichissement manuel des fichiers Markdown — clarification
 des sous-titres et complétion des informations manquantes — a permis d'améliorer

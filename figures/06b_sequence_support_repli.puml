@@ -1,4 +1,4 @@
-@startuml sequence_support_repli
+﻿@startuml sequence_support_repli
 !theme plain
 skinparam sequenceArrowColor #2C6EA0
 skinparam sequenceLifeLineBorderColor #2C6EA0

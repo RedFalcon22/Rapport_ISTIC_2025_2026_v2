@@ -76,7 +76,7 @@ Ces modules répondent directement aux besoins identifiés :
           Sa disponibilité continue élimine la dépendance aux horaires du personnel et garantit un accueil permanent des visiteurs.
     \item \textbf{Assistant de support interne :} Un assistant destiné au personnel des établissements utilisant Netethic.
           Il répond aux questions sur les fonctionnalités de la plateforme, gère les demandes de rendez-vous et recueille les signalements de dysfonctionnements techniques.
-    \item \textbf{Module de soutien émotionnel :} Un système qui détecte les signaux de détresse dans les messages des utilisateurs et génère des réponses empathiques adaptées, en orientant l'utilisateur vers les ressources disponibles sur la plateforme.
+    \item \textbf{assistant émotionnel :} Un système qui détecte les signaux de détresse dans les messages des utilisateurs et génère des réponses empathiques adaptées, en orientant l'utilisateur vers les ressources disponibles sur la plateforme.
     \item \textbf{Classificateur de harcèlement :} Un système d'analyse automatique des textes qui identifie les types de comportements nécessitant une attention particulière, en s'appuyant sur les références juridiques françaises en vigueur.
 \end{enumerate}
 
@@ -117,7 +117,7 @@ Les besoins fonctionnels décrivent l'ensemble des fonctionnalités que le syst�
 offrir à ses utilisateurs. Ils sont organisés par module.
 
 % ── Module 1 : Noa ────────────────────────────────────────────────────────────
-\subsection{Module 1 — Noa : Assistant virtuel du site public}
+\subsection{Module 1 — assistant Noa}
 
 Noa est l'assistant virtuel intégré au site public de Netethic.
 Il aide les visiteurs à s'informer sur la plateforme et à planifier une démonstration.
@@ -164,16 +164,16 @@ BF-N12 & Administrer le système
 \end{tabular}
 \end{table}
 
-% ── Module 2 : NetEthic Support Assistant ─────────────────────────────────────
-\subsection{Module 2 — NetEthic Support Assistant : Support technique interne}
+% ── Module 2 : assistant technique ─────────────────────────────────────
+\subsection{Module 2 — assistant technique : Support technique interne}
 
-Le \textit{NetEthic Support Assistant} est un assistant destiné aux utilisateurs internes de la plateforme.
+Le \textit{assistant technique} est un assistant destiné aux utilisateurs internes de la plateforme.
 Il aide le personnel des établissements à utiliser les fonctionnalités de Netethic.
 Le Tableau~\ref{tab:bf_nesa} décrit ses besoins fonctionnels.
 
 \vspace{6pt}
 \begin{table}[H]
-\caption{Besoins fonctionnels — NetEthic Support Assistant (support interne)}
+\caption{Besoins fonctionnels — assistant technique (support interne)}
 \label{tab:bf_nesa}
 \centering
 \small
@@ -216,7 +216,7 @@ BF-S13 & Détection automatique de la langue
 \end{table}
 
 % ── Module 3 : Soutien émotionnel ─────────────────────────────────────────────
-\subsection{Module 3 — Module de soutien émotionnel}
+\subsection{Module 3 — assistant émotionnel}
 
 Ce module accompagne les étudiants en difficulté à travers une conversation bienveillante et continue.
 Il détecte les signaux de mal-être, y répond avec empathie et protège la confidentialité des échanges.
@@ -224,7 +224,7 @@ Le Tableau~\ref{tab:bf_emo} décrit ses besoins fonctionnels.
 
 \vspace{6pt}
 \begin{table}[H]
-\caption{Besoins fonctionnels — Module de soutien émotionnel}
+\caption{Besoins fonctionnels — assistant émotionnel}
 \label{tab:bf_emo}
 \centering
 \small
@@ -261,7 +261,7 @@ BF-E08 & Converser dans la langue de l'étudiant
 \end{table}
 
 % ── Module 4 : Classificateur de harcèlement ──────────────────────────────────
-\subsection{Module 4 — Classificateur de harcèlement}
+\subsection{Module 4 — classificateur de harcèlement}
 
 Ce module analyse automatiquement les textes soumis à la plateforme.
 Il identifie les comportements nécessitant une attention particulière et s'appuie sur le droit français.
@@ -344,7 +344,7 @@ BNF-06 & Conformité RGPD
         & Aucune donnée personnelle n'est conservée au-delà de la session ; les données de réservation sont stockées localement sans partage avec des tiers. \\
 \hline
 BNF-07 & Multilingue
-        & L'interface et les réponses sont disponibles en français, en anglais et en arabe, avec détection automatique de la langue. Le module de soutien émotionnel étend ce support au darija tunisien et au code-switching arabo-français. \\
+        & L'interface et les réponses sont disponibles en français, en anglais et en arabe, avec détection automatique de la langue. Le assistant émotionnel étend ce support au darija tunisien et au code-switching arabo-français. \\
 \hline
 BNF-08 & Robustesse
         & Chaque composant intègre une gestion explicite des erreurs avec des messages clairs pour l'utilisateur et des traces journalisées côté serveur. \\
@@ -370,7 +370,7 @@ ou en anglais, et réserver une démonstration.
 
 L'utilisateur interne est un membre du personnel d'un établissement disposant
 d'un accès authentifié à la plateforme Netethic.
-Il interagit avec le \textit{NetEthic Support Assistant} pour obtenir de l'aide sur
+Il interagit avec le \textit{assistant technique} pour obtenir de l'aide sur
 les fonctionnalités de la plateforme, déclarer un incident technique ou planifier
 un rendez-vous.
 
@@ -380,16 +380,16 @@ L'administrateur est le responsable technique du système.
 Il surveille l'état des caches, consulte les statistiques d'usage, gère les sessions actives
 et accède aux rendez-vous collectés et aux signalements reçus.
 
-\subsection{Noa et NetEthic Support Assistant (stéréotype «Actor»)}
+\subsection{Noa et assistant technique (stéréotype «Actor»)}
 
-Noa et le \textit{NetEthic Support Assistant} sont les deux assistants virtuels du système.
+Noa et le \textit{assistant technique} sont les deux assistants virtuels du système.
 Conformément aux consignes de l'ISTIC pour les projets intégrant un module d'IA générative,
 ils sont représentés dans le diagramme de cas d'utilisation avec le stéréotype \textit{«Actor»}.
 Chacun orchestre de manière autonome son pipeline de traitement.
 
-\subsection{Module de soutien émotionnel (stéréotype «Actor»)}
+\subsection{assistant émotionnel (stéréotype «Actor»)}
 
-Le module de soutien émotionnel est un composant intelligent de la plateforme Netethic.
+Le assistant émotionnel est un composant intelligent de la plateforme Netethic.
 Il détecte les signaux de détresse dans les messages des utilisateurs, génère des réponses
 empathiques et déclenche les alertes en cas de crise.
 Il est représenté comme un acteur avec le stéréotype \textit{«Actor»} car il orchestre
@@ -413,7 +413,7 @@ Le serveur LLM est un service d'inférence externe hébergé sur kaisens.fr, exp
 \section{Diagramme de cas d'utilisation}
 
 Le diagramme de cas d'utilisation modélise les interactions entre les acteurs et les fonctionnalités du système.
-La Figure~\ref{fig:use_case} présente le système global : le visiteur interagit avec Noa, l'utilisateur interne avec le \textit{NetEthic Support Assistant} et le module de soutien émotionnel, tandis que l'administrateur supervise l'ensemble et que le serveur LLM externe alimente tous les modules.
+La Figure~\ref{fig:use_case} présente le système global : le visiteur interagit avec Noa, l'utilisateur interne avec le \textit{assistant technique} et le assistant émotionnel, tandis que l'administrateur supervise l'ensemble et que le serveur LLM externe alimente tous les modules.
 
 \begin{figure}[H]
 \centering
@@ -448,7 +448,7 @@ CU-02 & Réserver une démonstration
 CU-03 & Poser une question (support interne)
        & Utilisateur interne
        & L'utilisateur sélectionne une catégorie parmi les 11~modules, puis pose sa question.
-         Le Support Assistant retourne une réponse ancrée dans la documentation. \\
+         Le assistant technique retourne une réponse ancrée dans la documentation. \\
 \hline
 CU-03b & Consulter les suggestions de questions
         & Utilisateur interne
