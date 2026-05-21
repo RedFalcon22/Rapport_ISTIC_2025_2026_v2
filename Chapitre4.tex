@@ -97,12 +97,23 @@ Malgré cette architecture commune, chaque module présente des spécificités d
 Le classificateur de harcèlement repose sur une architecture distincte (Scala/Spark, ChromaDB en service dédié)
 décrite dans sa section de conception (voir Section~\ref{sec:module4_deploiement}).
 
+\subsection{Procédure de déploiement}
+
+Le déploiement de chaque module s'effectue en trois étapes :
+\begin{enumerate}
+    \item Configurer les variables d'environnement dans le fichier \texttt{.env} du module.
+    \item Construire les images Docker : \texttt{docker compose build}.
+    \item Lancer l'ensemble des services : \texttt{docker compose up -d}.
+\end{enumerate}
+
+Les services sont accessibles après quelques secondes d'initialisation \cite{docker}.
+
 % ─────────────────────────────────────────────────────────────────────────────
-\section{Module 1 — Noa assistant : Assistant virtuel du site public}
+\section{Module 1 — Assistant Noa}
 
 \subsection{Conception générale}
 
-Noa assistant est l'assistant virtuel accessible sur le site public de Netethic.
+Noa est l'assistant virtuel accessible sur le site public de Netethic.
 Son architecture repose sur un pipeline à cinq étapes :
 classification de l'intention, vérification du cache, recherche documentaire,
 génération de la réponse et mise à jour du cache.
@@ -127,37 +138,36 @@ e-mail et de son numéro de téléphone pour planifier une démonstration.
 
 \subsection{Diagramme de composants}
 
-La Figure~\ref{fig:composants_Noa assistant} illustre l'organisation interne du module Noa assistant en trois couches (présentation, métier et données) ainsi que les interactions entre ses composants principaux.
+La Figure~\ref{fig:composants_noa} illustre l'organisation interne du module Noa en trois couches (présentation, métier et données) ainsi que les interactions entre ses composants principaux.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=\textwidth]{diagramme/18_composants_noa.png}
-\caption{Diagramme de composants — Module Noa assistant}
-\label{fig:composants_Noa assistant}
+\caption{Diagramme de composants — Assistant Noa}
+\label{fig:composants_noa}
+\end{figure}
+
+\subsection{Diagramme de déploiement}
+
+La Figure~\ref{fig:deploiement_noa} présente la stack Docker Compose du module Noa avec ses conteneurs et leurs interconnexions.
+
+\begin{figure}[H]
+\centering
+\hspace*{-0.1\textwidth}\includegraphics[width=1.2\textwidth]{diagramme/14_deploiement_noa.png}
+\caption{Diagramme de déploiement — Assistant Noa (stack Docker Compose)}
+\label{fig:deploiement_noa}
 \end{figure}
 
 \subsection{Diagramme de séquences}
 
-La Figure~\ref{fig:seq_Noa assistant} illustre le déroulement d'une interaction typique avec Noa assistant
+La Figure~\ref{fig:seq_noa} illustre le déroulement d'une interaction typique avec Noa
 pour une question factuelle.
 
 \begin{figure}[H]
 \centering
 \hspace*{-0.1\textwidth}\includegraphics[width=1.2\textwidth]{diagramme/04_sequence_noa.png}
-\caption{Diagramme de séquences — Module Noa assistant (question factuelle)}
-\label{fig:seq_Noa assistant}
-\end{figure}
-
-\subsection{Diagramme d'état-transition}
-
-La Figure~\ref{fig:etat_Noa assistant} représente les états possibles de Noa assistant
-au cours d'une session de conversation.
-
-\begin{figure}[H]
-\centering
-\hspace*{-0.1\textwidth}\includegraphics[width=1.2\textwidth]{diagramme/05_etat_noa.png}
-\caption{Diagramme d'état-transition — Module Noa assistant}
-\label{fig:etat_Noa assistant}
+\caption{Diagramme de séquences — Assistant Noa (question factuelle)}
+\label{fig:seq_noa}
 \end{figure}
 
 % ─────────────────────────────────────────────────────────────────────────────
@@ -177,7 +187,7 @@ directement dans la session utilisateur.
 Un classificateur d'intention LLM sépare ensuite les questions portant sur des métriques
 en temps réel (\textit{LIVE}) des questions documentaires (\textit{PDF}).
 Les premières sont traitées à partir des données de session uniquement,
-sans appel à ChromaDB ; les secondes suivent le pipeline RAG standard.
+sans appel à ChromaDB, les secondes suivent le pipeline RAG standard.
 
 \textbf{Flux de repli guidés.}
 Lorsqu'aucun document pertinent n'est trouvé, le frontend déclenche trois flux
@@ -328,7 +338,7 @@ depuis la réception jusqu'à la journalisation de l'événement.
 
 
 % ─────────────────────────────────────────────────────────────────────────────
-\section{Module 4 — Classificateur de harcèlement}
+\section{Module 4 — Classificateur}
 
 \subsection{Conception générale}
 
@@ -367,8 +377,6 @@ La Figure~\ref{fig:composants_classificateur} illustre l'architecture interne du
 \subsection{Diagramme de déploiement}
 \label{sec:module4_deploiement}
 
-Le classificateur repose sur une architecture distincte de celle des modules conversationnels :
-il n'utilise pas de frontend interactif et fonctionne en mode batch.
 La Figure~\ref{fig:deploiement_classificateur} présente la stack Docker Compose du classificateur avec ses services et leurs interactions.
 
 \begin{figure}[H]
@@ -451,18 +459,18 @@ Classe indépendante de configuration système, composée des attributs \texttt{
 
 \section{Préparation des bases de connaissances RAG}
 
-Les modules Noa assistant et assistant technique reposent sur une architecture
+Les modules Noa et assistant technique reposent sur une architecture
 \textit{Retrieval-Augmented Generation} (RAG) dont la qualité des réponses
 dépend directement de la qualité et de la structure des documents indexés.
 La phase de préparation consiste à transformer les sources documentaires brutes
 en fichiers Markdown structurés et enrichis, exploitables par la base
 vectorielle ChromaDB.
 
-\subsection{Module Noa assistant — sources documentaires publiques}
+\subsection{Assistant Noa — sources documentaires publiques}
 
 \paragraph{Extraction et conversion}\mbox{}\newline
 
-La base de connaissances de Noa assistant est constituée à partir du contenu du site public
+La base de connaissances de Noa est constituée à partir du contenu du site public
 de Netethic.
 Les vingt-et-une pages du site ont été extraites et converties au format Markdown.
 Cette conversion produit des fichiers textuels structurés,
@@ -494,14 +502,14 @@ une réponse contextuellement riche.
 Cette stratégie permet d'allier précision de la recherche et richesse
 du contexte fourni au modèle de génération.
 
-Le Tableau~\ref{tab:kb_Noa assistant} présente les statistiques de la base de connaissances
-constituée pour Noa assistant.
+Le Tableau~\ref{tab:kb_noa} présente les statistiques de la base de connaissances
+constituée pour Noa.
 
 \vspace{6pt}
 \begin{table}[H]
 \centering
-\caption{Statistiques de la base de connaissances — Module Noa assistant}
-\label{tab:kb_Noa assistant}
+\caption{Statistiques de la base de connaissances — Assistant Noa}
+\label{tab:kb_noa}
 \begin{tabular}{|l|c|}
 \hline
 \textbf{Paramètre} & \textbf{Valeur} \\
@@ -534,7 +542,7 @@ et facturation.
 
 Les documents fournis au format PDF ont été convertis au format Markdown.
 Chaque fichier Markdown a ensuite été structuré par catégorie fonctionnelle,
-en suivant le même processus d'enrichissement que pour la base de Noa assistant~:
+en suivant le même processus d'enrichissement que pour la base de Noa~:
 clarification des sous-titres, complétion des informations manquantes
 et suppression des éléments non informatifs.
 
@@ -758,10 +766,6 @@ ambigus comme relevant du harcèlement.
 % ─────────────────────────────────────────────────────────────────────────────
 \section*{Conclusion}
 
-Ce chapitre a couvert la conception du système et la mise en place des modèles d'IA.
-La partie conception a présenté l'architecture commune et les diagrammes UML de chaque module.
-La mise en place a établi les bases de connaissances RAG (177~segments pour Noa assistant,
-11~collections pour l'assistant technique) et validé la stratégie hybride
-pour le classificateur avec un F1-score de 0,619 sur 1\,500~textes de test.
-Le chapitre suivant présente la réalisation concrète du système, les interfaces développées,
-les résultats des tests automatisés et les évaluations de qualité.
+Ce chapitre a présenté la conception du système à travers l'architecture globale
+et les diagrammes UML de chaque module. Ces éléments constituent le plan directeur
+qui guide la réalisation décrite dans le chapitre suivant.
