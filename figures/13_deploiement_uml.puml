@@ -37,28 +37,28 @@ node "Etudiant\n<<device>>" as CLI_S
 node "NetEthic\n<<system>>" as CLI_P
 
 ' ─── STACK 1 : NOA ─────────────────────────────────────────
-node "Stack Noa  [Module 1]\nServeur Linux  :3000" <<device>> as NOA {
+node "Stack Noa  [Module 1]\nServeur Linux  :3000"  as NOA {
   node "Docker Compose  [bridge]" <<execution environment>> as DC_NOA {
     component "React/Nginx  +  FastAPI\nChromaDB embedded\nRedis  Agent Claude" as C_NOA
   }
 }
 
 ' ─── STACK 2 : SUPPORT ─────────────────────────────────────
-node "Stack Support  [Module 2]\nServeur Linux  :8501" <<device>> as SUP {
+node "Stack Support  [Module 2]\nServeur Linux  :8501"  as SUP {
   node "Docker Compose  [bridge]" <<execution environment>> as DC_SUP {
-    component "Streamlit  +  FastAPI\nChromaDB embedded\nRedis  RAG 10 etapes" as C_SUP
+    component "Streamlit  +  FastAPI\nChromaDB embedded\nRedis  " as C_SUP
   }
 }
 
 ' ─── STACK 3 : EMOTIONNEL ──────────────────────────────────
-node "Stack Emotionnel  [Module 3]\nServeur Linux  :8501" <<device>> as EMO {
+node "Stack Emotionnel  [Module 3]\nServeur Linux  :8501"  as EMO {
   node "Docker Compose  [bridge]" <<execution environment>> as DC_EMO {
-    component "Streamlit  +  FastAPI\nRedis TTL 30j\n3 profils LLM" as C_EMO
+    component "Streamlit  +  FastAPI\nRedis \n3 profils LLM" as C_EMO
   }
 }
 
 ' ─── STACK 4 : CLASSIFICATEUR ──────────────────────────────
-node "Stack Classificateur  [Module 4]\nServeur Linux" <<device>> as CLS {
+node "Stack Classificateur  [Module 4]\nServeur Linux"  as CLS {
   node "Docker Compose  [bridge]" <<execution environment>> as DC_CLS {
     component "Scala/Spark  4 strategies\nChromaDB :8000\nembed-server :5001" as C_CLS
   }
@@ -66,7 +66,7 @@ node "Stack Classificateur  [Module 4]\nServeur Linux" <<device>> as CLS {
 
 ' ─── LLM EXTERNE ───────────────────────────────────────────
 cloud "kaisens.fr\n(vLLM partage — 4 modules)" as EXT_KAI {
-  component "vLLM  Mistral-7B-Instruct v0.3\nGPU A100  OpenAI-compat." as LLM_KAI
+  component "vLLM  Mistral-7B-Instruct v0.3\nGPU" as LLM_KAI
 }
 
 ' ─── CONNEXIONS CLIENTS ─────────────────────────────────────

@@ -7,40 +7,40 @@ skinparam activityArrowColor #2C6EA0
 skinparam diamondBorderColor #E65100
 skinparam diamondBackgroundColor #FFF3E0
 skinparam defaultFontName Arial
-skinparam defaultFontSize 11
+skinparam defaultFontSize 12
 
 start
 
-:Etape 1 -- Valider le message\n(normaliser, tronquer 2000 chars, verifier langue);
+:Valider le message;
 
-:Etape 2 -- Controle du debit (Redis)\n(fenetreglissante : 30 messages / 30 s);
+:Controle du debit (Redis);
 
 if (Limite depassee ?) then (Oui)
-  :Retourner reponse de blocage\n(guardrail_triggered: true);
+  :Retourner reponse de blocage;
   stop
 endif
 
-:Etape 3 -- Analyser le contenu\n(LLM classificateur, temperature 0, cache 120 s)\nCategories : prompt_injection | curse_words |\ninappropriate | suicidal | violence | safe;
+:Analyser le contenu\nCategories;
 
 if (Categorie ?) then (injection / inapproprie)
-  :Retourner refus bienveillant\n(guardrail_triggered: true);
+  :Retourner refus bienveillant;
   stop
 else if (suicidal / violence) then
-  :Generer reponse de crise\n(LLM principal, langue de l'etudiant);
-  :Ajouter numeros d'urgence\n(112 / 0800 737 800 / 3919);
+  :Generer reponse de crise;
+  :Ajouter numeros d'urgence;
   stop
 else (safe)
 endif
 
-:Etapes 4-6 -- Tampon + extraction + persistance\n(buffer FIFO 10 msgs, TTL 1 h)\nExtraction profil tous les 2 messages\n(prenom, stresseurs, situation, reussites)\nPersistance username si 1ere visite;
+:Tampon + extraction profil + persistance;
 
-:Etape 7 -- Enrichir le prompt\n(charger profil Redis + historique\ntemperature 0.7, max 200 tokens);
+:Enrichir le prompt avec profil et historique;
 
-:Etape 8 -- Invoquer le LLM principal\n(LangChain RunnableWithMessageHistory);
+:Invoquer le LLM principal;
 
-:Etape 9 -- Post-traitement + sauvegarde\n(<=3 phrases, nettoyage XSS\nhistorique Redis, TTL 30 jours);
+:Post-traitement + sauvegarde;
 
-:Retourner reponse\n{response, guardrail_triggered: false, language};
+:Retourner reponse;
 
 stop
 

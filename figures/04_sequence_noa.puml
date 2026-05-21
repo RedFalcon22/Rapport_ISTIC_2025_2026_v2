@@ -7,83 +7,124 @@ skinparam sequenceParticipantBackgroundColor #EBF4FB
 skinparam sequenceActorBorderColor #1A3550
 skinparam sequenceGroupBorderColor #888888
 skinparam defaultFontName Arial
-skinparam defaultFontSize 13
+skinparam defaultFontSize 12
 
-caption Déroulement d'une interaction factuelle typique avec Noa :\npipeline séquentiel (session → réservation → cache → intention → RAG → génération LLM).
 
-actor       "Visiteur"                  as V
-participant "Frontend\nReact"           as FE
-participant "FastAPI\n(Noa)"            as API
-participant "BookingAgent\n(FSM)"       as FSM
-participant "Cache FAQ\n(LRU)"          as Cache
-participant "ChromaDB\n(embedded)"      as Chroma
-participant "Serveur LLM\n(kaisens.fr)" as LLM
-participant "Redis\n(sessions)"         as Redis
+actor       "Visiteur"                          as V
+participant "Frontend\nReact"                   as FE
+participant "FastAPI\n(Noa)"                    as API
+participant "BookingAgent\n(automate FSM)"      as FSM
+participant "Cache\nLRU"                        as Cache
+participant "LangChain\n(AgentExecutor)"        as LC
+participant "ChromaDB\n(collection noa)"        as Chroma
+participant "netethic.fr\n(scraping)"           as Web
+participant "Serveur LLM\n(kaisens.fr)"         as LLM
+participant "Redis\n(sessions)"                 as Redis
 
 V  -> FE  : saisit un message
 activate FE
-FE -> API : POST /api/chat/
+FE -> API : POST /api/chat/\n{message, session_id, lang}
 activate API
 
-== Étape 1 — Chargement de session ==
+== Étape 1 — Interception du flux de réservation ==
 
-API -> Redis : getHistory(session_id)
-activate Redis
-Redis --> API : historique
-deactivate Redis
-API -> API : detect_language(message)
-
-== Étape 2 — Interception du flux de réservation ==
-
-API -> FSM : is_in_booking_flow(session_id)
+API -> FSM : checkActiveFlow(session_id)
 activate FSM
-FSM --> API : inactif
+FSM --> API : {active: false}
 deactivate FSM
-note right of FSM : Si flux actif → traitement immédiat\nsans appel LLM
 
-== Étape 3 — Vérification du cache FAQ ==
+note right of FSM
+  Si flux actif : l'étape FSM courante
+  (date / horaire / nom / email / tel)
+  est traitée et les choix sont renvoyés
+  au Frontend directement.
+end note
 
-API -> Cache : get(message)
-activate Cache
-Cache --> API : miss
-deactivate Cache
-note right of Cache : Si cache HIT → retour direct
+== Étape 2 — Vérification du garde-fou ==
 
-== Étape 4 — Classification d'intention ==
+API -> API : guardrailCheck(message)\n— patterns : jailbreak, contenu adulte, hors-sujet
 
-API -> LLM : classify_intent(message, historique)
-activate LLM
-LLM --> API : factual_query
-deactivate LLM
-note right of LLM : Autres intentions : guardrail,\nbook_demo, chit_chat → retour direct
+alt Guardrail déclenché
+  API --> FE : {response: réponse de refus poli,\nguardrail_triggered: true}
 
-== Étape 5 — Recherche RAG ==
+else Message autorisé
 
-API -> API : detect_category(message)
-API -> Chroma : search(query, filtre_catégorie)
-activate Chroma
-Chroma --> API : segments pertinents
-deactivate Chroma
+  == Étape 3 — Vérification du cache FAQ ==
 
-== Étape 6 — Génération de réponse ==
+  API -> Cache : lookup(normalizedQuery)
+  activate Cache
+  Cache --> API : résultat
+  deactivate Cache
 
-API -> LLM : generate(system_prompt, rag_context, historique, message)
-activate LLM
-LLM --> API : réponse brute
-deactivate LLM
-API -> API : _strip_intro(réponse)
+  alt Cache HIT — 200 entrées LRU, TTL 24 h
+    API --> FE : {reply, session_id, cached: true}
 
-== Étape 7 — Mise en cache et sauvegarde session ==
+  else Cache MISS
 
-API -> Cache : set(message, réponse)
-API -> Redis : save_history(session_id, historique)
-activate Redis
-Redis --> API : OK
-deactivate Redis
+    == Étape 4 — Boucle LangChain Agent (max 5 itérations) ==
 
-API --> FE : réponse
+    API -> LC : invoke(system_prompt, historique, message, tools_schema)
+    activate LC
+
+    group Itérations de l'agent [max 5 itérations]
+
+      LC -> LLM : generate(prompt + outils disponibles)
+      activate LLM
+      LLM --> LC : {text ou tool_call}
+      deactivate LLM
+
+      opt Outil : search_knowledge_base
+        LC -> Chroma : searchSimilar(embedding, k=3,\ncollection="noa", seuil=0.25)
+        activate Chroma
+        Chroma --> LC : [DocumentChunk × 3]\n(hiérarchie parent-enfant)
+        deactivate Chroma
+      end
+
+      opt Outil : fetch_website_page
+        LC -> Web : scrape(url_netethic.fr)
+        activate Web
+        Web --> LC : contenu textuel (max 3 000 caractères)
+        deactivate Web
+        note right of Web : Limité au domaine\nnetethic.fr uniquement.
+      end
+
+      opt Outil : get_contact_info
+        LC -> LC : lire KB statique\n{email, téléphone, Calendly, horaires}
+      end
+
+      opt Outil : start_booking_demo
+        LC -> FSM : startBooking(session_id)
+        activate FSM
+        FSM --> LC : {choices, state="COLLECT_DATE"}
+        deactivate FSM
+      end
+
+      LC -> LC : décider : appeler un autre outil\nou générer la réponse finale
+
+    end
+
+    LC --> API : {reply, choices?}
+    deactivate LC
+
+    == Étape 5 — Écriture cache et mise à jour session ==
+
+    API -> Cache : cacheResponse(query, reply, TTL 24 h)
+    activate Cache
+    Cache --> API : OK
+    deactivate Cache
+
+    API -> Redis : updateSession(session_id, message, reply)
+    activate Redis
+    Redis --> API : OK
+    deactivate Redis
+
+    API --> FE : {reply, choices?, session_id, agent_ok: true}
+
+  end
+
+end
+
 deactivate API
-FE --> V : affiche la réponse
 deactivate FE
 
 @enduml

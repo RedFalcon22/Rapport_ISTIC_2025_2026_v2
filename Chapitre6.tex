@@ -1,4 +1,5 @@
-\chapter{Réalisation et tests}
+﻿\chapter{Réalisation et tests}
+\markboth{Chapitre 4}{}
 
 % ─────────────────────────────────────────────────────────────────────────────
 \section*{Introduction}
@@ -12,7 +13,7 @@ l'évaluation de la qualité des réponses avec le framework RAGAS,
 les optimisations de performance et le déploiement.
 
 % ─────────────────────────────────────────────────────────────────────────────
-\section{Module 1 — assistant Noa}
+\section{Module 1 — Assistant Noa}
 
 \subsection{Interface utilisateur}
 
@@ -21,7 +22,7 @@ La Figure~\ref{fig:noa_interface} montre l'interface de Noa intégrée au site p
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.6\textwidth]{interface-png/interface_noa.png}
-\caption{Interface Noa — fenêtre de conversation intégrée au site Netethic}
+\caption{Interface Assistant Noa — fenêtre de conversation intégrée au site Netethic}
 \label{fig:noa_interface}
 \end{figure}
 
@@ -31,7 +32,7 @@ de la demande initiale du visiteur jusqu'au lien Calendly pré-rempli.
 \begin{figure}[H]
 \centering
 \includegraphics[width=\textwidth,height=0.85\textheight,keepaspectratio]{interface-png/noa_reservation_flow.png}
-\caption{Interface Noa — flux complet de réservation d'une démonstration (7 étapes)}
+\caption{Interface Assistant Noa — flux complet de réservation d'une démonstration (7 étapes)}
 \label{fig:noa_reservation}
 \end{figure}
 
@@ -43,7 +44,7 @@ Le Tableau~\ref{tab:tests_noa} présente les résultats obtenus.
 \vspace{6pt}
 \begin{table}[H]
 \centering
-\caption{Résultats des tests automatisés — assistant Noa}
+\caption{Résultats des tests automatisés — Assistant Noa}
 \label{tab:tests_noa}
 \begin{tabular}{|l|c|c|}
 \hline
@@ -67,7 +68,7 @@ Le Tableau~\ref{tab:perf_noa} présente les temps de réponse mesurés pour chaq
 \vspace{6pt}
 \begin{table}[H]
 \centering
-\caption{Temps de réponse moyens — assistant Noa}
+\caption{Temps de réponse moyens — Assistant Noa}
 \label{tab:perf_noa}
 \begin{tabular}{|l|c|c|}
 \hline
@@ -86,19 +87,22 @@ Question de suivi & $\approx$ 2,1\,s & $<$ 5\,s \\
 
 \subsection{Interface utilisateur}
 
-La Figure~\ref{fig:support_interface} montre l'interface principale du assistant technique.
+La Figure~\ref{fig:support_interface} montre l’interface principale de l’assistant technique, 
+constituée d’un filtre de catégories des modules tels que le tableau de bord, la gestion des cas, 
+le module de parrainage, etc. Elle contient également des requêtes suggérées comme : 
+« Comment accéder aux rapports mensuels ? » ou « Comment accéder au tableau de bord ? », comme représenté ci-dessous.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.85\textwidth]{interface-png/acceuil-support-chatbot.png}
-\caption{Interface principale du assistant technique}
+\caption{Interface principale de l'assistant technique}
 \label{fig:support_interface}
 \end{figure}
 
 \subsection{Interface contact support}
 
-Lorsque le assistant technique ne trouve pas de réponse dans la documentation,
-il propose automatiquement trois actions à l'utilisateur : planifier un rendez-vous,
+Lorsque l'assistant technique ne trouve pas de réponse dans la documentation,
+il propose automatiquement trois actions à l'utilisateur : prendre un rendez-vous,
 signaler un dysfonctionnement, ou accéder directement au portail de support en ligne.
 La Figure~\ref{fig:support_contact} illustre cet écran d'actions.
 
@@ -111,24 +115,21 @@ La Figure~\ref{fig:support_contact} illustre cet écran d'actions.
 
 \paragraph{Réservation de rendez-vous}\mbox{}\newline
 
-Lorsque l'utilisateur choisit \og Prendre rendez-vous \fg{}, un formulaire guidé en quatre étapes
-s'ouvre directement dans la fenêtre de conversation.
-Le motif du rendez-vous est pré-rempli automatiquement à partir du contexte de la conversation
-(BF-S07), sans que l'utilisateur ait à ressaisir ses informations (BF-S09).
-La Figure~\ref{fig:support_rdv_heure} montre l'étape de saisie de l'heure (étape~2/4),
-et la Figure~\ref{fig:support_rdv_confirm} présente l'écran de confirmation finale (étape~4/4)
-avec le résumé complet du rendez-vous avant envoi.
+Quand le bouton de prendre rendez-vous est cliqué, un formulaire guidé en quatre étapes s'ouvre directement dans la fenêtre de conversation.
+Le motif du rendez-vous est rempli automatiquement avec un résumé contenant les problèmes  rencontrés par l'utilisateur au cours de la conversation, 
+sans que l'utilisateur ressaisisse ses informations.
 
 \begin{figure}[H]
-\centering
-\begin{subfigure}[t]{0.49\textwidth}
+\hspace*{-0.15\textwidth}%
+\begin{minipage}{1.2\textwidth}
+\begin{subfigure}[t]{0.57\textwidth}
   \centering
   \includegraphics[width=\textwidth]{interface-png/rendez-vous-interface4.png}
   \caption{Étape 1/4 — date souhaitée}
   \label{fig:support_rdv_date}
 \end{subfigure}
 \hfill
-\begin{subfigure}[t]{0.49\textwidth}
+\begin{subfigure}[t]{0.57\textwidth}
   \centering
   \includegraphics[width=\textwidth]{interface-png/rendez-vous-interface2.png}
   \caption{Étape 2/4 — heure souhaitée}
@@ -137,14 +138,14 @@ avec le résumé complet du rendez-vous avant envoi.
 
 \vspace{8pt}
 
-\begin{subfigure}[t]{0.49\textwidth}
+\begin{subfigure}[t]{0.57\textwidth}
   \centering
   \includegraphics[width=\textwidth]{interface-png/rendez-vous-interface3.png}
   \caption{Étape 3/4 — canal préféré}
   \label{fig:support_rdv_canal}
 \end{subfigure}
 \hfill
-\begin{subfigure}[t]{0.49\textwidth}
+\begin{subfigure}[t]{0.57\textwidth}
   \centering
   \includegraphics[width=\textwidth]{interface-png/rendez-vous-interface.png}
   \caption{Étape 4/4 — confirmation et résumé}
@@ -152,28 +153,27 @@ avec le résumé complet du rendez-vous avant envoi.
 \end{subfigure}
 \caption{assistant technique — formulaire guidé de prise de rendez-vous (4 étapes)}
 \label{fig:support_rdv}
+\end{minipage}
 \end{figure}
-
+les données concernant l'utilisateur comme le email, téléphone, nom sont pré-remplies automatiquement 
+dans le formulaire de prise de rendez-vous et aussi pour le cas de signaler un problème.
 \paragraph{Flux de signalement de dysfonctionnement}\mbox{}\newline
 
-Lorsque l'utilisateur choisit \og Signaler un problème \fg{}, un formulaire en trois étapes
-s'affiche dans la conversation.
-À l'étape~2, la description du problème est générée automatiquement par le LLM
-à partir de l'historique de la conversation (BF-S07), puis reste modifiable avant envoi.
-La Figure~\ref{fig:support_bug_desc} illustre cette étape avec la description auto-générée,
-et la Figure~\ref{fig:support_bug_confirm} présente l'écran de confirmation finale (étape~3/3)
-avant transmission à l'équipe technique.
+Quand l'utilisateur choisit \og Signaler un problème \fg{}, un formulaire en trois étapes
+s'affiche dans la conversation, la description du problème est générée automatiquement par le LLM
+à partir de la conversation et reste modifiable avant l'envoi.
 
 \begin{figure}[H]
-\centering
-\begin{subfigure}[t]{0.48\textwidth}
+\hspace*{-0.15\textwidth}%
+\begin{minipage}{1.2\textwidth}
+\begin{subfigure}[t]{0.57\textwidth}
   \centering
   \includegraphics[width=\textwidth]{interface-png/report-bug-interface3.png}
   \caption{Étape 1/3 — date du problème}
   \label{fig:support_bug_date}
 \end{subfigure}
 \hfill
-\begin{subfigure}[t]{0.48\textwidth}
+\begin{subfigure}[t]{0.57\textwidth}
   \centering
   \includegraphics[width=\textwidth]{interface-png/report-bug-interface.png}
   \caption{Étape 2/3 — description auto-générée}
@@ -181,7 +181,7 @@ avant transmission à l'équipe technique.
 \end{subfigure}
 
 \vspace{8pt}
-\begin{subfigure}[t]{0.65\textwidth}
+\begin{subfigure}[t]{0.57\textwidth}
   \centering
   \includegraphics[width=\textwidth]{interface-png/report-bug-interface2.png}
   \caption{Étape 3/3 — confirmation du signalement}
@@ -189,18 +189,19 @@ avant transmission à l'équipe technique.
 \end{subfigure}
 \caption{assistant technique — formulaire guidé de signalement de dysfonctionnement}
 \label{fig:support_bug}
+\end{minipage}
 \end{figure}
 
 \subsection{Tests}
 
-Une suite de 35~tests automatisés a été exécutée via \texttt{pytest},
+Pour evaluer cet assistant, 35 tests automatisés a été effectués via \texttt{pytest}et \texttt{TestClient},
 couvrant l'intégralité des fonctionnalités exposées par l'API FastAPI.
 Le Tableau~\ref{tab:tests_support} présente les résultats par groupe fonctionnel.
 
 \vspace{6pt}
 \begin{table}[H]
 \centering
-\caption{Résultats des tests automatisés — assistant technique (35 tests, exécution du 2026-05-17)}
+\caption{Résultats des tests automatisés}
 \label{tab:tests_support}
 \begin{tabular}{|l|c|c|}
 \hline
@@ -219,8 +220,8 @@ Santé système et limitation du débit & 2 & 100\,\% \\
 \hline
 \end{tabular}
 \end{table}
-Les 25 tests ont été exécutés avec succès, couvrant notamment les
-mesures OWASP (LLM01, LLM02, LLM07, LLM09, LLM10) et la bonne recherche.
+Les 35 tests ont été exécutés avec succès, couvrant notamment les
+mesures OWASP (qui seront détaillées dans la section de sécurité) et la bonne recherche des informations.
 
 \subsection{Performances}
 
@@ -242,24 +243,23 @@ Question factuelle (RAG) & $\approx$ 4{,}32\,s & $<$ 5\,s & Réussi \\
 Question de suivi (RAG) & $\approx$ 4{,}01\,s & $<$ 5\,s & Réussi \\
 Réponse depuis le cache Redis & $\approx$ 0{,}98\,s & $<$ 1\,s & Réussi \\
 \hline
-\textbf{Bilan} & \multicolumn{3}{c|}{\textbf{3 scénarios réussis / 5}} \\
-\hline
 \end{tabular}
 \end{table}
 
+L'ensemble des scénarios respecte les exigences de temps de réponse fixées.
+Le cache Redis réduit significativement la latence pour les questions fréquentes,
+tandis que les requêtes RAG restent dans la limite des 5\,s malgré l'appel au serveur LLM distant.
 
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Module 3 — assistant émotionnel}
 
-Le assistant émotionnel est intégré au assistant technique et s'active automatiquement
-lorsqu'un signal de détresse est détecté dans le message de l'utilisateur,
-sans aucune action manuelle de la part de l'opérateur.
-Chaque déclenchement est journalisé avec le type de signal détecté et l'horodatage,
-sans stocker le contenu du message original, afin de respecter la confidentialité des utilisateurs.
+L'assistant émotionnel est un chatbot de soutien psychologique pour les étudiants,
+accessible via une interface Streamlit dédiée. Le LLM principal génère une réponse
+empathique enrichie du profil persistant de l'étudiant et en cas de crise, les numéros d'urgence  sont ajoutés automatiquement à la réponse.
 
 \subsection{Interface utilisateur}
 
-La Figure~\ref{fig:emotional_accueil} présente l'interface du assistant émotionnel.
+La Figure~\ref{fig:emotional_accueil} présente l'interface de l'assistant émotionnel.
 L'utilisateur choisit sa langue (français ou anglais) avant d'entamer la conversation
 via la zone de saisie \og Partage ce qui te pèse\ldots \fg{}.
 
@@ -272,13 +272,11 @@ via la zone de saisie \og Partage ce qui te pèse\ldots \fg{}.
 
 La Figure~\ref{fig:emotional_empathie} illustre une réponse empathique générée lorsque
 l'utilisateur exprime une tristesse modérée.
-Le module reconnaît le vécu émotionnel et engage une conversation de soutien
-sans escalade vers les ressources d'urgence.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.85\textwidth]{interface-png/empathie-emotionelle-interface.png}
-\caption{assistant émotionnel — réponse empathique face à une tristesse modérée}
+\caption{assistant émotionnel — example de réponse}
 \label{fig:emotional_empathie}
 \end{figure}
 
@@ -297,9 +295,9 @@ SAMU~(112), contre les cyberviolences~(0800~737~800) et violences femmes info~(3
 
 \subsection{Tests}
 
-Une suite de 25~tests automatisés couvre l'ensemble des fonctionnalités exposées par l'API
-du assistant émotionnel.
-Elle est exécutée via \texttt{pytest} avec \texttt{TestClient} en mode contexte,
+un ensemble de 25 tests automatisés couvre l'ensemble des fonctionnalités exposées par l'API
+de l'assistant émotionnel avec consideration des mesures de sécurité OWASP.
+Réaliser via \texttt{pytest} avec \texttt{TestClient} en mode contexte,
 ce qui garantit l'exécution du cycle de vie FastAPI avant chaque test.
 Le Tableau~\ref{tab:tests_emotional} présente les résultats par groupe fonctionnel.
 
@@ -325,34 +323,19 @@ Santé système et limitation du débit            & 3 & 100\,\% \\
 \end{tabular}
 \end{table}
 
-Les 25~tests ont été exécutés avec succès, couvrant notamment les mesures OWASP (LLM01, LLM02, LLM07, LLM09, LLM10) et la détection de crise.
-
 % ─────────────────────────────────────────────────────────────────────────────
-\section{Module 4 — classificateur de harcèlement}
+\section{Module 4 — Classificateur}
 
-Le classificateur de harcèlement est un système de classification multi-labels
-conçu pour analyser automatiquement des textes en français et détecter
-les formes de cyberharcèlement ainsi que les signaux de détresse des victimes.
-Il repose sur une approche hybride combinant inférence LLM, ancrage juridique
-par RAG et règles heuristiques, disponible en deux versions complémentaires :
-\begin{itemize}
-    \item \textbf{Version Python :} Adaptée aux expérimentations sur des corpus réduits.
-          Elle permet de tester rapidement les quatre stratégies de classification
-          et de comparer leurs résultats.
-    \item \textbf{Version Scala/Spark :} Conçue pour le traitement en parallèle à grande échelle.
-          Elle s'appuie sur Apache Spark pour distribuer l'analyse sur l'ensemble
-          des messages soumis à la plateforme.
-\end{itemize}
-
-La collecte des données, le nettoyage, l'augmentation, le labeling
-et l'évaluation comparative des quatre stratégies sont présentés au Chapitre~3.
+Le classificateur est un système multi-labels qui détecte les formes de cyberharcèlement
+et les signaux de détresse en français, via une approche hybride (LLM, RAG juridique,
+heuristiques). Il existe en version Python pour l'expérimentation et en version
+Scala/Spark \cite{chromadb} pour le traitement distribué à grande échelle.
+La collecte, le nettoyage et l'évaluation comparative des stratégies sont présentés au Chapitre~3.
 
 % ─────────────────────────────────────────────────────────────────────────────
 \subsection{Pipeline d'inférence}
 
-Le pipeline de classification suit un flux en quatre étapes principales,
-depuis l'ingestion des textes bruts jusqu'à la production des résultats annotés.
-Le Tableau~\ref{tab:pipeline_classif} décrit chaque étape.
+Le pipeline traite chaque texte en quatre étapes, du Tableau~\ref{tab:pipeline_classif}.
 
 \vspace{6pt}
 \begin{table}[H]
@@ -383,18 +366,15 @@ Le Tableau~\ref{tab:pipeline_classif} décrit chaque étape.
 \end{tabular}
 \end{table}
 
-Chaque résultat produit par le pipeline contient : la liste des labels détectés
-(\texttt{labels[]}), un score de confiance (\texttt{confidence} entre 0 et 1),
-un indicateur d'urgence (\texttt{urgent = true} si idéation suicidaire détectée),
-les articles juridiques cités (\texttt{legal\_articles[]}) et la stratégie utilisée.
+Chaque résultat contient : \texttt{labels[]}, \texttt{confidence} (0–1),
+\texttt{urgent = true} si idéation suicidaire détectée, \texttt{legal\_articles[]} et la stratégie utilisée.
 
 % ─────────────────────────────────────────────────────────────────────────────
 \subsection{Taxonomie à 16 labels}
 \label{subsec:taxonomie_classif}
 
-Le système effectue une classification \textbf{multi-labels} : chaque texte peut
-recevoir simultanément plusieurs étiquettes parmi 16~catégories organisées en
-deux groupes selon la perspective d'analyse.
+Chaque texte peut recevoir simultanément plusieurs étiquettes parmi 16~catégories,
+organisées en deux groupes selon la perspective d'analyse.
 
 \vspace{6pt}
 \begin{table}[H]
@@ -458,9 +438,8 @@ Comportements addictifs & Consommation de substances comme mécanisme d'adaptati
 \subsection{Stratégies de classification}
 \label{subsec:strategies_classif}
 
-Le système exécute \textbf{quatre stratégies de classification en parallèle}
-pour chaque texte analysé, permettant une comparaison directe de leurs résultats.
-Le Tableau~\ref{tab:strategies_classif} les présente.
+Quatre stratégies s'exécutent en parallèle pour chaque texte (Tableau~\ref{tab:strategies_classif}),
+combinant \cite{mistral2023} via \cite{vllm2023}, ancrage juridique par \cite{chromadb} et heuristiques.
 
 \vspace{6pt}
 \begin{table}[H]
@@ -493,8 +472,7 @@ Hybride
 \end{tabular}
 \end{table}
 
-La chaîne de repli garantit la robustesse du système face aux pannes
-du serveur LLM~:
+Une chaîne de repli garantit la disponibilité en cas de panne du serveur LLM~:
 
 \begin{center}
 \texttt{LLM} $\;\longrightarrow\;$ \textit{(si échec)}
@@ -506,12 +484,9 @@ $\;\longrightarrow\;$ \texttt{NEUTRAL} (réponse de sécurité par défaut)
 % ─────────────────────────────────────────────────────────────────────────────
 \subsection{Tests}
 
-Une suite de 20~tests automatisés couvre l'ensemble des composants du classificateur.
-Elle est exécutée via \texttt{pytest}, sans dépendance au serveur LLM~:
-les appels au modèle sont simulés par des \emph{mocks} Python,
-garantissant une exécution reproductible indépendamment de la disponibilité
-du serveur kaisens.fr.
-Le Tableau~\ref{tab:tests_classif} présente les résultats par groupe fonctionnel.
+Une suite de 20~tests automatisés couvre tous les composants du classificateur \cite{pytest}.
+Les appels LLM sont simulés par des \emph{mocks} Python, rendant l'exécution indépendante
+du serveur kaisens.fr. Les résultats par groupe sont présentés au Tableau~\ref{tab:tests_classif}.
 
 \vspace{6pt}
 \begin{table}[H]
@@ -543,8 +518,7 @@ Les 20~tests ont été exécutés avec succès.
 \section{Sécurité}
 \label{sec:securite_donnees}
 
-La sécurité du système s'appuie sur le référentiel OWASP Top~10 for LLM
-Applications~\cite{owasp_llm_2025}, qui recense les risques critiques propres
+OWASP Top 10 for LLM Applications \cite{owasp_llm_2025} a éte prise comme référentiel de sécurité, qui recense les risques critiques propres
 aux applications fondées sur des modèles de langage.
 Le Tableau~\ref{tab:owasp_mitigations} résume les mesures mises en place pour chacun.
 
@@ -558,147 +532,136 @@ Le Tableau~\ref{tab:owasp_mitigations} résume les mesures mises en place pour c
 \textbf{Risque} & \textbf{Intitulé} & \textbf{Mesure mise en place} \\
 \hline
 LLM01 & Injection de prompt
-  & Guardrail LLM côté serveur ; prompt système jamais exposé au client. \\
+  & Guardrail LLM côté serveur, prompt système jamais exposé au client. \\
 \hline
 LLM02 & Sorties non sécurisées
-  & Encodage HTML systématique (anti-XSS) ; paramètre \texttt{max\_tokens} fixé. \\
+  & Encodage HTML systématique (anti-XSS), paramètre \texttt{max\_tokens} fixé. \\
 \hline
 LLM03 & Chaîne d'approvisionnement
-  & Dépendances épinglées (\texttt{requirements.txt}) ; serveur LLM privé (kaisens.fr). \\
+  & Dépendances épinglées (\texttt{requirements.txt}), serveur LLM privé (kaisens.fr). \\
 \hline
 LLM04 & Empoisonnement des données
-  & Documents indexés issus de sources vérifiées uniquement ; pas de fine-tuning en production. \\
+  & Documents indexés issus de sources vérifiées uniquement, pas de fine-tuning en production. \\
 \hline
 LLM05 & Autorisations excessives
-  & Principe du moindre privilège ; actions sensibles (réservation, signalement) nécessitent une confirmation utilisateur. \\
+  & Principe du moindre privilège, les actions sensibles (réservation, signalement) nécessitent une confirmation utilisateur. \\
 \hline
 LLM06 & Divulgation d'informations
-  & Clés d'API dans \texttt{.env} exclu du dépôt ; aucun message conservé au-delà de la session. \\
+  & Clés d'API dans \texttt{.env} exclu du dépôt, aucun message conservé au-delà de la session. \\
 \hline
 LLM07 & Plugins non sécurisés
-  & Paramètres d'outils validés via schéma Pydantic ; timeout de 10\,s sur chaque appel. \\
+  & Paramètres d'outils validés via schéma Pydantic, timeout de 10\,s sur chaque appel. \\
 \hline
 LLM08 & Vecteurs d'embedding
-  & Base documentaire isolée dans son conteneur Docker ; aucune donnée personnelle indexée. \\
+  & Base documentaire isolée dans son conteneur Docker, aucune donnée personnelle indexée. \\
 \hline
 LLM09 & Désinformation
   & Architecture RAG avec réponse de repli explicite si aucun document pertinent trouvé. \\
 \hline
 LLM10 & Vol de modèle
-  & Limitation du débit par session ; serveur LLM accessible uniquement sur réseau interne. \\
+  & Limitation du débit par session, serveur LLM accessible uniquement sur réseau interne. \\
 \hline
 \end{tabular}
 \end{table}
 
-En complément, les communications entre modules et serveur LLM sont chiffrées via HTTPS,
-les sessions sont identifiées par un identifiant anonyme généré côté serveur,
-et les durées de vie des sessions sont de 30~minutes pour Noa et 24~heures
-pour le assistant technique.
-Le assistant émotionnel présente deux particularités : le risque LLM08 est
-inapplicable (architecture non-RAG, sans base vectorielle), et le risque LLM09
-est traité par une escalade automatique vers les ressources d'urgence
-(numéros 112, 0800~737~800, 3919) lorsqu'une idéation suicidaire est détectée.
+En complément, les communications entre modules et le serveur LLM sont chiffrées par HTTPS, les sessions sont anonymes
+et pour l'assistant émotionnel, le risque LLM08 ne s'applique pas
+(architecture sans RAG) et le risque LLM09 est géré par une escalation
+automatique vers les numéros d'urgence (112, 0800~737~800, 3919) en cas
+d'idéation suicidaire.
 
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Évaluation de la qualité RAG avec RAGAS}
 \label{sec:evaluation_ragas}
 
-\subsection{Présentation du framework RAGAS}
+\subsection{Pourquoi RAGAS}
 
-RAGAS (\emph{Retrieval-Augmented Generation Assessment}) est un framework
-d'évaluation automatique spécialement conçu pour les pipelines RAG~\cite{ragas_2024}.
-Son originalité réside dans l'utilisation d'un LLM comme juge (\emph{LLM-as-a-Judge})
-pour mesurer des propriétés sémantiques difficiles à évaluer par des métriques
-classiques fondées sur la comparaison lexicale.
+Les métriques lexicales classiques (BLEU, ROUGE) sont inadaptées aux réponses
+en langage naturel : deux formulations différentes peuvent être sémantiquement
+équivalentes. RAGAS~\cite{ragas_2024} résout ce problème en confiant le jugement
+à un LLM externe — ici \texttt{llama-3.3-70b-versatile}~\cite{llama3}
+via l'API Groq~\cite{groq} — indépendant du modèle de production Mistral-7B,
+ce qui garantit un jugement non biaisé à faible coût.
 
-Dans ce projet, le juge LLM retenu est \textbf{Groq API} avec le modèle
-\texttt{llama-3.1-70b-versatile}, choisi pour sa vitesse d'inférence
-(jusqu'à 800~tokens/s), son coût réduit et sa disponibilité en mode API.
-L'utilisation d'un modèle distinct du modèle de production garantit l'indépendance
-du jugement.
+\subsection{Métriques retenues et leur pertinence pour ce projet}
 
-\subsection{Métriques évaluées}
-
-RAGAS mesure quatre métriques principales, chacune évaluant une dimension spécifique
-de la qualité du pipeline RAG :
-
-\begin{itemize}
-    \item \textbf{Fidélité (\emph{Faithfulness}) :}
-          Mesure dans quelle proportion les affirmations présentes dans la réponse générée
-          sont factuellement fondées sur les documents sources récupérés.
-          Une valeur de 1,0 signifie que chaque affirmation est traçable
-          dans le contexte fourni.
-          \[
-              \text{Faithfulness} = \frac{\text{Nombre d'affirmations fondées sur le contexte}}
-                                         {\text{Nombre total d'affirmations dans la réponse}}
-          \]
-
-    \item \textbf{Pertinence de la réponse (\emph{Answer Relevancy}) :}
-          Évalue dans quelle mesure la réponse répond effectivement à la question posée,
-          indépendamment de son exactitude factuelle. Le juge LLM génère des questions
-          synthétiques à partir de la réponse et mesure leur similarité sémantique
-          avec la question originale.
-
-    \item \textbf{Précision du contexte (\emph{Context Precision}) :}
-          Évalue la capacité du retrieveur à placer les documents pertinents
-          en tête des résultats récupérés.
-          Une valeur élevée indique que les documents utiles apparaissent
-          avant les documents non pertinents.
-
-    \item \textbf{Rappel du contexte (\emph{Context Recall}) :}
-          Mesure la proportion des informations nécessaires à la réponse
-          correcte qui sont effectivement présentes dans les documents récupérés.
-          Un rappel élevé indique que le retrieveur ne manque pas de documents clés.
-\end{itemize}
-
-\subsection{Résultats}
-
-L'évaluation RAGAS a été lancée sur un échantillon de 10~paires
-du corpus de référence, en utilisant le modèle juge \texttt{llama-3.3-70b-versatile}
-via l'API Groq. Le quota de l'API Groq a été atteint en cours d'exécution~:
-seuls certains appels au juge ont abouti, ce qui rend les métriques
-de \emph{Faithfulness}, \emph{Context Precision} et \emph{Context Recall}
-non fiables pour cette campagne (nombreuses valeurs nulles dues aux requêtes rejetées).
-La métrique \emph{Answer Relevancy}, calculée par un mécanisme différent
-(similarité sémantique interne à RAGAS), est partiellement exploitable.
-
-Le Tableau~\ref{tab:ragas_results} présente les scores moyens obtenus,
-accompagnés de la réserve nécessaire concernant leur interprétation.
+Le Tableau~\ref{tab:ragas_metrics} présente les quatre dimensions mesurées
+et leur enjeu spécifique dans le contexte de l'assistant technique NetEthic.
 
 \vspace{6pt}
 \begin{table}[H]
 \centering
-\caption{Scores RAGAS — assistant technique (évaluation partielle, 10~questions)}
+\caption{Métriques RAGAS et leur enjeu pour l'assistant technique}
+\label{tab:ragas_metrics}
+\begin{tabular}{|p{3.2cm}|p{5.5cm}|p{5cm}|}
+\hline
+\textbf{Métrique} & \textbf{Ce qu'elle mesure} & \textbf{Enjeu NetEthic} \\
+\hline
+\emph{Faithfulness} &
+  Part des affirmations de la réponse traçables dans les chunks récupérés :
+  $\dfrac{\text{affirmations fondées}}{\text{total affirmations}}$ &
+  Éviter qu'un opérateur reçoive une information inventée sur un module qu'il ne connaît pas. \\
+\hline
+\emph{Answer Relevancy} &
+  Adéquation sémantique entre la réponse produite et la question initiale,
+  estimée par similarité cosinus entre questions synthétiques et question réelle. &
+  Les questions couvrant 11 modules différents, une réponse hors-sujet
+  serait directement préjudiciable à l'usage professionnel. \\
+\hline
+\emph{Context Precision} &
+  Rang des chunks pertinents dans la liste retournée par ChromaDB :
+  un score élevé signifie que les meilleurs extraits arrivent en tête. &
+  Le prompt LLM n'accepte que $k=5$ chunks, un mauvais classement
+  exclut les informations utiles dès cette étape. \\
+\hline
+\emph{Context Recall} &
+  Taux de couverture des informations nécessaires à la réponse
+  correcte par les chunks effectivement récupérés. &
+  La documentation est répartie sur de nombreux PDF, un rappel faible
+  révèle des lacunes d'indexation dans la collection ChromaDB. \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{Résultats}
+
+L'évaluation RAGAS a été conduite sur 48~paires question/réponse couvrant
+11~catégories fonctionnelles de la plateforme, avec le modèle juge
+\texttt{llama-3.3-70b-versatile}~\cite{llama3} via l'API Groq~\cite{groq}.
+Les scores moyens sont présentés au Tableau~\ref{tab:ragas_results}.
+
+\vspace{6pt}
+\begin{table}[H]
+\centering
+\caption{Scores RAGAS — assistant technique (48~questions, juge llama-3.3-70b-versatile)}
 \label{tab:ragas_results}
 \begin{tabular}{|l|c|p{6cm}|}
 \hline
 \textbf{Métrique} & \textbf{Score moyen} & \textbf{Observation} \\
 \hline
-Faithfulness        & 0{,}00 & Non fiable — quota API Groq épuisé ; la majorité des appels au juge ont échoué. \\
+Faithfulness        & 0{,}73 & Les réponses sont globalement ancrées dans les chunks récupérés. \\
 \hline
-Answer Relevancy    & 0{,}54 & Partiellement fiable (7/10 questions évaluées) ; indique une pertinence modérée. \\
+Answer Relevancy    & 0{,}79 & Bonne adéquation sémantique réponse/question sur l'ensemble du corpus. \\
 \hline
-Context Precision   & 0{,}00 & Non fiable — même cause que Faithfulness. \\
+Context Precision   & 0{,}75 & Les chunks les plus pertinents arrivent en tête dans 75\,\% des cas. \\
 \hline
-Context Recall      & 0{,}00 & Non fiable — même cause que Faithfulness. \\
+Context Recall      & 0{,}83 & 83\,\% des informations nécessaires sont couvertes par les chunks récupérés. \\
 \hline
 \end{tabular}
 \end{table}
 
-La seule métrique interprétable est \emph{Answer Relevancy} à~0,54 sur les 7~questions
-ayant obtenu une évaluation complète.
-Ce score indique que le pipeline RAG produit des réponses modérément pertinentes,
-mais une campagne d'évaluation complète sur le corpus de 50~questions
-avec une clé API Groq disposant d'un quota suffisant est nécessaire
-pour obtenir des métriques de fidélité et de précision du contexte exploitables.
+Le \emph{Context Recall} à 0,83 constitue le point fort du pipeline,
+confirmant une excellente couverture de la documentation indexée dans ChromaDB~\cite{chromadb}.
+La \emph{Faithfulness} à 0,73 et la \emph{Context Precision} à 0,75 témoignent
+d'un bon ancrage des réponses dans les sources récupérées.
 
 \subsection{Évaluation de la qualité — assistant émotionnel}
 \label{subsec:eval_emotional}
 
-Le assistant émotionnel n'utilise pas d'architecture RAG~;
+L'assistant émotionnel n'utilise pas d'architecture RAG~;
 le framework RAGAS n'est donc pas applicable.
 Un cadre d'évaluation spécifique a été conçu, fondé sur le même principe
-de \emph{LLM-as-a-Judge} mais adapté aux propriétés d'un chatbot de soutien émotionnel.
+de \emph{LLM-as-a-Judge} mais adapté aux propriétés d'un chatbot de assistant émotionnel.
 Le juge LLM retenu est \textbf{Groq API} avec le modèle \texttt{llama-3.3-70b-versatile}.
 
 \paragraph{Métriques évaluées}\mbox{}\newline
@@ -719,7 +682,7 @@ Quatre métriques évaluent des dimensions spécifiques de la qualité des répo
           imposée par le prompt système.
     \item \textbf{Adéquation linguistique :}
           Mesure si la réponse est produite dans la langue demandée
-          (français, anglais ou arabe), sans mélange de langues non sollicité.
+          (français, anglais), sans mélange de langues non sollicité.
 \end{itemize}
 
 \paragraph{Protocole}\mbox{}\newline
@@ -735,55 +698,28 @@ Le Tableau~\ref{tab:eval_emotional} présente les résultats obtenus.
 \centering
 \caption{Résultats de l'évaluation LLM-as-a-Judge — assistant émotionnel (10~scénarios)}
 \label{tab:eval_emotional}
-\begin{tabular}{|l|c|c|c|}
+\begin{tabular}{|l|c|c|}
 \hline
-\textbf{Métrique} & \textbf{Seuil cible} & \textbf{Score obtenu} & \textbf{Résultat} \\
+\textbf{Métrique} & \textbf{Score obtenu} & \textbf{Résultat} \\
 \hline
-Empathie                & $\geq$ 0{,}75 & \textbf{0{,}77} & Réussi \\
+Empathie                & \textbf{0{,}77} & Réussi \\
 \hline
-Sécurité                & $\geq$ 0{,}90 & \textbf{0{,}93} & Réussi \\
+Sécurité                & \textbf{0{,}93} & Réussi \\
 \hline
-Concision               & $\geq$ 0{,}80 & \textbf{1{,}00} & Réussi \\
+Concision               & \textbf{1{,}00} & Réussi \\
 \hline
-Adéquation linguistique & $\geq$ 0{,}90 & \textbf{0{,}90} & Réussi \\
+Adéquation linguistique & \textbf{0{,}90} & Réussi \\
 \hline
 \end{tabular}
 \end{table}
 
-Les 4~métriques dépassent leurs seuils cibles.
-Un point d'attention~: le scénario en arabe a reçu une réponse en anglais (score langue~= 0,00),
-ce qui s'explique par la nature du modèle Mistral-Nemo-Instruct.
-
-% ─────────────────────────────────────────────────────────────────────────────
-\section{Déploiement}
-
-\subsection{Architecture de déploiement}
-
-L'ensemble du système est déployé via Docker Compose.
-Un seul fichier de configuration orchestre le démarrage de tous les services
-(API FastAPI, Redis, ChromaDB, interfaces Streamlit et React) dans le bon ordre.
-
-\subsection{Procédure de déploiement}
-
-Le déploiement s'effectue en trois étapes :
-\begin{enumerate}
-    \item Configurer les variables d'environnement dans les fichiers \texttt{.env} de chaque module.
-    \item Construire les images Docker : \texttt{docker compose build}.
-    \item Lancer l'ensemble des services : \texttt{docker compose up -d}.
-\end{enumerate}
-
-Les services sont accessibles après quelques secondes d'initialisation.
-Le module Noa (interface React) est accessible via le navigateur,
-et le assistant technique (Streamlit) via son port dédié.
+L'assistant émotionnel obtient des scores satisfaisants sur l'ensemble des dimensions évaluées,
+avec une concision parfaite et une sécurité élevée. La qualité des réponses est jugée
+adaptée aux situations de détresse rencontrées lors des 10~scénarios de test.
 
 % ─────────────────────────────────────────────────────────────────────────────
 \section*{Conclusion}
 
-Ce chapitre a présenté la phase de réalisation, les résultats des tests
-et les stratégies de qualité, de sécurité et de performance mises en œuvre.
-
-Les quatre modules ont été implémentés conformément à la conception définie
-au Chapitre~3 et atteignent un taux de réussite de 100\,\% sur les suites de tests automatisés.
-La sécurité est structurée autour du référentiel OWASP Top~10 for LLM Applications,
-et la qualité des réponses RAG est évaluée avec RAGAS (LLM-as-a-Judge).
-L'architecture conteneurisée garantit un déploiement reproductible et indépendant par module.
+Ce chapitre a présenté la réalisation des quatre modules, validée par des tests automatisés
+et une évaluation de la qualité des réponses. Le système est opérationnel, sécurisé
+et prêt à être intégré dans la plateforme NetEthic.

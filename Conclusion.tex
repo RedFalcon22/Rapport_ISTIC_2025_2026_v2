@@ -2,18 +2,35 @@
 \markboth{Conclusion Générale}{}
 \addcontentsline{toc}{chapter}{Conclusion Générale}
 
-Ce projet a abouti à l'intégration de quatre modules d'intelligence artificielle
-au sein de la plateforme Netethic, couvrant l'assistance conversationnelle,
-le support technique, le soutien émotionnel et la classification automatique des textes.
+Ce projet de fin d'études avait pour objectif de doter la plateforme Netethic d'une couche
+d'intelligence artificielle capable d'accompagner les établissements scolaires dans leur lutte
+contre le harcèlement numérique. L'enjeu était de concevoir des modules adaptés non seulement
+au langage naturel, mais aussi au contexte émotionnel et juridique propre à ce domaine.
+
+Les quatre modules réalisés répondent chacun à un besoin précis : \textbf{Noa} assure une présence
+permanente sur le site public, l'\textbf{assistant technique} accompagne le personnel dans la navigation et l'utilisation
+de la plateforme, l'\textbf{assistant émotionnel} aide les étudiants à exprimer leurs émotions et à gérer leurs conflits,
+et le \textbf{classificateur de harcèlement},
+ancré dans le droit français, offre une lecture structurée des contenus signalés selon quatre
+stratégies complémentaires. L'ensemble forme un système cohérent, modulaire et conteneurisé,
+dont les résultats valident la pertinence des choix effectués.
+
 Sur le plan architectural, le choix d'une approche modulaire et conteneurisée
 s'est révélé déterminant~: les composants développés restent indépendants du domaine
 applicatif et peuvent être réorientés vers d'autres contextes sans refonte majeure.
-
 Ce qui ressort le plus clairement de ce travail, c'est que la performance d'un système
 conversationnel basé sur un LLM dépend moins du modèle lui-même que de ce qui l'entoure~:
 la qualité des données indexées, la précision des garde-fous, et la robustesse
 des mécanismes de repli.
-Ces constats posent naturellement la question de l'évolution à long terme d'un tel système.
+
+\medskip
+
+Ce travail ouvre néanmoins des perspectives ambitieuses. La \textbf{détection multimodale}
+constitue un axe naturel : le harcèlement numérique emprunte aussi la forme d'images, de mèmes
+et de messages vocaux, ce qui appelle une combinaison de vision par ordinateur et de traitement
+du langage. Une \textbf{analyse comportementale longitudinale} permettrait de passer d'une posture réactive à
+une posture prédictive en alertant les équipes éducatives avant qu'une situation n'atteigne un
+seuil critique, faisant ainsi de Netethic non plus un outil de détection, mais de prévention.
 
 \medskip
 
@@ -33,10 +50,7 @@ uniquement les mises à jour de poids — des gradients agrégés et anonymisés
 Aucun message d'élève ne quitte jamais l'établissement.
 Le modèle s'améliore collectivement, tout en respectant scrupuleusement
 les contraintes légales et éthiques.
-
-Ce qui rend cette piste particulièrement intéressante pour Netethic,
-c'est qu'elle résoudrait en même temps un problème technique souvent négligé~:
-la dérive linguistique.
+Ce mécanisme résoudrait également un problème souvent négligé~: la dérive linguistique.
 L'argot utilisé par les adolescents évolue rapidement, varie selon les régions,
 et un corpus figé finit inévitablement par devenir obsolète.
 Avec un apprentissage distribué et continu, le modèle s'adapterait

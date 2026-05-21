@@ -1,0 +1,61 @@
+@startuml activite_support
+!theme plain
+scale 0.8
+skinparam activityBorderColor #2C6EA0
+skinparam activityBackgroundColor #E8F5E9
+skinparam activityArrowColor #2C6EA0
+skinparam diamondBorderColor #E65100
+skinparam diamondBackgroundColor #FFF3E0
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+
+start
+
+:Recevoir message + session utilisateur;
+
+:Garde-fou LLM\n(injection / XSS / contenu haineux);
+
+if (Requete dangereuse ?) then (Oui)
+  :Retourner message de rejet;
+  stop
+endif
+
+:Detection sociale + correction orthographique;
+
+if (Message social ?) then (salutation / hors sujet)
+  :Retourner reponse cordiale\n(sans recherche documentaire);
+  stop
+else (vraie question)
+endif
+
+:Classification d'intention LLM\n(LIVE vs PDF);
+
+if (Type de donnees ?) then (temps reel / LIVE)
+  :Recuperer donnees du tableau de bord\n(depuis la session);
+  if (Donnees disponibles ?) then (Non)
+    :Declencher flux de repli\n(RDV / Signalement / Portail support);
+    stop
+  endif
+else (documentation / PDF)
+  :Reecriture de requete RAG\n+ detection de suivi (1 appel LLM);
+  :Consulter cache Redis\n(similarite semantique);
+  if (Cache hit ?) then (Oui)
+    :Retourner reponse depuis le cache;
+    stop
+  endif
+  :Recherche vectorielle ChromaDB\n(filtree par categorie);
+  if (Documents trouves ?) then (Non)
+    :Declencher flux de repli\n(RDV / Signalement / Portail support);
+    stop
+  endif
+endif
+
+:Generer reponse LLM\n(contexte + historique + question);
+
+:Post-traitement + mise en cache + sauvegarde session;
+
+:Retourner reponse;
+
+stop
+
+@enduml

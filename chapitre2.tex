@@ -17,17 +17,17 @@ le diagramme de cas d'utilisation, et l'environnement technique retenu.
 Les besoins fonctionnels décrivent l'ensemble des fonctionnalités que le système doit
 offrir à ses utilisateurs. Ils sont organisés par module.
 
-% ── Module 1 : Noa ────────────────────────────────────────────────────────────
-\subsection{Module 1 — assistant Noa}
+% ── Module 1 : Noa assistant ────────────────────────────────────────────────────────────
+\subsection{Module 1 — Noa assistant : assistant virtuel du site public}
 
-Noa est l'assistant virtuel intégré au site public de Netethic.
+Noa assistant est l'assistant virtuel intégré au site public de Netethic.
 Il aide les visiteurs à s'informer sur la plateforme et à planifier une démonstration.
-Le Tableau~\ref{tab:bf_noa} présente ses besoins fonctionnels.
+Le Tableau~\ref{tab:bf_Noa assistant} présente ses besoins fonctionnels.
 
 \vspace{6pt}
 \begin{table}[H]
-\caption{Besoins fonctionnels — Noa (assistant site public Netethic)}
-\label{tab:bf_noa}
+\caption{Besoins fonctionnels — Noa assistant (assistant site public Netethic)}
+\label{tab:bf_Noa assistant}
 \centering
 \small
 \setlength{\tabcolsep}{4pt}
@@ -68,7 +68,7 @@ BF-N12 & Administrer le système
 % ── Module 2 : assistant technique ─────────────────────────────────────
 \subsection{Module 2 — assistant technique : support technique interne}
 
-Le \textit{assistant technique} est un assistant destiné aux utilisateurs internes de la plateforme.
+L'\textit{assistant technique} est un assistant destiné aux utilisateurs internes de la plateforme.
 Il aide le personnel des établissements à utiliser les fonctionnalités de Netethic.
 Le Tableau~\ref{tab:bf_nesa} décrit ses besoins fonctionnels.
 
@@ -116,7 +116,7 @@ BF-S13 & Détection automatique de la langue
 \end{tabular}
 \end{table}
 
-% ── Module 3 : Soutien émotionnel ─────────────────────────────────────────────
+% ── Module 3 : assistant émotionnel ─────────────────────────────────────────────
 \subsection{Module 3 — assistant émotionnel}
 
 Ce module accompagne les étudiants en difficulté à travers une conversation bienveillante et continue.
@@ -162,7 +162,7 @@ BF-E08 & Converser dans la langue de l'étudiant
 \end{table}
 
 % ── Module 4 : Classificateur de harcèlement ──────────────────────────────────
-\subsection{Module 4 — classificateur de harcèlement}
+\subsection{Module 4 — Classificateur de harcèlement}
 
 Ce module analyse automatiquement les textes soumis à la plateforme.
 Il identifie les comportements nécessitant une attention particulière et s'appuie sur le droit français.
@@ -242,10 +242,10 @@ BNF-05 & Maintenabilité
         & L'architecture modulaire isole chaque fonctionnalité dans un module distinct, facilitant les mises à jour et les corrections. \\
 \hline
 BNF-06 & Conformité RGPD
-        & Aucune donnée personnelle n'est conservée au-delà de la session ; les données de réservation sont stockées localement sans partage avec des tiers. \\
+        & Aucune donnée personnelle n'est conservée au-delà de la session, les données de réservation sont stockées localement sans partage avec des tiers. \\
 \hline
 BNF-07 & Multilingue
-        & L'interface et les réponses sont disponibles en français, en anglais et en arabe, avec détection automatique de la langue. Le assistant émotionnel étend ce support au darija tunisien et au code-switching arabo-français. \\
+        & L'interface et les réponses sont disponibles en français, en anglais et en arabe, avec détection automatique de la langue. L'assistant émotionnel étend ce support au darija tunisien et au code-switching arabo-français. \\
 \hline
 BNF-08 & Robustesse
         & Chaque composant intègre une gestion explicite des erreurs avec des messages clairs pour l'utilisateur et des traces journalisées côté serveur. \\
@@ -257,67 +257,76 @@ BNF-08 & Robustesse
 \section{Identification des acteurs}
 
 Un acteur représente toute entité externe qui interagit avec le système.
-Sept acteurs principaux sont identifiés.
+Neuf acteurs principaux sont identifiés.
 
 \subsection{Visiteur du site public}
 
 Le visiteur est toute personne qui accède au site web de Netethic.
 Il peut s'agir d'un directeur d'établissement scolaire, d'un conseiller principal d'éducation,
 d'un parent ou d'un représentant d'association.
-Il interagit avec Noa pour s'informer sur la plateforme, poser des questions en français
-ou en anglais, et réserver une démonstration.
+Il interagit avec Noa assistant pour s'informer sur la plateforme, poser des questions
+et réserver une démonstration.
 
 \subsection{Utilisateur interne de la plateforme}
 
 L'utilisateur interne est un membre du personnel d'un établissement disposant
 d'un accès authentifié à la plateforme Netethic.
-Il interagit avec le \textit{assistant technique} pour obtenir de l'aide sur
-les fonctionnalités de la plateforme, déclarer un incident technique ou planifier
-un rendez-vous.
+Il interagit avec l'\textit{assistant technique} pour obtenir de l'aide sur
+les fonctionnalités de la plateforme, déclarer un incident ou planifier un rendez-vous.
 
 \subsection{Administrateur}
 
 L'administrateur est le responsable technique du système.
-Il surveille l'état des caches, consulte les statistiques d'usage, gère les sessions actives
-et accède aux rendez-vous collectés et aux signalements reçus.
+Il supervise Noa assistant et l'assistant technique, consulte les statistiques d'usage,
+gère les sessions actives et accède aux signalements reçus.
 
-\subsection{Noa et assistant technique}
+\subsection{Système Netethic}
 
-L'assistant Noa et l'assistant technique sont les deux assistants virtuels du système.
-Chacun orchestre de manière autonome son pipeline de traitement.
+La plateforme Netethic est un acteur déclencheur du module de classification.
+Elle soumet automatiquement des textes au classificateur de harcèlement pour analyse
+et récupère les labels, scores de confiance et indicateurs d'urgence produits.
 
-\subsection{assistant émotionnel}
+\subsection{Noa assistant (stéréotype «Actor»)}
 
-L'assistant émotionnel est un composant intelligent de la plateforme Netethic.
-Il détecte les signaux de détresse dans les messages des utilisateurs, génère des réponses
-empathiques et déclenche les alertes en cas de crise.
-Il orchestre de manière autonome son pipeline de traitement.
+Noa assistant est l'assistant virtuel du site public de Netethic.
+Il est représenté avec le stéréotype \textit{«Actor»} car il orchestre de manière autonome
+son pipeline : classification d'intention, recherche documentaire et génération de réponse.
 
-\subsection{Classificateur de harcèlement}
+\subsection{assistant technique (stéréotype «Actor»)}
 
-Le classificateur de harcèlement est un module d'analyse automatique de textes soumis
-par la plateforme Netethic.
-Il identifie les comportements problématiques, les signaux de harcèlement et ancre ses
-décisions dans le cadre juridique français.
-Il conduit de manière autonome son pipeline d'analyse.
+L'assistant technique est l'assistant virtuel interne de la plateforme Netethic.
+Il orchestre de manière autonome son pipeline RAG : réécriture de la requête, recherche
+documentaire et génération de réponse adaptée au contexte de l'utilisateur.
 
-\subsection{Serveur LLM (kaisens.fr)}
+\subsection{assistant émotionnel (stéréotype «Actor»)}
 
-Un LLM (Large Language Model — grand modèle de langage) est un modèle entraîné sur de grandes
-quantités de texte, capable de générer des réponses en langage naturel et de suivre des instructions.
-Le serveur LLM est un serveur d'inférence externe hébergé sur l'infrastructure de kaisens.fr \cite{vllm2023}.
-Il expose une interface compatible avec les standards de l'industrie et génère les réponses
-à partir du modèle Mistral-7B \cite{mistral2023}.
-Il est sollicité par les deux assistants virtuels ainsi que par le classificateur de harcèlement.
+L'assistant émotionnel détecte les signaux de détresse dans les messages des utilisateurs,
+génère des réponses empathiques et déclenche les alertes en cas d'idéation suicidaire.
+Il est représenté avec le stéréotype \textit{«Actor»} car il orchestre de manière autonome
+son pipeline de traitement.
+
+\subsection{Classificateur de harcèlement (stéréotype «Actor»)}
+
+Le classificateur de harcèlement analyse automatiquement les textes soumis par la plateforme.
+Il identifie les comportements problématiques sur 16 labels et ancre ses décisions
+dans le cadre juridique français.
+Il est représenté avec le stéréotype \textit{«Actor»} car il conduit de manière autonome
+son pipeline d'analyse.
+
+\subsection{Serveur LLM (kaisens.fr) (stéréotype «Actor»)}
+
+Le serveur LLM est un service d'inférence externe hébergé sur kaisens.fr, exposant le modèle
+Mistral-7B \cite{mistral2023} via une API standard \cite{vllm2023}.
+Il est sollicité par Noa assistant, l'assistant technique et le classificateur de harcèlement.
 
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Diagramme de cas d'utilisation}
 
 La Figure~\ref{fig:use_case} illustre le système global.
-Le visiteur est l'acteur principal de Noa : il initie les conversations, pose des questions
+Le visiteur est l'acteur principal de Noa assistant : il initie les conversations, pose des questions
 sur la plateforme et réserve une démonstration.
-L'utilisateur interne est l'acteur principal du \textit{assistant technique} :
-il pose des questions, signale des incidents et peut bénéficier du soutien émotionnel.
+L'utilisateur interne est l'acteur principal de l'\textit{assistant technique} :
+il pose des questions, signale des incidents et peut bénéficier de l'assistant émotionnel.
 L'administrateur supervise les deux systèmes.
 Le serveur LLM externe fournit la capacité de génération à l'ensemble des modules.
 
@@ -345,7 +354,7 @@ Le Tableau~\ref{tab:cas_utilisation} décrit les cas d'utilisation essentiels du
 CU-01 & Poser une question (site public)
        & Visiteur
        & Le visiteur pose une question en français ou en anglais.
-         Noa la traite selon son pipeline : classification, mémoire, recherche, génération. \\
+         Noa assistant la traite selon son pipeline : classification, mémoire, recherche, génération. \\
 \hline
 CU-02 & Réserver une démonstration
        & Visiteur
@@ -355,7 +364,7 @@ CU-02 & Réserver une démonstration
 CU-03 & Poser une question (support interne)
        & Utilisateur interne
        & L'utilisateur sélectionne une catégorie parmi les 11~modules, puis pose sa question.
-         Le assistant technique retourne une réponse ancrée dans la documentation. \\
+         L'assistant technique retourne une réponse ancrée dans la documentation. \\
 \hline
 CU-03b & Consulter les suggestions de questions
         & Utilisateur interne
@@ -365,7 +374,7 @@ CU-04 & Contacter le support
        & Utilisateur interne
        & Si pas d'information dans la documentation, l'utilisateur choisit l'une de trois options : planifier un rendez-vous, signaler un dysfonctionnement via un formulaire pré-rempli transmis à l'équipe technique, ou accéder au portail de support en ligne. \\
 \hline
-CU-06 & Bénéficier du soutien émotionnel
+CU-06 & Bénéficier de l'assistant émotionnel
        & Utilisateur interne
        & Si un signal de détresse est détecté, le module génère une réponse empathique
          et oriente vers le module Accompagnement. En cas d'idéation suicidaire, une alerte est déclenchée. \\
@@ -424,12 +433,7 @@ Modélisation UML      & Power AMC \\
 % ─────────────────────────────────────────────────────────────────────────────
 \section*{Conclusion}
 
-Ce chapitre a défini les besoins du système dans sa globalité.
-Les besoins fonctionnels ont établi les fonctionnalités attendues de chacun des quatre modules.
-Les besoins non fonctionnels ont précisé les contraintes de qualité transversales,
-notamment en matière de performance, de sécurité, de disponibilité et de conformité RGPD.
-Les sept acteurs du système ont été identifiés, incluant les assistants virtuels et les modules autonomes.
-Le diagramme de cas d'utilisation a synthétisé l'ensemble de ces interactions.
-
-Dans le chapitre suivant, nous présentons l'état de l'art et les choix technologiques
-retenus pour chacun des quatre modules.
+Ce chapitre a établi les besoins fonctionnels et non fonctionnels du système,
+identifié les acteurs impliqués et formalisé leurs interactions.
+Ces spécifications servent de référentiel pour les choix de conception présentés
+dans le chapitre suivant.
