@@ -599,22 +599,6 @@ après nettoyage) et ne modifie que 2~prédictions sur 977 (0,2\,\%),
 confirmant que les erreurs observées sont intrinsèques au modèle
 et non aux données brutes.
 
-\subsection{Augmentation des données}
-
-Le corpus initial présente un déséquilibre de classes~:
-après la phase de labeling (voir Section~\ref{subsec:labeling}),
-647~textes sont confirmés dans la catégorie négative contre 330~textes
-reclassifiés dans des catégories positives ou neutres.
-Pour atténuer ce déséquilibre et améliorer la robustesse du modèle,
-une stratégie d'augmentation des données a été appliquée à la classe minoritaire.
-
-L'augmentation repose sur la paraphrase automatique par LLM~:
-chaque texte de la classe minoritaire est soumis au modèle indépendant
-avec une instruction de paraphrase, produisant une version reformulée
-sémantiquement équivalente mais lexicalement différente.
-Cette technique élargit la diversité des exemples d'entraînement
-sans nécessiter de collecte de nouvelles données.
-
 \subsection{Stratégie de labeling — LLM comme juge indépendant}
 \label{subsec:labeling}
 
