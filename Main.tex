@@ -32,6 +32,8 @@
 \renewcommand{\theparagraph}{\alph{paragraph}.}
 
 \pagestyle{fancy}
+\renewcommand{\chaptermark}[1]{\markboth{Chapitre \thechapter}{}}
+\renewcommand{\sectionmark}[1]{\markright{\thesection\ \ #1}}
 \fancyhead[L]{\nouppercase\leftmark}
 \fancyhead[C]{}
 \fancyhead[R]{\nouppercase\rightmark}

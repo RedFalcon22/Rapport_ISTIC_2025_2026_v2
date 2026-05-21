@@ -1,4 +1,4 @@
-﻿@startuml sequence_classificateur
+@startuml sequence_classificateur
 !theme plain
 skinparam sequenceArrowColor #2C6EA0
 skinparam sequenceLifeLineBorderColor #2C6EA0
@@ -7,63 +7,54 @@ skinparam sequenceParticipantBackgroundColor #FCE4EC
 skinparam sequenceActorBorderColor #1A3550
 skinparam sequenceGroupBorderColor #888888
 skinparam defaultFontName Arial
-skinparam defaultFontSize 11
+skinparam defaultFontSize 13
 
+caption Flux de classification d'un texte — stratégie hybride (LLM avec repli heuristique) :\nquatre stratégies évaluées ; hybrid_fallback retenue pour son meilleur F1-score.
 
 participant "Plateforme\nNetethic" as Plat
-participant "API\nClassificateur" as API
+participant "Pipeline\nClassificateur" as API
 participant "Préprocesseur" as Prep
-participant "Stratégie\nLLM seul" as SLLM
-participant "Stratégie\nLLM + Juridique" as SLegal
-participant "Stratégie\nHeuristique" as SHeur
-participant "Stratégie\nHybride" as SHybrid
-participant "ChromaDB\n(corpus légal)" as Chroma
+participant "Client LLM" as CLLM
+participant "Heuristiques" as Heur
 participant "Serveur LLM\n(kaisens.fr)" as LLM
 
-Plat -> API  : POST /classify\n{text, experimentId}
+Plat -> API : texte à classifier
+activate API
 
-group Prétraitement
-  API  -> Prep : preprocess(text)
-  note right of Prep : — Suppression des URLs\n— Normalisation des espaces\n— Mise en minuscules
-  Prep --> API  : cleanText
+== Étape 1 — Prétraitement ==
+
+API -> Prep : clean_text(texte)
+activate Prep
+Prep --> API : texte nettoyé
+deactivate Prep
+note right of Prep : Suppression URLs / emails,\nnormalisation des espaces,\nmise en minuscules
+
+== Étape 2 — Classification hybride ==
+
+note right of API : Quatre stratégies évaluées :\nheuristic_only, llm/no_rag,\nllm/full_rag, hybrid_fallback.\nLa stratégie hybride est retenue.
+
+API -> CLLM : classify(texte, prompt)
+activate CLLM
+CLLM -> LLM : inference(prompt, texte_nettoyé)
+activate LLM
+LLM --> CLLM : labels bruts
+deactivate LLM
+CLLM --> API : labels normalisés
+deactivate CLLM
+note right of CLLM : Si LLM indisponible ou réponse\ninvalide → repli automatique\nsur les heuristiques
+
+opt [Repli heuristique]
+  API -> Heur : classify_heuristic(texte_nettoyé)
+  activate Heur
+  Heur --> API : labels
+  deactivate Heur
 end
 
-group Classification parallèle (4 stratégies)
+== Étape 3 — Journalisation ==
 
-  API  -> SLLM    : classify(cleanText)
-  SLLM -> LLM     : inference(prompt_zero_shot + cleanText)
-  LLM --> SLLM    : rawLabels
-  SLLM --> API    : {labels, confidence, strategy="llm_only"}
+API -> API : save_results(labels, méthode, timestamp)
 
-  API  -> SLegal  : classify(cleanText)
-  SLegal -> Chroma : searchLegal(cleanText, k=3)
-  Chroma --> SLegal : legalChunks
-  SLegal -> LLM    : inference(prompt + legalChunks + cleanText)
-  LLM --> SLegal   : rawLabels
-  SLegal --> API   : {labels, confidence, strategy="llm_legal"}
-
-  API  -> SHeur   : classify(cleanText)
-  note right of SHeur : Correspondance\npar mots-clés\n(pas de LLM)
-  SHeur --> API   : {labels, confidence, strategy="heuristics"}
-
-  API  -> SHybrid : classify(cleanText)
-  SHybrid -> LLM  : inference(prompt + cleanText)
-  alt LLM succès
-    LLM --> SHybrid  : rawLabels
-  else LLM échec
-    SHybrid -> SHeur : fallback heuristics
-    SHeur --> SHybrid : labels
-  end
-  SHybrid --> API : {labels, confidence, strategy="hybrid"}
-
-end
-
-group Sélection et journalisation
-  API -> API : evaluateBestStrategy(results)
-  API -> API : checkUrgencyFlag(labels)
-  API -> API : logClassification(textId, strategy, confidence,\nlatency, urgencyFlag, timestamp)
-end
-
-API --> Plat : {labels, confidence, strategy,\nurgencyFlag, latency, textId}
+API --> Plat : labels, méthode, confiance
+deactivate API
 
 @enduml

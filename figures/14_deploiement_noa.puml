@@ -1,4 +1,4 @@
-﻿@startuml deploiement_noa
+@startuml deploiement_noa
 !theme plain
 skinparam defaultFontName Arial
 skinparam defaultFontSize 11
@@ -43,20 +43,23 @@ node "Visiteur\n<<device>>" as CLI {
 
 ' ─── STACK NOA ─────────────────────────────────────────────
 node "Serveur Linux  [Stack Noa]" <<device>> as HOST {
-  node "Docker Compose  [bridge]" <<execution environment>> as NET {
+  node "Docker Compose  [bridge: noa-net]" <<execution environment>> as NET {
 
     node "netethic-frontend  :3000" <<container>> as FE {
-      component "React 18 + Vite\nNginx  (proxy /api → :8000)" as SVC_FE
+      component "React 18 + Vite\nNginx  (proxy /api → backend:8000)" as SVC_FE
     }
 
     node "netethic-backend  :8000" <<container>> as API {
-      component "FastAPI  uvicorn\n--reload" as SVC_API
-      component "Agent Loop\n[Claude tool-use  /  Gemini]\nsearch_kb · fetch_page\nget_contact · start_booking" as SVC_AGT
+      component "FastAPI  uvicorn" as SVC_API
+      component "Agent Loop\n[tool-use: search_kb · fetch_page\nget_contact · start_booking]" as SVC_AGT
       component "Booking FSM\n[booking_agent.py]\nstep-by-step reservation" as SVC_FSM
       component "Intent Router\n[guardrail patterns]" as SVC_GRD
       component "FAQ Cache\n[LRU  in-memory]" as SVC_CACHE
-      component "ChromaDB  embedded\ncol: netethic_kb" as SVC_CHR
-      artifact "vol  chroma_data\n/app/chroma_db" as VOL_CHR
+    }
+
+    node "netethic-chroma  :8001" <<container>> as CHR {
+      component "ChromaDB 0.4\nHTTP Server\ncol: netethic_kb" as SVC_CHR
+      artifact "vol  chroma_data\n/chroma/chroma" as VOL_CHR
     }
 
     node "netethic-redis  (interne)" <<container>> as RED {
@@ -80,6 +83,7 @@ CLI  --  HOST  : HTTPS  :3000
 HOST --  EXT   : HTTPS  :443\nPOST /v1/chat/completions
 
 FE   --> API   : REST /api/chat  /api/health
-API  --> RED   : sessions  historique
+API  --> CHR   : HTTP :8001  recherche vectorielle\n(noa-net interne)
+API  --> RED   : TCP :6379  sessions  historique
 
 @enduml

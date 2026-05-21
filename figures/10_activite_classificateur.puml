@@ -1,4 +1,4 @@
-﻿@startuml activite_classificateur
+@startuml activite_classificateur
 !theme plain
 skinparam activityBorderColor #2C6EA0
 skinparam activityBackgroundColor #FCE4EC
@@ -8,42 +8,37 @@ skinparam diamondBackgroundColor #FCE4EC
 skinparam defaultFontName Arial
 skinparam defaultFontSize 11
 
+caption Chaîne de repli du classificateur de harcèlement :\nstratégie hybride — tentative LLM puis repli automatique sur les heuristiques en cas d'échec.
 
 start
 
-:Réception du texte\n(depuis la plateforme Netethic);
+:Réception du texte;
 
-:Prétraitement\n— Suppression des URLs\n— Normalisation des espaces\n— Mise en minuscules;
+:Prétraitement\n(URLs, espaces, minuscules);
 
-:Tentative 1 — Stratégie LLM seul\n(inférence directe, zéro-shot);
+:Appel LLM\n(prompt + texte prétraité);
 
 if (LLM répond correctement ?) then (Oui)
+
   :labels ← résultat LLM;
-else (Non)
 
-  :Tentative 2 — Stratégie LLM + Ancrage juridique\n(récupération des passages légaux pertinents\ndepuis ChromaDB, injection dans le prompt);
+  :Vérification urgence\n(Suicide / Self Harm → urgent);
 
-  if (LLM+Juridique répond correctement ?) then (Oui)
-    :labels ← résultat LLM + Juridique;
+else (Non — échec ou réponse invalide)
+
+  :Repli — Heuristiques par mots-clés;
+
+  if (Score de harcèlement > seuil ?) then (Oui)
+    :labels ← HARASSMENT;
   else (Non)
-
-    :Tentative 3 — Heuristiques par mots-clés\n(correspondance rapide sans appel au LLM);
-
-    if (Heuristiques trouvent une correspondance ?) then (Oui)
-      :labels ← résultat heuristiques;
-    else (Non)
-      :labels <- etiquette neutre\n"non_classifie";
-    endif
-
+    :labels ← NOT_HARASSMENT;
   endif
 
 endif
 
-:Vérification indicateur d'urgence\n(idéation suicidaire → urgencyFlag = true);
+:Journalisation\n(labels, méthode, confiance, timestamp);
 
-:Journalisation du résultat\n{textId, labels, strategy, confidence,\nlatency, urgencyFlag, timestamp};
-
-:Retour à la plateforme Netethic\n{labels, confidence, strategy,\nurgencyFlag, latency};
+:Retour à la plateforme\n(labels, méthode, confiance);
 
 stop
 

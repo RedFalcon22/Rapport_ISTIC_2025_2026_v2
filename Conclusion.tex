@@ -2,34 +2,50 @@
 \markboth{Conclusion Générale}{}
 \addcontentsline{toc}{chapter}{Conclusion Générale}
 
-Ce projet de fin d'études avait pour objectif d'enrichir la plateforme Netethic de quatre modules
-intelligents basés sur l'intelligence artificielle, afin de combler les limites identifiées
-dans les outils de lutte contre le harcèlement scolaire.
+Ce projet a abouti à l'intégration de quatre modules d'intelligence artificielle
+au sein de la plateforme Netethic, couvrant l'assistance conversationnelle,
+le support technique, le soutien émotionnel et la classification automatique des textes.
+Sur le plan architectural, le choix d'une approche modulaire et conteneurisée
+s'est révélé déterminant~: les composants développés restent indépendants du domaine
+applicatif et peuvent être réorientés vers d'autres contextes sans refonte majeure.
 
-Les travaux réalisés ont permis de concevoir et d'implémenter :
-\begin{itemize}
-    \item \textbf{Noa}, un assistant virtuel bilingue intégré au site public de Netethic,
-          capable de répondre aux visiteurs à toute heure et de gérer les demandes de démonstration.
-    \item \textbf{NetEthic Support Assistant}, un assistant de support technique pour le personnel
-          des établissements, avec gestion de sessions, filtrage par catégorie et flux guidés
-          pour la prise de rendez-vous et le signalement de dysfonctionnements.
-    \item \textbf{Module de soutien émotionnel}, intégré au Support Assistant, qui détecte
-          les signaux de détresse et génère des réponses empathiques adaptées.
-    \item \textbf{Classificateur de harcèlement}, un système multi-méthodes ancré dans le droit
-          français, capable d'analyser automatiquement les textes soumis à la plateforme.
-\end{itemize}
+Ce qui ressort le plus clairement de ce travail, c'est que la performance d'un système
+conversationnel basé sur un LLM dépend moins du modèle lui-même que de ce qui l'entoure~:
+la qualité des données indexées, la précision des garde-fous, et la robustesse
+des mécanismes de repli.
+Ces constats posent naturellement la question de l'évolution à long terme d'un tel système.
 
-Les modules conversationnels atteignent un taux de réussite de 100\,\% sur les tests automatisés,
-avec des temps de réponse conformes aux exigences définies.
-Le classificateur offre une approche comparative entre quatre stratégies, permettant
-d'identifier la plus adaptée selon les données à analyser.
+\medskip
 
-D'un point de vue technique, l'architecture modulaire et conteneurisée garantit la maintenabilité
-et la portabilité du système.
-Les choix technologiques retenus — génération ancrée dans la documentation, ancrage juridique,
-mémoire persistante et traitement en parallèle — forment un ensemble cohérent et adapté aux besoins.
+La perspective qui nous semble la plus riche — et la moins explorée dans ce domaine —
+est celle de l'\textbf{apprentissage fédéré inter-établissements}.
+Le problème fondamental du classificateur de harcèlement est le suivant~:
+les données les plus utiles à son amélioration, à savoir les messages réels échangés
+entre élèves, sont précisément celles qui ne peuvent pas être partagées.
+Elles sont sensibles, protégées par le RGPD, et dispersées dans des centaines
+d'établissements qui n'ont aucune raison légale de les transmettre à un tiers.
 
-Parmi les perspectives d'amélioration envisageables, on peut citer l'extension du support
-à d'autres langues, l'enrichissement des bases documentaires, l'intégration d'un tableau
-de bord de supervision en temps réel, et le renforcement des mécanismes de détection
-par l'ajout de données d'entraînement supplémentaires.
+L'apprentissage fédéré contourne cette contrainte d'une façon élégante.
+Plutôt que de faire circuler les données brutes, chaque établissement entraîne
+localement une version du modèle sur ses propres messages, puis transmet
+uniquement les mises à jour de poids — des gradients agrégés et anonymisés —
+à un serveur central qui consolide les améliorations de tous les participants.
+Aucun message d'élève ne quitte jamais l'établissement.
+Le modèle s'améliore collectivement, tout en respectant scrupuleusement
+les contraintes légales et éthiques.
+
+Ce qui rend cette piste particulièrement intéressante pour Netethic,
+c'est qu'elle résoudrait en même temps un problème technique souvent négligé~:
+la dérive linguistique.
+L'argot utilisé par les adolescents évolue rapidement, varie selon les régions,
+et un corpus figé finit inévitablement par devenir obsolète.
+Avec un apprentissage distribué et continu, le modèle s'adapterait
+naturellement à ces évolutions sans nécessiter de campagnes de re-labeling manuelles.
+
+\medskip
+
+Ce projet constitue ainsi une première brique dans une architecture qui,
+si elle venait à intégrer ces mécanismes d'apprentissage distribué,
+pourrait devenir un outil véritablement évolutif — capable non seulement
+de détecter le harcèlement tel qu'il existe aujourd'hui,
+mais aussi tel qu'il se manifestera demain.
