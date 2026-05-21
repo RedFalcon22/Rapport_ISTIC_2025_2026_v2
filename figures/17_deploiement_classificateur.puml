@@ -1,7 +1,7 @@
 ﻿@startuml deploiement_classificateur
 !theme plain
 skinparam defaultFontName Arial
-skinparam defaultFontSize 13
+skinparam defaultFontSize 18
 skinparam shadowing false
 
 skinparam node {
@@ -9,29 +9,30 @@ skinparam node {
   BorderColor     #1565C0
   BorderThickness 1.5
   FontColor       #0D47A1
-  FontSize        13
+  FontSize        18
 }
 skinparam artifact {
   BackgroundColor #FFFDE7
   BorderColor     #F9A825
   FontColor       #7B5E00
-  FontSize        12
+  FontSize        17
 }
 skinparam component {
   BackgroundColor #F5F5F5
   BorderColor     #78909C
   FontColor       #212121
-  FontSize        12
+  FontSize        17
 }
 skinparam cloud {
   BackgroundColor #ECEFF1
   BorderColor     #546E7A
   FontColor       #263238
+  FontSize        18
 }
 skinparam arrow {
   Color     #37474F
   Thickness 1.5
-  FontSize  11
+  FontSize  16
   FontColor #37474F
 }
 

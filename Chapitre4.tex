@@ -316,14 +316,38 @@ La Figure~\ref{fig:composants_classificateur} illustre l'architecture interne du
 \subsection{Diagramme de déploiement}
 \label{sec:module4_deploiement}
 
-La Figure~\ref{fig:deploiement_classificateur} présente la stack Docker Compose du classificateur avec ses services et leurs interactions.
+La Figure~\ref{fig:deploiement_classificateur} présente l'infrastructure de déploiement
+du module classificateur sous forme de stack Docker Compose.
+L'architecture repose sur trois services principaux interconnectés.
 
+\textbf{Service API (FastAPI).}
+Point d'entrée du module, il expose les routes REST permettant à la plateforme Netethic
+de soumettre des textes à analyser et d'en récupérer les résultats de classification.
+Il orchestre l'appel aux quatre stratégies et consolide les résultats.
+
+\textbf{Service Spark (Apache Spark).}
+Moteur de traitement distribué responsable du pipeline d'analyse à grande échelle.
+Il exécute les quatre stratégies de classification en parallèle — LLM direct, ancrage juridique,
+règles heuristiques et hybride — et calcule les métriques d'évaluation agrégées.
+
+\textbf{Service ChromaDB.}
+Base de données vectorielle locale hébergeant les passages juridiques indexés
+(Loi 2022 anti-harcèlement, Code pénal français).
+Elle est interrogée par la stratégie d'ancrage juridique pour enrichir les requêtes
+envoyées au serveur LLM externe (kaisens.fr).
+
+Les trois conteneurs communiquent via un réseau Docker interne dédié,
+garantissant l'isolation du module et facilitant son déploiement indépendant
+sur n'importe quelle infrastructure compatible Docker Compose.
+
+\begin{landscape}
 \begin{figure}[H]
 \centering
-\hspace*{-0.1\textwidth}\includegraphics[width=1.2\textwidth]{diagramme/17_deploiement_classificateur.png}
+\includegraphics[width=0.95\linewidth]{diagramme/17_deploiement_classificateur.png}
 \caption{Diagramme de déploiement — Classificateur de harcèlement (stack Docker Compose)}
 \label{fig:deploiement_classificateur}
 \end{figure}
+\end{landscape}
 
 \subsection{Diagramme de séquences}
 
