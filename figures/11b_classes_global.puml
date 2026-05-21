@@ -1,0 +1,196 @@
+@startuml classes_global
+!theme plain
+skinparam classBackgroundColor #EBF4FB
+skinparam classBorderColor #2C6EA0
+skinparam classArrowColor #1A3550
+skinparam packageBorderColor #888888
+skinparam abstractClassBackgroundColor #D6EAF8
+skinparam defaultFontName Arial
+skinparam defaultFontSize 11
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+
+' ─────────────────────────────────────────
+' CLASSE USER
+' ─────────────────────────────────────────
+class User {
+  + userId    : String
+  + username  : String
+  + email     : String
+  + phone     : String
+  + role      : String
+  --
+  + login()   : void
+  + logout()  : void
+}
+
+' ─────────────────────────────────────────
+' SESSION (abstract)
+' ─────────────────────────────────────────
+abstract class Session {
+  # sessionId          : String
+  # createdAt          : DateTime
+  # language           : String
+  # guardrailTriggered : Boolean
+  --
+  + save() : void
+  + load() : Session
+}
+
+' ─────────────────────────────────────────
+' MESSAGES — module Noa + module Émotionnel
+' ─────────────────────────────────────────
+class Messages {
+  + messageId  : String
+  + content    : String
+  + role       : String
+  + timestamp  : DateTime
+  + category   : String
+  --
+  + send()     : void
+  + classify() : String
+}
+
+' ─────────────────────────────────────────
+' TECHNICAL SESSION — module Support
+' ─────────────────────────────────────────
+class TechnicalSession {
+  + schoolId         : String
+  + selectedCategory : String
+  + liveDataLoaded   : Boolean
+  --
+  + startSession()   : void
+  + closeSession()   : void
+}
+
+' ─────────────────────────────────────────
+' CONVERSATION — pivot Émotionnel + Support
+' ─────────────────────────────────────────
+class Conversation {
+  + conversationId : String
+  + history        : List~Messages~
+  --
+  + addMessage(m : Messages) : void
+  + getHistory()             : List~Messages~
+}
+
+note right of Conversation
+  Pivot partagé :
+  — enrichit ProfilEmotionnel
+    (module émotionnel)
+  — appartient à TechnicalSession
+    (module support)
+end note
+
+' ─────────────────────────────────────────
+' PROFIL ÉMOTIONNEL — module Émotionnel
+' ─────────────────────────────────────────
+class ProfilEmotionnel {
+  + prenom            : String
+  + stresseurs        : List~String~
+  + situationScolaire : String
+  + reussites         : List~String~
+  --
+  + load()   : ProfilEmotionnel
+  + update() : void
+}
+
+' ─────────────────────────────────────────
+' LIVE DATA — module Support
+' ─────────────────────────────────────────
+class LiveData {
+  + schoolId    : String
+  + stats       : Map
+  + lastUpdated : DateTime
+  --
+  + resolve()   : Map
+  + refresh()   : void
+}
+
+' ─────────────────────────────────────────
+' CHROMADB — partagé (Noa, Support, Classif)
+' ─────────────────────────────────────────
+class ChromaDB {
+  + url         : String
+  + collections : Map
+  --
+  + searchSimilar(query, k) : List~Chunks~
+  + searchLegal(text, k)    : List~Chunks~
+}
+
+class Collection {
+  + name     : String
+  + distance : String
+  + count    : Integer
+}
+
+class Docs {
+  + docId    : String
+  + source   : String
+  + metadata : Map
+}
+
+class Chunks {
+  + chunkId   : String
+  + content   : String
+  + embedding : Vector
+  + score     : Float
+}
+
+' ─────────────────────────────────────────
+' PARAMETRE — configuration système
+' ─────────────────────────────────────────
+class Parametre {
+  + id    : String
+  + key   : String
+  + value : String
+}
+
+' ─────────────────────────────────────────
+' GROUPEMENTS VISUELS
+' ─────────────────────────────────────────
+together {
+  class Messages
+  class TechnicalSession
+}
+
+together {
+  class ProfilEmotionnel
+  class LiveData
+}
+
+together {
+  class ChromaDB
+  class Collection
+  class Docs
+  class Chunks
+}
+
+' ─────────────────────────────────────────
+' RELATIONS
+' ─────────────────────────────────────────
+
+' User → sessions
+User "1" --> "0..*" Messages         : saisit >
+User "1" --> "0..*" TechnicalSession : ouvre >
+
+' Héritage
+Messages         --|> Session
+TechnicalSession --|> Session
+
+' Messages → Conversation → ProfilEmotionnel
+Messages     "1" --> "1"    Conversation     : appartient >
+Conversation "1" --> "1"    ProfilEmotionnel : enrichit >
+
+' Conversation → TechnicalSession (module support)
+Conversation "1" --> "1"    TechnicalSession : appartient >
+
+' TechnicalSession → LiveData
+TechnicalSession "1" --> "1" LiveData : contient >
+
+' ChromaDB composition
+ChromaDB   "1" *-- "1..*" Collection : contient
+Collection "1" *-- "1..*" Docs       : contient
+Docs       "1" *-- "1..*" Chunks     : contient
+
+@enduml

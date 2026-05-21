@@ -1,4 +1,4 @@
-﻿@startuml sequence_support_repli
+@startuml sequence_support_repli
 !theme plain
 skinparam sequenceArrowColor #2C6EA0
 skinparam sequenceLifeLineBorderColor #2C6EA0
@@ -7,13 +7,14 @@ skinparam sequenceParticipantBackgroundColor #EBF4FB
 skinparam sequenceActorBorderColor #1A3550
 skinparam sequenceGroupBorderColor #888888
 skinparam defaultFontName Arial
-skinparam defaultFontSize 11
+skinparam defaultFontSize 12
 
 
 actor "Utilisateur interne" as U
 participant "Streamlit\nFrontend" as FE
 participant "FastAPI" as API
-participant "LLM\n(Génération\ndescription)" as LLM
+participant "LangChain\n(Chain)" as LC
+participant "Serveur LLM\n(kaisens.fr)" as LLM
 participant "Redis\n(Session)" as Redis
 participant "API\nNetEthic" as NetEthic
 
@@ -25,81 +26,89 @@ end note
 
 == Option A — Prise de rendez-vous ==
 
-U -> FE : 1. Cliquer "Prendre un rendez-vous"
+U -> FE : Cliquer "Prendre un rendez-vous"
 activate FE
 
-FE -> API : 2. POST /generate-description\n{session_id, mode: "motif"}
+FE -> API : POST /generate-description\n{session_id, mode: "motif"}
 activate API
 
-API -> Redis : 3. get_session(session_id)
+API -> Redis : get_session(session_id)
 activate Redis
 Redis --> API : session (historique de conversation)
 deactivate Redis
 
-API -> LLM : 4. generate_description(session, "motif")
+API -> LC : generate_description(session, motif)
+activate LC
+LC -> LLM : generate(prompt_motif + historique)
 activate LLM
-LLM --> API : motif_auto (1-2 phrases)
+LLM --> LC : motif_auto (1-2 phrases)
 deactivate LLM
+LC --> API : motif_auto
+deactivate LC
 
-API --> FE : 5. {description: motif_auto}
+API --> FE : {description: motif_auto}
 deactivate API
 
-U -> FE : 6. Vérifier et valider le formulaire RDV
+U -> FE : Vérifier et valider le formulaire RDV
 
-FE -> API : 7. POST /appointments\n{session_id, date, heure, canal}
+FE -> API : POST /appointments\n{session_id, date, heure, canal}
 activate API
 
-API -> Redis : 8. get_session(session_id)\n[lire nom, email, téléphone]
+API -> Redis : get_session(session_id)
 activate Redis
 Redis --> API : {username, email, phone}
 deactivate Redis
 
-API -> NetEthic : 9. POST makeAppointment\n{username, email, phone,\nmotif, date, heure, canal}
+API -> NetEthic : POST makeAppointment\n{username, email, phone,\nmotif, date, heure, canal}
 activate NetEthic
 NetEthic --> API : {success: true}
 deactivate NetEthic
 
-API --> FE : 10. {success: true}
+API --> FE : {success: true}
 deactivate API
 deactivate FE
 
 == Option B — Signalement de bug ==
 
-U -> FE : 1. Cliquer "Signaler un bug"
+U -> FE : Cliquer "Signaler un bug"
 activate FE
 
-FE -> API : 2. POST /generate-description\n{session_id, mode: "bug_report"}
+FE -> API : POST /generate-description\n{session_id, mode: "bug_report"}
 activate API
 
-API -> Redis : 3. get_session(session_id)
+API -> Redis : get_session(session_id)
 activate Redis
 Redis --> API : session (historique de conversation)
 deactivate Redis
 
-API -> LLM : 4. generate_description(session, "bug_report")
+API -> LC : generate_description(session, bug_report)
+activate LC
+LC -> LLM : generate(prompt_bug , historique)
 activate LLM
-LLM --> API : description_bug (3-5 phrases structurées)
+LLM --> LC : description_bug ()
 deactivate LLM
+LC --> API : description_bug
+deactivate LC
 
-API --> FE : 5. {description: description_bug}
+API --> FE : {description: description_bug}
 deactivate API
 
-U -> FE : 6. Vérifier et valider le formulaire bug
+U -> FE : Vérifier et valider le formulaire()
 
-FE -> API : 7. POST /bug-reports\n{session_id, description}
+FE -> API : POST /bug-reports\n{session_id, description}
 activate API
 
-API -> Redis : 8. get_session(session_id)\n[lire nom, email, téléphone]
+API -> Redis : get_session(session_id)
 activate Redis
 Redis --> API : {username, email, phone}
 deactivate Redis
 
-API -> NetEthic : 9. POST signalBug\n{username, email, phone,\ndescription}
+API -> NetEthic : POST signalBug\n{username, email, phone,\ndescription}
 activate NetEthic
 NetEthic --> API : {success: true}
 deactivate NetEthic
 
-API --> FE : 10. {success: true}
+API --> FE : {success: true}
 deactivate API
 deactivate FE
 

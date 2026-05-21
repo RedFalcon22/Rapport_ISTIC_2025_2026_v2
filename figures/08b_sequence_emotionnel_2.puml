@@ -1,0 +1,58 @@
+@startuml sequence_emotionnel_2
+!theme plain
+skinparam sequenceArrowColor #2C6EA0
+skinparam sequenceLifeLineBorderColor #2C6EA0
+skinparam sequenceParticipantBorderColor #2C6EA0
+skinparam sequenceParticipantBackgroundColor #EBF4FB
+skinparam sequenceActorBorderColor #1A3550
+skinparam sequenceGroupBorderColor #888888
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+
+
+actor       "Étudiant"              as U
+participant "Streamlit\nFrontend"   as FE
+participant "FastAPI\n(api.py)"     as API
+participant "LangChain\n(Chain)"    as LC
+participant "Redis\n(mémoire)"      as Redis
+participant "LLM\nPrincipal"        as LLM
+
+note over U, LLM
+  Suite — chemin "message sûr" (garde-fou franchi, étapes 4 → 9)
+end note
+
+activate FE
+activate API
+
+== Étapes 4-6 — Contexte mémorisé ==
+
+API -> Redis : charger profil()
+activate Redis
+Redis --> API : {prénom, stresseurs, situation scolaire, réussites...}
+deactivate Redis
+API -> API : enrichir prompt\n(lang + profil)
+
+== Étapes 7-8 — Génération de la réponse ==
+
+API -> LC : chain.invoke(prompt, historique, message)
+activate LC
+LC -> LLM : generate(prompt_empathie + historique)
+activate LLM
+LLM --> LC : réponse brute
+deactivate LLM
+LC --> API : réponse brute
+deactivate LC
+
+== Étape 9 — Post-traitement et sauvegarde ==
+
+API -> API : limiter longueur\n+ nettoyer balises HTML()
+API -> Redis : sauvegarder historique()
+activate Redis
+Redis --> API : confirmation
+deactivate Redis
+
+API --> FE : afficher(response, guardrail_triggered: false, language)
+deactivate API
+deactivate FE
+
+@enduml

@@ -389,41 +389,47 @@ incluant les mécanismes de repli en cas d'échec.
 \end{figure}
 
 % ─────────────────────────────────────────────────────────────────────────────
-\section{Diagramme de classes (Application)}
+\section{Diagramme de classes global}
 
-Le diagramme de classes de la Figure~\ref{fig:classes_app} représente la structure statique
-de l'application, c'est-à-dire les entités principales du système, leurs attributs et
-les relations qui les unissent.
+La Figure~\ref{fig:classes_global} représente la structure statique globale de la plateforme NetEthic,
+organisée autour des entités suivantes.
 
-Les classes centrales sont les suivantes :
+\textbf{User.}
+Classe centrale qui initie les interactions avec le système.
+Un même utilisateur peut ouvrir plusieurs sessions de type \texttt{Messages}
+(modules Noa et émotionnel) ou \texttt{TechnicalSession} (module support technique).
 
-\begin{itemize}
-    \item \textbf{ChatSession :} Représente une session conversationnelle.
-          Attributs : \texttt{sessionId}, \texttt{userId}, \texttt{moduleType}, \texttt{createdAt}, \texttt{expiresAt}.
-          Une session agrège plusieurs instances de \texttt{Message}.
-    \item \textbf{Message :} Représente un message échangé au cours d'une session.
-          Attributs : \texttt{messageId}, \texttt{content}, \texttt{role} (utilisateur/assistant), \texttt{timestamp}.
-          Chaque message est associé à une \texttt{IntentClassification} et peut référencer un \texttt{Response}.
-    \item \textbf{IntentClassification :} Encapsule le résultat de la classification d'intention.
-          Attributs : \texttt{intent} (factual, chitchat, follow-up, forbidden), \texttt{confidence}.
-    \item \textbf{DocumentChunk :} Représente un extrait de document indexé dans la base vectorielle.
-          Attributs : \texttt{chunkId}, \texttt{content}, \texttt{embedding}, \texttt{category}, \texttt{sourceDocument}.
-    \item \textbf{Response :} Encapsule la réponse générée par le LLM.
-          Attributs : \texttt{responseId}, \texttt{content}, \texttt{sourceChunks}, \texttt{latency}, \texttt{cached}.
-    \item \textbf{ReservationRequest :} Modélise une demande de réservation collectée par l'assistant Noa ou l'assistant technique.
-          Attributs : \texttt{requestId}, \texttt{email}, \texttt{phone}, \texttt{requestedDate}, \texttt{channel}, \texttt{subject}.
-    \item \textbf{HarassmentClassification :} Encapsule le résultat de l'analyse d'un texte par le classificateur.
-          Attributs : \texttt{textId}, \texttt{labels}, \texttt{strategy}, \texttt{confidence}, \texttt{urgencyFlag}, \texttt{timestamp}.
-    \item \textbf{EmotionalSignal :} Représente un signal de détresse détecté dans un message.
-          Attributs : \texttt{signalType} (dépression, idéation suicidaire, solitude, anxiété, colère, addiction),
-          \texttt{severity}, \texttt{detectedAt}.
-\end{itemize}
+\textbf{Session (abstraite).}
+Classe mère partagée par \texttt{Messages} et \texttt{TechnicalSession},
+portant les attributs communs à toute session : \texttt{sessionId}, \texttt{createdAt},
+\texttt{language} et \texttt{guardrailTriggered}.
+
+\textbf{Messages.}
+Spécialisation de \texttt{Session} couvrant les échanges conversationnels
+(modules Noa et émotionnel). Chaque instance est reliée à une \texttt{Conversation}
+qui agrège l'historique des échanges et enrichit un \texttt{ProfilEmotionnel}
+persistant (\texttt{prenom}, \texttt{stresseurs}, \texttt{situationScolaire}, \texttt{reussites}).
+
+\textbf{TechnicalSession.}
+Spécialisation de \texttt{Session} propre au module support technique.
+Elle charge un objet \texttt{LiveData} contenant les statistiques du tableau de bord scolaire
+(\texttt{stats}, \texttt{lastUpdated}).
+
+\textbf{ChromaDB.}
+Base vectorielle partagée par les modules Noa, Support et Classificateur.
+La hiérarchie par composition \texttt{ChromaDB} $\to$ \texttt{Collection}
+$\to$ \texttt{Docs} $\to$ \texttt{Chunks} organise les documents indexés et leurs fragments
+avec leur vecteur d'embedding et leur score de similarité.
+
+\textbf{Parametre.}
+Classe indépendante de configuration système, composée des attributs \texttt{id},
+\texttt{key} et \texttt{value}.
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.95\textwidth]{diagramme/11_classes_application.png}
-\caption{Diagramme de classes --- Architecture de l'application}
-\label{fig:classes_app}
+\hspace*{-0.1\textwidth}\includegraphics[width=1.2\textwidth]{diagramme/11b_classes_global.png}
+\caption{Diagramme de classes global --- Architecture de l'application NetEthic}
+\label{fig:classes_global}
 \end{figure}
 
 % ─────────────────────────────────────────────────────────────────────────────
